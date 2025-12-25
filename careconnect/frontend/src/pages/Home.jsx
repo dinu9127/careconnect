@@ -172,7 +172,7 @@ const Home = () => {
             </Link>
             <Link
               to="/register"
-              className=" gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:fbg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+              className=" gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
             >
               Get Started
             </Link>
