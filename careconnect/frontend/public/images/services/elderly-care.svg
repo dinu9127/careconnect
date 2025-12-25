@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f472b6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#grad2)"/>
+  <circle cx="200" cy="100" r="35" fill="#ffffff" opacity="0.3"/>
+  <path d="M 190 70 L 200 85 L 210 70 Q 200 60, 190 70" fill="#ffffff" opacity="0.8"/>
+  <circle cx="200" cy="105" r="20" fill="#ffffff" opacity="0.8"/>
+  <text x="200" y="180" font-size="28" font-weight="bold" text-anchor="middle" fill="#ffffff">Elderly Care</text>
+  <text x="200" y="220" font-size="14" text-anchor="middle" fill="#ffffff" opacity="0.9">Senior Companionship</text>
+</svg>
