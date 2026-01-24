@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
+import { authService } from '../../services/api'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,8 @@ const Login = () => {
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -15,12 +18,45 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     })
+    // Clear error when user types
+    if (error) setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Login attempt:', formData)
-    // TODO: Implement login logic
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await authService.login(formData)
+      
+      if (response.data.success) {
+        const { token, role, ...userData } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(userData))
+        
+        // Navigate based on role
+        switch (role) {
+          case 'admin':
+            navigate('/admin/dashboard')
+            break
+          case 'caregiver':
+            navigate('/caregiver/dashboard')
+            break
+          case 'client':
+          default:
+            navigate('/client/dashboard')
+            break
+        }
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError(err.response?.data?.message || 'Invalid email or password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -71,6 +107,14 @@ const Login = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Error Alert */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 rounded-lg border bg-red-50 border-red-200 text-red-800">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
+
               {/* Email */}
               <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-2">
@@ -140,10 +184,20 @@ const Login = () => {
               {/* Sign In Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                disabled={loading}
+                className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Sign In
-                <ArrowRight className="w-5 h-5" />
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
 
               {/* Divider */}
