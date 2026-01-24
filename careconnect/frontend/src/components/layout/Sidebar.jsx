@@ -6,20 +6,23 @@ const Sidebar = ({ role = 'client' }) => {
     { name: 'Dashboard', path: '/client/dashboard' },
     { name: 'Find Caregivers', path: '/client/caregivers' },
     { name: 'My Bookings', path: '/client/bookings' },
-    { name: 'Messages', path: '/client/messages' },
+    { name: 'Complaints', path: '/client/complaints' },
   ]
 
   const caregiverLinks = [
     { name: 'Dashboard', path: '/caregiver/dashboard' },
     { name: 'My Schedule', path: '/caregiver/schedule' },
-    { name: 'Clients', path: '/caregiver/clients' },
-    { name: 'Earnings', path: '/caregiver/earnings' },
+    { name: 'Update Availability', path: '/caregiver/availability' },
+    { name: 'Update Profile', path: '/caregiver/profile' },
+    { name: 'Update Verification', path: '/caregiver/verification' },
   ]
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard' },
     { name: 'Users', path: '/admin/users' },
     { name: 'Caregivers', path: '/admin/caregivers' },
+    { name: 'Payments', path: '/admin/payments' },
+    { name: 'Complaints', path: '/admin/complaints' },
     { name: 'Reports', path: '/admin/reports' },
   ]
 

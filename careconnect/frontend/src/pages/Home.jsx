@@ -270,7 +270,7 @@ const Home = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-12">
+      <section id="services" className="py-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
@@ -338,7 +338,7 @@ const Home = () => {
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-4 py-16">
+      <section id="how-it-works" className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             How It Works
@@ -445,17 +445,17 @@ const Home = () => {
               <h5 className="text-white font-semibold mb-4">Platform</h5>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/" className="hover:text-white transition">Home</Link></li>
-                <li><button className="hover:text-white transition">How it works</button></li>
-                <li><button className="hover:text-white transition">Services</button></li>
+                <li><a href="#how-it-works" className="hover:text-white transition">How it works</a></li>
+                <li><a href="#services" className="hover:text-white transition">Services</a></li>
               </ul>
             </div>
             <div>
-              <h5 className="text-white font-semibold mb-4">Servicses</h5>
+              <h5 className="text-white font-semibold mb-4">Services</h5>
               <ul className="space-y-2 text-sm">
-                <li><button className="hover:text-white transition">Elder Care</button></li>
-                <li><button className="hover:text-white transition">Child Care</button></li>
-                <li><button className="hover:text-white transition">Hospital Companionship</button></li>
-                <li><button className="hover:text-white transition">Disability Support</button></li>
+                <li><a href="#services" className="hover:text-white transition">Elderly Care</a></li>
+                <li><a href="#services" className="hover:text-white transition">Child Care</a></li>
+                <li><a href="#services" className="hover:text-white transition">Hospital Companionship</a></li>
+                <li><a href="#services" className="hover:text-white transition">Disability Support</a></li>
               </ul>
             </div>
             <div>

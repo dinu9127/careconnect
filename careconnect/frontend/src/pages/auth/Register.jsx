@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Stethoscope, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import { Heart, Stethoscope, ArrowRight, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { authService } from '../../services/api'
 
 const Register = () => {
   const [step, setStep] = useState('role') // 'role' or 'form'
   const [selectedRole, setSelectedRole] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +24,8 @@ const Register = () => {
       ...formData,
       [e.target.name]: e.target.value
     })
+    // Clear error when user types
+    if (error) setError('')
   }
 
   const handleRoleSelect = (role) => {
@@ -29,10 +34,58 @@ const Register = () => {
     setTimeout(() => setStep('form'), 300)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Registration attempt:', formData)
-    // TODO: Implement registration logic
+    setError('')
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    // Validate password strength
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const { confirmPassword, ...registrationData } = formData
+      const response = await authService.register(registrationData)
+      
+      if (response.data.success) {
+        const { token, role, ...userData } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(userData))
+        
+        // Navigate based on role
+        switch (role) {
+          case 'admin':
+            navigate('/admin/dashboard')
+            break
+          case 'caregiver':
+            navigate('/caregiver/dashboard')
+            break
+          case 'client':
+          default:
+            navigate('/client/dashboard')
+            break
+        }
+      }
+    } catch (err) {
+      console.error('Registration error:', err)
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.errors?.map(e => e.message).join(', ') ||
+                          'Registration failed. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Step 1: Role Selection
@@ -118,53 +171,61 @@ const Register = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl">
         <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Left Side - Image & Gradient */}
-          <div className={`hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br ${selectedRole === 'client' ? 'from-indigo-600 via-blue-600 to-sky-600' : 'from-orange-500 via-orange-400 to-rose-500'} relative overflow-hidden`}>
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-black rounded-full blur-3xl" />
+          {/* Left Side - Image or Gradient */}
+          {selectedRole === 'client' ? (
+            // For client role - show register.jpg image
+            <div className="hidden lg:block relative overflow-hidden">
+              <img 
+                src="/images/logo/register.jpg" 
+                alt="Healthcare professional" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Optional overlay for better aesthetics */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
-
-            {/* Brand */}
-            <div className="relative z-10 mb-6">
-              <div className="flex items-center gap-3">
-                <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-10 w-auto drop-shadow" />
-                <span className="text-xl font-semibold text-white">CareConnect</span>
+          ) : (
+            // For caregiver role - show gradient with info
+            <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-orange-500 via-orange-400 to-rose-500 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-black rounded-full blur-3xl" />
               </div>
-            </div>
 
-            <div className="relative z-10">
-              <div className="text-white mb-8">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${selectedRole === 'client' ? 'bg-white/20' : 'bg-white/20'}`}>
-                  {selectedRole === 'client' ? (
-                    <Heart className="w-8 h-8 text-white" />
-                  ) : (
-                    <Stethoscope className="w-8 h-8 text-white" />
-                  )}
+              {/* Brand */}
+              <div className="relative z-10 mb-6">
+                <div className="flex items-center gap-3">
+                  <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-10 w-auto drop-shadow" />
+                  <span className="text-xl font-semibold text-white">CareConnect</span>
                 </div>
-                <h2 className="text-3xl font-bold mb-4">
-                  {selectedRole === 'client' ? 'Find Care You Trust' : 'Share Your Expertise'}
-                </h2>
-                <p className="text-lg opacity-90 leading-relaxed">
-                  {selectedRole === 'client'
-                    ? 'Join thousands of families who have found compassionate, verified caregivers on CareConnect.'
-                    : 'Connect with families seeking your expertise. Build a thriving caregiving practice.'}
-                </p>
               </div>
-            </div>
 
-            {/* Stats */}
-            <div className="relative z-10 grid grid-cols-2 gap-4">
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                <div className="text-2xl font-bold text-white">500+</div>
-                <div className="text-sm text-white/80">Caregivers</div>
+              <div className="relative z-10">
+                <div className="text-white mb-8">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-white/20">
+                    <Stethoscope className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-4">
+                    Share Your Expertise
+                  </h2>
+                  <p className="text-lg opacity-90 leading-relaxed">
+                    Connect with families seeking your expertise. Build a thriving caregiving practice.
+                  </p>
+                </div>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                <div className="text-2xl font-bold text-white">2000+</div>
-                <div className="text-sm text-white/80">Users</div>
+
+              {/* Stats */}
+              <div className="relative z-10 grid grid-cols-2 gap-4">
+                <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
+                  <div className="text-2xl font-bold text-white">500+</div>
+                  <div className="text-sm text-white/80">Caregivers</div>
+                </div>
+                <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
+                  <div className="text-2xl font-bold text-white">2000+</div>
+                  <div className="text-sm text-white/80">Users</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Right Side - Form */}
           <div className="p-8 sm:p-12">
@@ -193,6 +254,14 @@ const Register = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Error Alert */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 rounded-lg border bg-red-50 border-red-200 text-red-800">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
+
               {/* Full Name */}
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">
@@ -314,13 +383,21 @@ const Register = () => {
               {/* Sign Up Button */}
               <button
                 type="submit"
-                className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                disabled={loading}
+                className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                   selectedRole === 'client'
                     ? 'bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700'
                     : 'bg-gradient-to-r from-orange-600 to-rose-600 hover:from-orange-700 hover:to-rose-700'
                 }`}
               >
-                Create Account
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </div>
+                ) : (
+                  'Create Account'
+                )}
               </button>
 
               {/* Sign In Link */}
