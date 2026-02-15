@@ -145,7 +145,7 @@ const Caregivers = () => {
                   e.target.src = `https://via.placeholder.com/150/4A5568/FFFFFF?text=${userData.name?.split(' ')[0]}`
                 }}
               />
-              <div className="absolute -top-1 -right-1 bg-teal-500 rounded-full p-1">
+              <div className="absolute -top-1 -right-1 bg-blue-500 rounded-full p-1">
                 <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
@@ -195,7 +195,7 @@ const Caregivers = () => {
             {caregiver.serviceTypes?.slice(0, 2).map((service) => (
               <span
                 key={service}
-                className="px-2 py-1 bg-teal-50 text-teal-700 text-xs font-medium rounded-full"
+                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full"
               >
                 {service}
               </span>
@@ -211,7 +211,7 @@ const Caregivers = () => {
           <div className="flex gap-2">
             <button
               onClick={() => handleViewProfile(caregiver)}
-              className="flex-1 px-4 py-2 border-2 border-teal-600 text-teal-600 font-semibold rounded-xl hover:bg-teal-50 transition"
+              className="flex-1 px-4 py-2 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition"
             >
               View Profile
             </button>
@@ -249,7 +249,7 @@ const Caregivers = () => {
                 placeholder="Search by caregiver name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
 
@@ -258,7 +258,7 @@ const Caregivers = () => {
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition appearance-none bg-white cursor-pointer"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white cursor-pointer"
               >
                 {locations.map(location => (
                   <option key={location} value={location}>{location}</option>
@@ -272,7 +272,7 @@ const Caregivers = () => {
               <select
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition appearance-none bg-white cursor-pointer"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white cursor-pointer"
               >
                 {services.map(service => (
                   <option key={service} value={service}>{service}</option>
@@ -311,7 +311,7 @@ const Caregivers = () => {
             {categorized.available.length > 0 && (
               <div className="mb-12">
                 <div className="flex items-center gap-2 mb-6">
-                  <div className="w-1 h-6 bg-green-500 rounded"></div>
+                  <div className="w-1 h-6 bg-blue-500 rounded"></div>
                   <h2 className="text-2xl font-bold text-slate-900">Available Today</h2>
                   <span className="ml-auto text-slate-600">({categorized.available.length})</span>
                 </div>
@@ -382,3 +382,4 @@ const Caregivers = () => {
 }
 
 export default Caregivers
+
