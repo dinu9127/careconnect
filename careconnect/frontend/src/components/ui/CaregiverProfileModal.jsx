@@ -51,7 +51,7 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
               <p className="text-slate-600 mb-4">{caregiver.specialization}</p>
               <div className="flex flex-wrap gap-2">
                 {caregiver.serviceTypes?.map((service, index) => (
-                  <span key={index} className="px-3 py-1 bg-teal-50 text-teal-700 text-sm font-medium rounded-full">
+                  <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
                     {service}
                   </span>
                 ))}
@@ -168,3 +168,4 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
 }
 
 export default CaregiverProfileModal
+

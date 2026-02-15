@@ -211,7 +211,7 @@ const AdminComplaints = () => {
                 onClick={() => setFilterStatus('all')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
                   filterStatus === 'all'
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
                 }`}
               >
@@ -271,7 +271,7 @@ const AdminComplaints = () => {
                         onClick={() => handleSelectComplaint(complaint)}
                         className={`w-full text-left p-4 rounded-lg border-2 transition ${
                           selectedComplaint?._id === complaint._id
-                            ? 'border-teal-600 bg-teal-50'
+                            ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 bg-white hover:border-gray-300'
                         }`}
                       >
@@ -355,7 +355,7 @@ const AdminComplaints = () => {
                           name="status"
                           value={updateData.status}
                           onChange={handleUpdateChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="open">Open</option>
                           <option value="in_progress">In Progress</option>
@@ -372,7 +372,7 @@ const AdminComplaints = () => {
                           name="adminAction"
                           value={updateData.adminAction}
                           onChange={handleUpdateChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="none">No Action</option>
                           <option value="refund">Issue Refund</option>
@@ -393,7 +393,7 @@ const AdminComplaints = () => {
                           onChange={handleUpdateChange}
                           placeholder="Add your response and notes for the client..."
                           rows="4"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
@@ -423,3 +423,4 @@ const AdminComplaints = () => {
 }
 
 export default AdminComplaints
+

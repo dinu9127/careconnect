@@ -37,21 +37,21 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <Link to={getDashboardLink()} className="flex items-center gap-3">
             <img src="/images/logo/careconnectlogo.png" alt="CareConnect" className="h-8 w-auto" />
-            <span className="text-2xl font-bold text-teal-600">CareConnect</span>
+            <span className="text-2xl font-bold text-blue-600">CareConnect</span>
           </Link>
           
           <div className="flex items-center gap-6">
             {user && user.role === 'client' && (
               <Link 
                 to="/client/caregivers" 
-                className="text-gray-700 hover:text-teal-600 font-medium transition"
+                className="text-gray-700 hover:text-blue-600 font-medium transition"
               >
                 Find Caregivers
               </Link>
             )}
             <Link 
               to="/profile" 
-              className="text-gray-700 hover:text-teal-600 font-medium transition"
+              className="text-gray-700 hover:text-blue-600 font-medium transition"
             >
               Profile
             </Link>
@@ -69,3 +69,4 @@ const Navbar = () => {
 }
 
 export default Navbar
+

@@ -44,9 +44,27 @@ const Register = () => {
       return
     }
 
-    // Validate password strength
+    // Validate password strength - must match backend requirements
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long')
+      return
+    }
+
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('Password must contain at least one uppercase letter')
+      return
+    }
+
+    // Check for lowercase letter
+    if (!/[a-z]/.test(formData.password)) {
+      setError('Password must contain at least one lowercase letter')
+      return
+    }
+
+    // Check for number
+    if (!/\d/.test(formData.password)) {
+      setError('Password must contain at least one number')
       return
     }
 
@@ -69,7 +87,7 @@ const Register = () => {
             navigate('/admin/dashboard')
             break
           case 'caregiver':
-            navigate('/caregiver/dashboard')
+            navigate('/caregiver/profile')
             break
           case 'client':
           default:
@@ -97,7 +115,7 @@ const Register = () => {
           <div className="text-center mb-12">
             <Link to="/" className="inline-flex items-center gap-3 mb-6">
               <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-10 w-auto" />
-              <span className="text-2xl font-bold text-slate-900">CareConnect</span>
+              <span className="text-2xl font-bold text-slate-900 color=indigo-600">CareConnect</span>
             </Link>
             <h1 className="text-4xl font-bold text-slate-900 mb-3">
               Join CareConnect
@@ -116,12 +134,10 @@ const Register = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity" />
               <div className="relative z-10">
-                <div className="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-200 transition">
-                  <Heart className="w-8 h-8 text-indigo-600" />
+                <div className="w-70 h-20 bg-indigo-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-200 transition overflow-hidden">
+                  <img src="/images/logo/needcare.png" alt="Need care" className="w-50 h-19 object-contain" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                  I Need Care
-                </h3>
+                
                 <p className="text-slate-600 text-sm mb-4 leading-relaxed">
                   Find trusted caregivers for yourself or a family member. Get matched with qualified professionals.
                 </p>
@@ -138,12 +154,10 @@ const Register = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity" />
               <div className="relative z-10">
-                <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-200 transition">
-                  <Stethoscope className="w-8 h-8 text-orange-600" />
+                <div className="w-70 h-20 bg-orange-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-200 transition overflow-hidden">
+                  <img src="/images/logo/iamcaregiver.png" alt="I am a caregiver" className="w-50 h-19 object-contain" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                  I'm a Caregiver
-                </h3>
+                
                 <p className="text-slate-600 text-sm mb-4 leading-relaxed">
                   Offer your services and connect with families in need. Build your client base and grow your career.
                 </p>
@@ -292,7 +306,7 @@ const Register = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder="name@gmail.com"
                     className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder-slate-400"
                     required
                   />
@@ -328,6 +342,9 @@ const Register = () => {
                     )}
                   </button>
                 </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Must be at least 6 characters with uppercase, lowercase, and a number
+                </p>
               </div>
 
               {/* Confirm Password */}
@@ -342,7 +359,7 @@ const Register = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm your password"
-                    className="w-full px-4 py-3 pl-11 pr-11 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition placeholder-slate-400"
+                    className="w-full px-4 py-3 pl-11 pr-11 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-slate-400"
                     required
                   />
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -416,3 +433,4 @@ const Register = () => {
 }
 
 export default Register
+

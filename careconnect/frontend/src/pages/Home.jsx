@@ -89,9 +89,9 @@ const features = [
     bgColor: 'bg-violet-50',
   },
   {
-    icon: MessageSquare,
-    title: 'Easy Communication',
-    desc: 'Seamless messaging and scheduling directly within the platform.',
+    icon: Star,
+    title: 'Review and Rating System',
+    desc: 'Collect and share feedback to ensure quality and trust.',
     color: 'text-fuchsia-600',
     bgColor: 'bg-fuchsia-50',
   },
@@ -100,7 +100,7 @@ const features = [
     title: 'Transparent Pricing',
     desc: 'Clear, upfront pricing with no hidden fees or surprise charges.',
     color: 'text-teal-600',
-    bgColor: 'bg-teal-50',
+    bgColor: 'bg-blue-50',
   },
 ]
 
@@ -129,25 +129,25 @@ const steps = [
 // Testimonials/Social proof
 const testimonials = [
   {
-    name: 'Maria Silva',
-    role: 'Family caregiver',
+    name: 'Maheepa De Silva',
+    Role: "Care recipient's family member",
     content: 'CareConnect made finding quality care for my mother incredibly easy and stress-free.',
     rating: 5,
-    avatar: '👩‍🦱',
+    
   },
   {
-    name: 'Rajesh Kumar',
+    name: 'Ramesh Pathirana',
     role: 'Care recipient',
     content: 'The caregivers are truly compassionate. I feel safe and well-looked-after daily.',
     rating: 5,
-    avatar: '👨‍💼',
+   
   },
   {
-    name: 'Emma Thompson',
+    name: 'Ethmi Fernando',
     role: 'Professional caregiver',
     content: 'This platform lets me connect with families in need. Truly fulfilling work.',
     rating: 5,
-    avatar: '👩‍⚕️',
+   
   },
 ]
 
@@ -493,3 +493,4 @@ const Home = () => {
 }
 
 export default Home
+

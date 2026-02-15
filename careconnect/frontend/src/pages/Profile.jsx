@@ -111,7 +111,7 @@ const Profile = () => {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit Profile
@@ -120,7 +120,7 @@ const Profile = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                   >
                     <Save className="w-4 h-4" />
                     Save
@@ -149,7 +149,7 @@ const Profile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ) : (
                   <p className="text-slate-900 px-4 py-2 bg-slate-50 rounded-lg">{userData.name}</p>
@@ -179,7 +179,7 @@ const Profile = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+94 XX XXX XXXX"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ) : (
                   <p className="text-slate-900 px-4 py-2 bg-slate-50 rounded-lg">
@@ -201,7 +201,7 @@ const Profile = () => {
                     onChange={handleChange}
                     rows="3"
                     placeholder="Enter your address"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ) : (
                   <p className="text-slate-900 px-4 py-2 bg-slate-50 rounded-lg">
@@ -210,16 +210,7 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Account Created */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                  <Calendar className="w-4 h-4" />
-                  Member Since
-                </label>
-                <p className="text-slate-900 px-4 py-2 bg-slate-50 rounded-lg">
-                  {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : 'N/A'}
-                </p>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -245,3 +236,4 @@ const Profile = () => {
 }
 
 export default Profile
+

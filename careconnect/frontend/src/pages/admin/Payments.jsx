@@ -110,22 +110,34 @@ const Payments = () => {
               <p className="text-gray-600">View and manage all payments</p>
             </div>
 
-            {/* Statistics */}
+            {/* Stats Cards */}
             <div className="grid md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <p className="text-gray-600 text-sm mb-2">Total Revenue</p>
-                <p className="text-3xl font-bold text-teal-600">${stats.total.toFixed(2)}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-gray-600 text-sm">Total Revenue</p>
+                  <DollarSign className="w-5 h-5 text-blue-600" />
+                </div>
+                <p className="text-3xl font-bold text-gray-800">${stats.total.toFixed(2)}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <p className="text-gray-600 text-sm mb-2">Paid</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-gray-600 text-sm">Paid</p>
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
                 <p className="text-3xl font-bold text-green-600">${stats.paid.toFixed(2)}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <p className="text-gray-600 text-sm mb-2">Pending</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-gray-600 text-sm">Pending</p>
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                </div>
                 <p className="text-3xl font-bold text-yellow-600">${stats.pending.toFixed(2)}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <p className="text-gray-600 text-sm mb-2">Unpaid</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-gray-600 text-sm">Unpaid</p>
+                  <X className="w-5 h-5 text-red-600" />
+                </div>
                 <p className="text-3xl font-bold text-red-600">${stats.unpaid.toFixed(2)}</p>
               </div>
             </div>
@@ -151,7 +163,7 @@ const Payments = () => {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg font-medium transition ${
                   filter === 'all'
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
                 }`}
               >
@@ -380,3 +392,4 @@ const Payments = () => {
 }
 
 export default Payments
+

@@ -102,7 +102,7 @@ const Complaints = () => {
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-800'
       case 'resolved':
-        return 'bg-green-100 text-green-800'
+        return 'bg-blue-100 text-blue-800'
       case 'closed':
         return 'bg-gray-100 text-gray-800'
       default:
@@ -179,7 +179,7 @@ const Complaints = () => {
               <div className={`mb-6 p-4 rounded-lg ${
                 message.type === 'error'
                   ? 'bg-red-100 text-red-800 border border-red-300'
-                  : 'bg-green-100 text-green-800 border border-green-300'
+                  : 'bg-blue-100 text-blue-800 border border-blue-300'
               }`}>
                 <div className="flex justify-between items-start">
                   <p>{message.text}</p>
@@ -206,7 +206,7 @@ const Complaints = () => {
                         value={formData.title}
                         onChange={handleFormChange}
                         placeholder="Brief summary of your complaint"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
                     </div>
@@ -219,7 +219,7 @@ const Complaints = () => {
                         name="category"
                         value={formData.category}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       >
                         <option value="service_quality">Service Quality</option>
@@ -238,7 +238,7 @@ const Complaints = () => {
                         name="severity"
                         value={formData.severity}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -257,7 +257,7 @@ const Complaints = () => {
                         value={formData.bookingId}
                         onChange={handleFormChange}
                         placeholder="Related booking ID"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -272,7 +272,7 @@ const Complaints = () => {
                       onChange={handleFormChange}
                       placeholder="Please provide detailed information about your complaint..."
                       rows="5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -423,7 +423,7 @@ const Complaints = () => {
               )}
 
               {selectedComplaint.adminAction && selectedComplaint.adminAction !== 'none' && (
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                   <p className="text-sm text-gray-700 font-semibold mb-2">Action Taken by Admin:</p>
                   <p className="text-gray-800 font-medium">
                     {selectedComplaint.adminAction.replace('_', ' ').toUpperCase()}
@@ -454,3 +454,4 @@ const Complaints = () => {
 }
 
 export default Complaints
+

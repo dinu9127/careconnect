@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { X, Calendar, Clock, AlertCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { X, Calendar, Clock, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import axios from 'axios'
 
 const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
@@ -13,8 +13,35 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectingEndDate, setSelectingEndDate] = useState(false)
+  const [bookedDates, setBookedDates] = useState([])
 
   const userData = caregiver?.user || {}
+
+  useEffect(() => {
+    if (isOpen && caregiver) {
+      fetchBookedDates()
+    }
+  }, [isOpen, caregiver])
+
+  const fetchBookedDates = async () => {
+    try {
+      if (!caregiver?._id) {
+        console.error('Caregiver ID is missing')
+        return
+      }
+      const response = await axios.get(`/api/caregivers/${caregiver._id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      setBookedDates(response.data.data?.bookedDates || [])
+    } catch (err) {
+      console.error('Failed to fetch booked dates:', err)
+      setBookedDates([])
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -37,10 +64,38 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       setError('Please select a service type')
       return false
     }
-    if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      setError('End date must be after start date')
+    
+    const startDate = new Date(formData.startDate)
+    const endDate = new Date(formData.endDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (startDate < today) {
+      setError('Start date cannot be in the past')
       return false
     }
+    if (endDate < startDate) {
+      setError('End date must be after or equal to start date')
+      return false
+    }
+    
+    // Validate times
+    const [startHour, startMin] = formData.startTime.split(':').map(Number)
+    const [endHour, endMin] = formData.endTime.split(':').map(Number)
+    const startMinutes = startHour * 60 + startMin
+    const endMinutes = endHour * 60 + endMin
+    
+    if (endMinutes <= startMinutes) {
+      setError('End time must be after start time')
+      return false
+    }
+    
+    // Check minimum booking duration (at least 1 hour)
+    if (endMinutes - startMinutes < 60) {
+      setError('Minimum booking duration is 1 hour')
+      return false
+    }
+    
     return true
   }
 
@@ -63,9 +118,9 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       // Calculate hours per day
       const [startHour, startMin] = formData.startTime.split(':').map(Number)
       const [endHour, endMin] = formData.endTime.split(':').map(Number)
-      const hours = (endHour - startHour) + (endMin - startMin) / 60
+      const hours = Math.max(1, (endHour - startHour) + (endMin - startMin) / 60)
       
-      const totalAmount = days * hours * caregiver.hourlyRate
+      const totalAmount = (days + 1) * hours * caregiver.hourlyRate
 
       const bookingData = {
         ...formData,
@@ -99,6 +154,101 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   }
 
   if (!isOpen || !caregiver) return null
+
+  // Calendar helper functions
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+  const isDateBooked = (date) => {
+    return bookedDates.some(booked => {
+      const bookedStart = new Date(booked.startDate)
+      const bookedEnd = new Date(booked.endDate)
+      bookedStart.setHours(0, 0, 0, 0)
+      bookedEnd.setHours(23, 59, 59, 999)
+      date.setHours(0, 0, 0, 0)
+      return date >= bookedStart && date <= bookedEnd
+    })
+  }
+
+  const isDateAvailable = (date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (date < today) return false
+    if (isDateBooked(date)) return false
+    
+    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]
+    const hasAvailability = caregiver.availability?.some(avail => avail.day === dayName)
+    return hasAvailability
+  }
+
+  const handleDateClick = (date) => {
+    if (!isDateAvailable(date)) return
+    
+    const dateStr = date.toISOString().split('T')[0]
+    
+    if (!selectingEndDate) {
+      setFormData(prev => ({
+        ...prev,
+        startDate: dateStr,
+        endDate: ''
+      }))
+      setSelectingEndDate(true)
+    } else {
+      const startDate = new Date(formData.startDate)
+      if (date < startDate) {
+        setFormData(prev => ({
+          ...prev,
+          startDate: dateStr,
+          endDate: ''
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          endDate: dateStr
+        }))
+        setSelectingEndDate(false)
+      }
+    }
+  }
+
+  const getDaysArray = () => {
+    const daysInMonth = getDaysInMonth(currentMonth)
+    const firstDay = getFirstDayOfMonth(currentMonth)
+    const days = []
+
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null)
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i))
+    }
+
+    return days
+  }
+
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+  }
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+  }
+
+  const isDateInRange = (date) => {
+    if (!formData.startDate || !formData.endDate) return false
+    const start = new Date(formData.startDate)
+    const end = new Date(formData.endDate)
+    start.setHours(0, 0, 0, 0)
+    end.setHours(23, 59, 59, 999)
+    date.setHours(12, 0, 0, 0)
+    return date >= start && date <= end
+  }
 
   // Calculate estimated total
   const calculateTotal = () => {
@@ -150,7 +300,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               name="serviceType"
               value={formData.serviceType}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
               <option value="">Select a service type</option>
               {caregiver.serviceTypes?.map((service) => (
@@ -161,8 +311,101 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
             </select>
           </div>
 
+          {/* Calendar */}
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={prevMonth}
+                className="p-1 hover:bg-slate-200 rounded"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <h3 className="font-semibold text-slate-900">
+                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h3>
+              <button
+                type="button"
+                onClick={nextMonth}
+                className="p-1 hover:bg-slate-200 rounded"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                <div key={day} className="text-center text-xs font-semibold text-slate-600 py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {getDaysArray().map((date, idx) => {
+                if (!date) {
+                  return <div key={`empty-${idx}`} className="aspect-square" />
+                }
+
+                const isAvailable = isDateAvailable(date)
+                const isBooked = isDateBooked(date)
+                const isSelected = formData.startDate === date.toISOString().split('T')[0] || 
+                                  formData.endDate === date.toISOString().split('T')[0]
+                const isInRange = isDateInRange(date)
+                const isToday = date.toDateString() === new Date().toDateString()
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleDateClick(date)}
+                    disabled={!isAvailable}
+                    className={`aspect-square rounded text-sm font-medium transition ${
+                      isSelected
+                        ? 'bg-teal-600 text-white'
+                        : isInRange
+                        ? 'bg-teal-100 text-teal-900'
+                        : isToday
+                        ? 'border-2 border-teal-600 text-teal-600'
+                        : isBooked
+                        ? 'bg-red-100 text-red-400 cursor-not-allowed'
+                        : isAvailable
+                        ? 'bg-white text-slate-900 hover:bg-teal-50'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {date.getDate()}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-teal-600 rounded"></div>
+                <span className="text-slate-600">Selected</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-white border border-slate-300 rounded"></div>
+                <span className="text-slate-600">Available</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-red-100 rounded"></div>
+                <span className="text-slate-600">Booked</span>
+              </div>
+            </div>
+
+            {formData.startDate && (
+              <div className="mt-3 text-sm text-slate-700">
+                <strong>Selected:</strong> {new Date(formData.startDate).toLocaleDateString()}
+                {formData.endDate && ` - ${new Date(formData.endDate).toLocaleDateString()}`}
+                {!formData.endDate && selectingEndDate && ' (Select end date)'}
+              </div>
+            )}
+          </div>
+
           {/* Start Date */}
-          <div>
+          <div className="hidden">
             <label className="block text-sm font-semibold text-slate-900 mb-2">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -175,12 +418,12 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               value={formData.startDate}
               onChange={handleChange}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
           {/* End Date */}
-          <div>
+          <div className="hidden">
             <label className="block text-sm font-semibold text-slate-900 mb-2">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -193,7 +436,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               value={formData.endDate}
               onChange={handleChange}
               min={formData.startDate || new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
@@ -210,7 +453,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               name="startTime"
               value={formData.startTime}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
@@ -227,7 +470,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               name="endTime"
               value={formData.endTime}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
@@ -242,7 +485,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               onChange={handleChange}
               placeholder="Add any special requests or notes"
               rows="3"
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
@@ -284,3 +527,4 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
 }
 
 export default BookingModal
+

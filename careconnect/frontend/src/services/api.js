@@ -65,4 +65,19 @@ export const bookingService = {
   cancelBooking: (id) => api.delete(`/bookings/${id}`),
 }
 
+export const complaintService = {
+  submitComplaint: (data) => api.post('/complaints', data),
+  getClientComplaints: () => api.get('/complaints/my-complaints'),
+  getAllComplaints: () => api.get('/complaints/admin/all'),
+  getComplaintById: (id) => api.get(`/complaints/${id}`),
+  updateComplaint: (id, data) => api.put(`/complaints/${id}`, data),
+}
+
+export const reviewService = {
+  createReview: (data) => api.post('/reviews', data), // client only
+  getCaregiverReviews: (caregiverId) => api.get(`/reviews/caregiver/${caregiverId}`),
+  getMyReviews: () => api.get('/reviews/me'), // caregiver
+  getAllReviews: () => api.get('/reviews/admin'), // admin
+}
+
 export default api

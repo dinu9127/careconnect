@@ -13,7 +13,7 @@ const Button = ({
   
   const variants = {
     primary: 'bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-300',
-    secondary: 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-300',
+    secondary: 'bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-300',
     danger: 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-300',
     outline: 'border-2 border-blue-500 text-blue-500 hover:bg-blue-50 focus:ring-blue-300',
   }
@@ -39,3 +39,4 @@ const Button = ({
 }
 
 export default Button
+
