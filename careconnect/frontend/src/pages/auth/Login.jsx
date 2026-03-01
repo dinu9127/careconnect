@@ -35,7 +35,7 @@ const Login = () => {
         
         // Store token and user data
         localStorage.setItem('token', token)
-        localStorage.setItem('user', JSON.stringify(userData))
+        localStorage.setItem('user', JSON.stringify({ ...userData, role }))
         
         // Navigate based on role
         switch (role) {
@@ -60,64 +60,64 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl">
-        <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-shadow duration-300">
           {/* Left Side - Image & Gradient */}
-          <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-indigo-600 via-blue-600 to-sky-600 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
+          <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-indigo-600 via-blue-500 to-cyan-500 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-30">
               <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-black rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-900 rounded-full blur-3xl" />
             </div>
 
             <div className="relative z-10">
               <div className="text-white mb-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-10 w-auto drop-shadow" />
-                  <span className="text-2xl font-bold">CareConnect</span>
+                  <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-10 w-auto drop-shadow-lg" />
+                  <span className="text-2xl font-bold tracking-tight">CareConnect</span>
                 </div>
-                <h2 className="text-3xl font-bold mb-4">
+                <h2 className="text-4xl font-bold mb-4 leading-tight">
                   Welcome back
                 </h2>
-                <p className="text-lg opacity-90 leading-relaxed">
+                <p className="text-lg opacity-95 leading-relaxed">
                   Access your CareConnect account to find and manage care with ease.
                 </p>
               </div>
             </div>
-
-            {/* Stats */}
-            
           </div>
 
           {/* Right Side - Form */}
-          <div className="p-8 sm:p-12">
+          <div className="p-8 sm:p-12 bg-white">
             {/* Header */}
             <div className="mb-10">
               <Link to="/" className="inline-flex items-center gap-3 mb-8 lg:hidden">
                 <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-9 w-auto" />
                 <span className="text-xl font-bold text-slate-900">CareConnect</span>
               </Link>
-              <h3 className="text-3xl font-bold text-slate-900 mb-2">
+              <h3 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">
                 Sign in to your account
               </h3>
-              <p className="text-slate-600">
+              <p className="text-slate-600 leading-relaxed">
                 Access your CareConnect dashboard and manage your care
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Error Alert */}
               {error && (
-                <div className="flex items-start gap-3 p-4 rounded-lg border bg-red-50 border-red-200 text-red-800">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm font-medium">{error}</p>
+                <div className="flex items-start gap-3 p-4 rounded-xl border-l-4 border-l-red-600 bg-red-50 border border-red-200 text-red-800 shadow-sm">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600" />
+                  <div>
+                    <p className="font-semibold text-sm mb-1">Error</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
                 </div>
               )}
 
               {/* Email */}
               <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-2">
+                <label className="block text-sm font-semibold text-slate-900 mb-2.5">
                   Email Address
                 </label>
                 <div className="relative">
@@ -127,7 +127,7 @@ const Login = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder-slate-400"
+                    className="w-full px-4 py-3 pl-11 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:shadow-md transition-all placeholder-slate-400 bg-slate-50 hover:bg-white"
                     required
                   />
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -136,11 +136,11 @@ const Login = () => {
 
               {/* Password */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2.5">
                   <label className="block text-sm font-semibold text-slate-900">
                     Password
                   </label>
-                  <Link to="#" className="text-sm text-indigo-600 hover:text-indigo-700 font-semibold">
+                  <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
                     Forgot password?
                   </Link>
                 </div>
@@ -151,14 +151,14 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 pl-11 pr-11 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder-slate-400"
+                    className="w-full px-4 py-3 pl-11 pr-11 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:shadow-md transition-all placeholder-slate-400 bg-slate-50 hover:bg-white"
                     required
                   />
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
@@ -170,13 +170,13 @@ const Login = () => {
               </div>
 
               {/* Remember Me */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 py-2">
                 <input
                   type="checkbox"
                   id="remember"
-                  className="w-5 h-5 rounded-lg border border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  className="w-5 h-5 rounded-lg border border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                 />
-                <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer">
+                <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
                   Remember me
                 </label>
               </div>
@@ -185,7 +185,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full py-3 px-4 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 transform hover:shadow-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md disabled:hover:from-indigo-600 disabled:hover:to-blue-600 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -206,7 +206,7 @@ const Login = () => {
                   <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-slate-600">Or continue with</span>
+                  <span className="px-2 bg-white text-slate-500">Or continue with</span>
                 </div>
               </div>
 
@@ -214,7 +214,7 @@ const Login = () => {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 py-2 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition font-medium text-slate-700"
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 font-medium text-slate-700 shadow-sm"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -228,9 +228,9 @@ const Login = () => {
               </div>
 
               {/* Sign Up Link */}
-              <p className="text-center text-slate-600 text-sm">
+              <p className="text-center text-slate-600 text-sm mt-8">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+                <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
                   Sign up
                 </Link>
               </p>

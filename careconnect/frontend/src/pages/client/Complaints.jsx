@@ -150,7 +150,7 @@ const Complaints = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-red-50">
       <Navbar />
       <div className="flex">
         <Sidebar role="client" />
@@ -159,31 +159,31 @@ const Complaints = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">My Complaints</h1>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">My Complaints</h1>
                 <p className="text-gray-600">Submit and track your service complaints</p>
               </div>
               <button
                 onClick={() => setShowForm(!showForm)}
-                className={`px-6 py-2 rounded-lg font-semibold transition ${
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                   showForm
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-teal-600 hover:bg-teal-700 text-white'
+                    ? 'bg-red-500 hover:bg-red-600 text-white hover:shadow-lg'
+                    : 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-lg'
                 }`}
               >
-                {showForm ? 'Cancel' : '+ New Complaint'}
+                {showForm ? '✕ Cancel' : '+ New Complaint'}
               </button>
             </div>
 
             {/* Messages */}
             {message.text && (
-              <div className={`mb-6 p-4 rounded-lg ${
+              <div className={`mb-6 p-4 rounded-xl border-l-4 ${
                 message.type === 'error'
-                  ? 'bg-red-100 text-red-800 border border-red-300'
-                  : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  ? 'bg-red-50 text-red-800 border-red-300'
+                  : 'bg-teal-50 text-teal-800 border-teal-300'
               }`}>
                 <div className="flex justify-between items-start">
-                  <p>{message.text}</p>
-                  <button onClick={() => setMessage({ type: '', text: '' })}>
+                  <p className="font-medium">{message.text}</p>
+                  <button onClick={() => setMessage({ type: '', text: '' })} className="text-gray-500 hover:text-gray-700">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -192,12 +192,12 @@ const Complaints = () => {
 
             {/* Form */}
             {showForm && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-bold text-gray-800 mb-6">Submit a Complaint</h2>
+              <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-teal-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Submit a Complaint</h2>
                 <form onSubmit={handleSubmitComplaint}>
                   <div className="grid md:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Title *
                       </label>
                       <input
@@ -206,20 +206,20 @@ const Complaints = () => {
                         value={formData.title}
                         onChange={handleFormChange}
                         placeholder="Brief summary of your complaint"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Category *
                       </label>
                       <select
                         name="category"
                         value={formData.category}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                         required
                       >
                         <option value="service_quality">Service Quality</option>
@@ -231,14 +231,14 @@ const Complaints = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Severity
                       </label>
                       <select
                         name="severity"
                         value={formData.severity}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -248,7 +248,7 @@ const Complaints = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Booking ID (Optional)
                       </label>
                       <input
@@ -257,13 +257,13 @@ const Complaints = () => {
                         value={formData.bookingId}
                         onChange={handleFormChange}
                         placeholder="Related booking ID"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                       />
                     </div>
                   </div>
 
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Description *
                     </label>
                     <textarea
@@ -272,7 +272,7 @@ const Complaints = () => {
                       onChange={handleFormChange}
                       placeholder="Please provide detailed information about your complaint..."
                       rows="5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition resize-none"
                       required
                     />
                   </div>
@@ -280,7 +280,7 @@ const Complaints = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
+                    className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
                   >
                     <Send className="w-5 h-5" />
                     {submitting ? 'Submitting...' : 'Submit Complaint'}
@@ -292,12 +292,12 @@ const Complaints = () => {
             {/* Complaints List */}
             <div>
               {loading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
-                  <p className="mt-4 text-gray-600">Loading complaints...</p>
+                <div className="text-center py-16">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+                  <p className="mt-4 text-gray-600 font-medium">Loading complaints...</p>
                 </div>
               ) : complaints.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-red-100">
                   <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">No Complaints Yet</h3>
                   <p className="text-gray-600 mb-6">
@@ -310,25 +310,39 @@ const Complaints = () => {
                     Submit Your First Complaint
                   </button>
                 </div>
+              ) : complaints.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-red-100">
+                  <AlertCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Complaints Yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    You haven't submitted any complaints. If you experience any issues with our service, please submit a complaint.
+                  </p>
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                  >
+                    Submit Your First Complaint
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {complaints.map((complaint) => (
                     <div
                       key={complaint._id}
-                      className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer"
+                      className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-red-100 hover:border-red-300 cursor-pointer"
                       onClick={() => setSelectedComplaint(complaint)}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-800">{complaint.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${getStatusColor(complaint.status)}`}>
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            <h3 className="text-lg font-bold text-gray-900">{complaint.title}</h3>
+                            <span className={`px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1 ${getStatusColor(complaint.status)}`}>
                               {getStatusIcon(complaint.status)}
                               {complaint.status.replace('_', ' ').toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-gray-600 text-sm mb-2">{complaint.description.substring(0, 100)}...</p>
-                          <div className="flex gap-4 text-sm text-gray-600">
+                          <p className="text-gray-600 text-sm mb-3">{complaint.description.substring(0, 100)}...</p>
+                          <div className="flex gap-4 text-sm text-gray-700 flex-wrap">
                             <span className="font-medium">
                               Category: {getCategoryLabel(complaint.category)}
                             </span>
@@ -340,7 +354,7 @@ const Complaints = () => {
                       </div>
 
                       {complaint.adminNotes && (
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg mt-3">
                           <p className="text-sm text-gray-700">
                             <span className="font-semibold">Admin Response:</span> {complaint.adminNotes}
                           </p>
@@ -350,13 +364,13 @@ const Complaints = () => {
                       {complaint.adminAction && complaint.adminAction !== 'none' && (
                         <div className="mt-3 text-sm">
                           <span className="font-semibold text-gray-700">Action Taken: </span>
-                          <span className="text-teal-600 font-medium">
+                          <span className="text-teal-700 font-semibold">
                             {complaint.adminAction.replace('_', ' ').toUpperCase()}
                           </span>
                         </div>
                       )}
 
-                      <div className="mt-4 text-xs text-gray-500">
+                      <div className="mt-4 text-xs text-gray-500 font-medium">
                         Submitted: {new Date(complaint.createdAt).toLocaleDateString()}
                         {complaint.resolvedAt && ` • Resolved: ${new Date(complaint.resolvedAt).toLocaleDateString()}`}
                       </div>
@@ -372,12 +386,12 @@ const Complaints = () => {
       {/* Detail Modal */}
       {selectedComplaint && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-start">
-              <h2 className="text-2xl font-bold text-gray-800">{selectedComplaint.title}</h2>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-96 overflow-y-auto border border-red-100">
+            <div className="sticky top-0 bg-gradient-to-r from-red-50 to-pink-50 border-b border-red-100 p-6 flex justify-between items-start">
+              <h2 className="text-2xl font-bold text-gray-900">{selectedComplaint.title}</h2>
               <button
                 onClick={() => setSelectedComplaint(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-1 transition"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -386,44 +400,44 @@ const Complaints = () => {
             <div className="p-6 space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600 font-medium mb-1">Status</p>
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.status)}`}>
+                  <p className="text-sm text-gray-600 font-semibold mb-1">Status</p>
+                  <span className={`inline-flex items-center gap-1 px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(selectedComplaint.status)}`}>
                     {getStatusIcon(selectedComplaint.status)}
                     {selectedComplaint.status.replace('_', ' ').toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 font-medium mb-1">Category</p>
-                  <p className="font-semibold text-gray-800">{getCategoryLabel(selectedComplaint.category)}</p>
+                  <p className="text-sm text-gray-600 font-semibold mb-1">Category</p>
+                  <p className="font-semibold text-gray-900">{getCategoryLabel(selectedComplaint.category)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 font-medium mb-1">Severity</p>
+                  <p className="text-sm text-gray-600 font-semibold mb-1">Severity</p>
                   <p className={`font-semibold ${getSeverityColor(selectedComplaint.severity)}`}>
                     {selectedComplaint.severity.toUpperCase()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 font-medium mb-1">Submitted Date</p>
-                  <p className="font-semibold text-gray-800">
+                  <p className="text-sm text-gray-600 font-semibold mb-1">Submitted Date</p>
+                  <p className="font-semibold text-gray-900">
                     {new Date(selectedComplaint.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600 font-medium mb-2">Description</p>
+                <p className="text-sm text-gray-600 font-semibold mb-2">Description</p>
                 <p className="text-gray-800 leading-relaxed">{selectedComplaint.description}</p>
               </div>
 
               {selectedComplaint.adminNotes && (
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
                   <p className="text-sm text-gray-700 font-semibold mb-2">Admin Response:</p>
                   <p className="text-gray-800">{selectedComplaint.adminNotes}</p>
                 </div>
               )}
 
               {selectedComplaint.adminAction && selectedComplaint.adminAction !== 'none' && (
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-lg">
                   <p className="text-sm text-gray-700 font-semibold mb-2">Action Taken by Admin:</p>
                   <p className="text-gray-800 font-medium">
                     {selectedComplaint.adminAction.replace('_', ' ').toUpperCase()}
@@ -432,16 +446,16 @@ const Complaints = () => {
               )}
 
               {selectedComplaint.resolvedAt && (
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-gray-600 font-medium">
                   <span className="font-semibold">Resolved on:</span> {new Date(selectedComplaint.resolvedAt).toLocaleDateString()}
                 </div>
               )}
             </div>
 
-            <div className="border-t bg-gray-50 p-6">
+            <div className="border-t border-red-100 bg-gray-50 p-6">
               <button
                 onClick={() => setSelectedComplaint(null)}
-                className="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold transition"
+                className="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-xl font-semibold transition-all duration-300"
               >
                 Close
               </button>

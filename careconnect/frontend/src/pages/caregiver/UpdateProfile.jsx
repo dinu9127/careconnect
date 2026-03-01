@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import { User, Phone, Mail, MapPin, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
-import api from '../../services/api'
+import api, { userService } from '../../services/api'
 
 const UpdateProfile = () => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [activeTab, setActiveTab] = useState('profile') // profile, verification
@@ -25,6 +27,17 @@ const UpdateProfile = () => {
     profilePicture: null,
     profilePicturePreview: ''
   })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [pendingBookings, setPendingBookings] = useState(0)
+  const [unpaidPayments, setUnpaidPayments] = useState(0)
+  const [loadingAccountInfo, setLoadingAccountInfo] = useState(false)
 
   // Verification Documents State
   const [identityData, setIdentityData] = useState({
@@ -70,7 +83,7 @@ const UpdateProfile = () => {
 
   const serviceTypes = [
     'Elderly Care',
-    'Child Care',
+    'Childcare',
     'Hospital Companion Care',
     'Disability Support'
   ]
@@ -90,6 +103,39 @@ const UpdateProfile = () => {
     fetchProfile()
     checkIfNewCaregiver()
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetchAccountInfo()
+    }
+  }, [activeTab])
+
+  const fetchAccountInfo = async () => {
+    try {
+      setLoadingAccountInfo(true)
+      const bookingsResponse = await api.get('/bookings/my-bookings')
+      if (bookingsResponse.data.success) {
+        const bookings = bookingsResponse.data.data || []
+        const pending = bookings.filter(b => 
+          b.status && !['completed', 'cancelled'].includes(b.status.toLowerCase())
+        ).length
+        setPendingBookings(pending)
+      }
+
+      const paymentsResponse = await api.get('/payments/my-payments')
+      if (paymentsResponse.data.success) {
+        const payments = paymentsResponse.data.data || []
+        const unpaid = payments.filter(p => 
+          p.status && ['pending', 'unpaid'].includes(p.status.toLowerCase())
+        ).length
+        setUnpaidPayments(unpaid)
+      }
+    } catch (err) {
+      console.error('Error fetching account info:', err)
+    } finally {
+      setLoadingAccountInfo(false)
+    }
+  }
 
   const checkIfNewCaregiver = () => {
     const params = new URLSearchParams(window.location.search)
@@ -245,7 +291,12 @@ const UpdateProfile = () => {
 
       setMessage('Profile updated successfully!')
       setFormData(prev => ({ ...prev, profilePicture: null }))
-      setTimeout(() => setMessage(''), 3000)
+      
+      // Auto-switch to verification documents tab after successful profile update
+      setTimeout(() => {
+        setActiveTab('verification')
+        setMessage('')
+      }, 1500)
     } catch (error) {
       console.error('Error updating profile:', error)
       console.error('Error response:', error.response?.data)
@@ -273,6 +324,60 @@ const UpdateProfile = () => {
     }
   }
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault()
+    setPasswordMessage({ type: '', text: '' })
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match' })
+      return
+    }
+
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
+    if (!passwordPattern.test(passwordData.newPassword)) {
+      setPasswordMessage({
+        type: 'error',
+        text: 'Password must be at least 6 characters and include uppercase, lowercase, and a number'
+      })
+      return
+    }
+
+    try {
+      setPasswordLoading(true)
+      await userService.changePassword(passwordData)
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully' })
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error) {
+      setPasswordMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update password'
+      })
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      await userService.deleteMe()
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      navigate('/login')
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to delete account'
+      alert(errorMessage)
+      setShowDeleteModal(false)
+    }
+  }
+
   // File validation - only PDF and DOCX
   const validateFileType = (file) => {
     const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
@@ -283,6 +388,39 @@ const UpdateProfile = () => {
     const isAllowedExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
     
     return isAllowedType || isAllowedExtension
+  }
+
+  // ID Number validation based on ID type
+  const validateIdNumber = (idType, idNumber) => {
+    const cleanNumber = idNumber.replace(/\D/g, '')
+    const numberLength = cleanNumber.length
+    const stringLength = idNumber.length
+
+    switch (idType) {
+      case 'National Identity Card':
+        // Sri Lankan NIC: 9 digits + 1 letter (old format) or 12 digits (new format)
+        if (numberLength === 9 || numberLength === 12) {
+          return { valid: true, message: '' }
+        }
+        return { valid: false, message: 'National ID must be 9 digits (old format) or 12 digits (new format)' }
+      
+      case 'Passport':
+        // Passport:  8-10 characters (numbers and letters)
+        if (stringLength >= 6 && stringLength <= 12) {
+          return { valid: true, message: '' }
+        }
+        return { valid: false, message: 'Passport number must be 6-12 characters' }
+      
+      case 'Driving License':
+        // Driving License:  8-10 digits
+        if (numberLength >= 8 && numberLength <= 10) {
+          return { valid: true, message: '' }
+        }
+        return { valid: false, message: 'Driving License must be 8-10 digits' }
+      
+      default:
+        return { valid: false, message: 'Please select a valid ID type' }
+    }
   }
 
   const handleIdentityFileChange = (e) => {
@@ -322,6 +460,23 @@ const UpdateProfile = () => {
     if (!file) {
       setMessage('Please select a file to upload')
       return
+    }
+
+    // Validate ID number if it's an identity document
+    if (docType === 'identity') {
+      if (!data.idType) {
+        setMessage('Please select an ID type')
+        return
+      }
+      if (!data.idNumber) {
+        setMessage('Please enter an ID number')
+        return
+      }
+      const validation = validateIdNumber(data.idType, data.idNumber)
+      if (!validation.valid) {
+        setMessage(validation.message)
+        return
+      }
     }
 
     setLoading(true)
@@ -417,10 +572,10 @@ const UpdateProfile = () => {
 
             {/* Message */}
             {message && (
-              <div className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
                 message.includes('Error') 
-                  ? 'bg-red-100 text-red-800 border border-red-300' 
-                  : 'bg-green-100 text-green-800 border border-green-300'
+                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600' 
+                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
               }`}>
                 {message.includes('Error') ? (
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -433,12 +588,12 @@ const UpdateProfile = () => {
 
             {/* Tabs */}
             {!isNewCaregiverSetup && (
-              <div className="flex gap-4 mb-6 border-b">
+              <div className="flex gap-4 mb-6 border-b-2 border-gray-200">
                 <button
                   onClick={() => setActiveTab('profile')}
-                  className={`px-4 py-2 font-medium border-b-2 transition ${
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
                     activeTab === 'profile'
-                      ? 'border-teal-600 text-teal-600'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
                       : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -446,20 +601,30 @@ const UpdateProfile = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab('verification')}
-                  className={`px-4 py-2 font-medium border-b-2 transition ${
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
                     activeTab === 'verification'
-                      ? 'border-teal-600 text-teal-600'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
                       : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
                 >
                   Verification Documents
+                </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
+                    activeTab === 'settings'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Account Settings
                 </button>
               </div>
             )}
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <form onSubmit={handleProfileSubmit} className="bg-white rounded-lg shadow-md p-8">
+              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
                 {/* Profile Picture Section */}
                 <div className="mb-8 pb-8 border-b">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -471,18 +636,18 @@ const UpdateProfile = () => {
                           <img
                             src={formData.profilePicturePreview}
                             alt="Profile preview"
-                            className="w-32 h-32 rounded-full object-cover border-4 border-teal-600"
+                            className="w-32 h-32 rounded-full object-cover border-4 border-blue-600 shadow-md"
                           />
                           <button
                             type="button"
                             onClick={removeProfilePicture}
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                            className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-all duration-300 shadow-md hover:shadow-lg"
                           >
                             <X className="w-5 h-5" />
                           </button>
                         </div>
                       ) : (
-                        <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-gray-300 flex items-center justify-center">
+                        <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-blue-300 flex items-center justify-center shadow-md">
                           <Camera className="w-12 h-12 text-gray-400" />
                         </div>
                       )}
@@ -553,7 +718,7 @@ const UpdateProfile = () => {
                       placeholder="0771234567"
                       pattern="[0-9]{10}"
                       maxLength="10"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">Enter 10 digit phone number (e.g., 0771234567)</p>
@@ -569,7 +734,7 @@ const UpdateProfile = () => {
                       name="location"
                       value={formData.location}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     >
                       <option value="">Select Location</option>
@@ -590,7 +755,7 @@ const UpdateProfile = () => {
                       name="hourlyRate"
                       value={formData.hourlyRate}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     />
                   </div>
@@ -606,7 +771,7 @@ const UpdateProfile = () => {
                       name="experience"
                       value={formData.experience}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     />
                   </div>
@@ -623,7 +788,7 @@ const UpdateProfile = () => {
                     value={formData.bio}
                     onChange={handleChange}
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                     placeholder="Tell clients about yourself..."
                   />
                 </div>
@@ -638,7 +803,7 @@ const UpdateProfile = () => {
                     name="certifications"
                     value={formData.certifications}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                     placeholder="e.g., First Aid, CPR, Nursing Certificate"
                   />
                 </div>
@@ -652,13 +817,13 @@ const UpdateProfile = () => {
                     {serviceTypes.map(service => (
                       <label
                         key={service}
-                        className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                        className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors duration-200"
                       >
                         <input
                           type="checkbox"
                           checked={formData.serviceTypes.includes(service)}
                           onChange={() => handleServiceTypeToggle(service)}
-                          className="w-4 h-4 text-teal-600 rounded focus:ring-2 focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-600"
                         />
                         <span className="text-gray-700">{service}</span>
                       </label>
@@ -670,7 +835,7 @@ const UpdateProfile = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-8 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400 flex items-center justify-center gap-2"
+                  className="w-full mt-8 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:shadow-none flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -680,16 +845,16 @@ const UpdateProfile = () => {
 
             {/* Verification Tab / Step-by-Step Setup */}
             {(activeTab === 'verification' || isNewCaregiverSetup) && (
-              <div className="bg-white rounded-lg shadow-md p-8">
+              <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
                 {/* Progress Steps */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between">
                     {[1, 2, 3].map(step => (
                       <React.Fragment key={step}>
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition ${
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
                             step <= currentStep
-                              ? 'bg-teal-600 text-white'
+                              ? 'bg-blue-600 text-white shadow-md'
                               : 'bg-gray-300 text-gray-700'
                           }`}
                         >
@@ -697,8 +862,8 @@ const UpdateProfile = () => {
                         </div>
                         {step < 3 && (
                           <div
-                            className={`flex-1 h-1 mx-2 transition ${
-                              step < currentStep ? 'bg-teal-600' : 'bg-gray-300'
+                            className={`flex-1 h-1 mx-2 transition-all duration-300 ${
+                              step < currentStep ? 'bg-blue-600' : 'bg-gray-300'
                             }`}
                           />
                         )}
@@ -706,9 +871,9 @@ const UpdateProfile = () => {
                     ))}
                   </div>
                   <div className="flex justify-between mt-4 text-sm">
-                    <span className={currentStep >= 1 ? 'text-teal-600 font-medium' : 'text-gray-600'}>Identity</span>
-                    <span className={currentStep >= 2 ? 'text-teal-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
-                    <span className={currentStep >= 3 ? 'text-teal-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
+                    <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Identity</span>
+                    <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
+                    <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
                   </div>
                 </div>
 
@@ -728,13 +893,20 @@ const UpdateProfile = () => {
                         <select
                           value={identityData.idType}
                           onChange={(e) => setIdentityData(prev => ({ ...prev, idType: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         >
                           <option value="">Select ID Type</option>
                           {idTypes.map(type => (
                             <option key={type} value={type}>{type}</option>
                           ))}
                         </select>
+                        {identityData.idType && (
+                          <p className="mt-2 text-xs text-gray-600">
+                            {identityData.idType === 'National Identity Card' && '9 digits (old format) or 12 digits (new format)'}
+                            {identityData.idType === 'Passport' && '6-12 characters'}
+                            {identityData.idType === 'Driving License' && '8-10 digits'}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -746,8 +918,27 @@ const UpdateProfile = () => {
                           value={identityData.idNumber}
                           onChange={(e) => setIdentityData(prev => ({ ...prev, idNumber: e.target.value }))}
                           placeholder="Enter your ID number"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors ${
+                            identityData.idNumber 
+                              ? validateIdNumber(identityData.idType, identityData.idNumber).valid
+                                ? 'border-green-500 focus:ring-green-500 bg-green-50'
+                                : 'border-red-500 focus:ring-red-500 bg-red-50'
+                              : 'border-gray-300 focus:ring-blue-600'
+                          }`}
                         />
+                        {identityData.idNumber && (
+                          <p className={`mt-2 text-sm font-medium ${
+                            validateIdNumber(identityData.idType, identityData.idNumber).valid
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`}>
+                            {validateIdNumber(identityData.idType, identityData.idNumber).valid ? (
+                              <>✓ Valid {identityData.idType} format</>
+                            ) : (
+                              <>✗ {validateIdNumber(identityData.idType, identityData.idNumber).message}</>
+                            )}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -769,8 +960,8 @@ const UpdateProfile = () => {
 
                     <button
                       onClick={() => uploadDocument('identity', identityData, identityData.file)}
-                      disabled={loading || !identityData.idType || !identityData.idNumber || !identityData.file}
-                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
+                      disabled={loading || !identityData.idType || !identityData.idNumber || !identityData.file || !validateIdNumber(identityData.idType, identityData.idNumber).valid}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                     >
                       {loading ? 'Uploading...' : 'Upload & Continue'}
                     </button>
@@ -780,9 +971,9 @@ const UpdateProfile = () => {
                 {/* Step 2: NVQ Certification */}
                 {currentStep === 2 && (
                   <div className="space-y-6">
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex gap-3">
-                      <Award className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                      <p className="text-sm text-purple-800">Upload your NVQ certification (PDF or DOCX)</p>
+                    <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 flex gap-3">
+                      <Award className="w-5 h-5 text-sky-600 flex-shrink-0" />
+                      <p className="text-sm text-sky-800">Upload your NVQ certification (PDF or DOCX)</p>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
@@ -793,7 +984,7 @@ const UpdateProfile = () => {
                         <select
                           value={nvqData.level}
                           onChange={(e) => setNvqData(prev => ({ ...prev, level: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         >
                           <option value="">Select Level</option>
                           {nvqLevels.map(level => (
@@ -811,7 +1002,7 @@ const UpdateProfile = () => {
                           value={nvqData.subject}
                           onChange={(e) => setNvqData(prev => ({ ...prev, subject: e.target.value }))}
                           placeholder="e.g., Health and Social Care"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -823,7 +1014,7 @@ const UpdateProfile = () => {
                           type="date"
                           value={nvqData.issueDate}
                           onChange={(e) => setNvqData(prev => ({ ...prev, issueDate: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -835,7 +1026,7 @@ const UpdateProfile = () => {
                           type="date"
                           value={nvqData.expiryDate}
                           onChange={(e) => setNvqData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -848,7 +1039,7 @@ const UpdateProfile = () => {
                           value={nvqData.certificateNumber}
                           onChange={(e) => setNvqData(prev => ({ ...prev, certificateNumber: e.target.value }))}
                           placeholder="Enter certificate number"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -872,14 +1063,14 @@ const UpdateProfile = () => {
                     <div className="flex gap-3">
                       <button
                         onClick={prevStep}
-                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                       >
                         Previous
                       </button>
                       <button
                         onClick={() => uploadDocument('nvq', nvqData, nvqData.file)}
                         disabled={loading || !nvqData.level || !nvqData.subject || !nvqData.issueDate || !nvqData.file}
-                        className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition font-medium"
+                        className="flex-1 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 disabled:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                       >
                         {loading ? 'Uploading...' : 'Upload & Continue'}
                       </button>
@@ -903,7 +1094,7 @@ const UpdateProfile = () => {
                         <select
                           value={professionalData.documentType}
                           onChange={(e) => setProfessionalData(prev => ({ ...prev, documentType: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         >
                           <option value="">Select Type</option>
                           {docTypes.map(type => (
@@ -921,7 +1112,7 @@ const UpdateProfile = () => {
                           value={professionalData.title}
                           onChange={(e) => setProfessionalData(prev => ({ ...prev, title: e.target.value }))}
                           placeholder="e.g., First Aid Training"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -934,7 +1125,7 @@ const UpdateProfile = () => {
                           value={professionalData.issuer}
                           onChange={(e) => setProfessionalData(prev => ({ ...prev, issuer: e.target.value }))}
                           placeholder="e.g., Red Cross"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -946,7 +1137,7 @@ const UpdateProfile = () => {
                           type="date"
                           value={professionalData.issueDate}
                           onChange={(e) => setProfessionalData(prev => ({ ...prev, issueDate: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
 
@@ -958,7 +1149,7 @@ const UpdateProfile = () => {
                           type="date"
                           value={professionalData.expiryDate}
                           onChange={(e) => setProfessionalData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -972,7 +1163,7 @@ const UpdateProfile = () => {
                         onChange={(e) => setProfessionalData(prev => ({ ...prev, description: e.target.value }))}
                         rows="3"
                         placeholder="Add any additional information about this document"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       />
                     </div>
 
@@ -995,14 +1186,14 @@ const UpdateProfile = () => {
                     <div className="flex gap-3">
                       <button
                         onClick={prevStep}
-                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+                        className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                       >
                         Previous
                       </button>
                       <button
                         onClick={() => uploadDocument('professional', professionalData, professionalData.file)}
                         disabled={loading || !professionalData.documentType || !professionalData.title || !professionalData.issuer || !professionalData.file}
-                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition font-medium"
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                       >
                         {loading ? 'Uploading...' : 'Upload & Finish'}
                       </button>
@@ -1011,7 +1202,7 @@ const UpdateProfile = () => {
                     {isNewCaregiverSetup && (
                       <button
                         onClick={completeSetup}
-                        className="w-full mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium"
+                        className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
                       >
                         Complete Setup
                       </button>
@@ -1020,9 +1211,79 @@ const UpdateProfile = () => {
                 )}
               </div>
             )}
+
+            {/* Account Settings Tab */}
+            {activeTab === 'settings' && (
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">Account Settings</h3>
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                  <h4 className="text-sm font-semibold text-gray-700">Change Password</h4>
+
+                  {passwordMessage.text && (
+                    <div className={`rounded-lg px-4 py-3 text-sm border-t-4 transition-all duration-300 ${
+                      passwordMessage.type === 'error'
+                        ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600'
+                        : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+                    }`}>
+                      {passwordMessage.text}
+                    </div>
+                  )}
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={passwordData.currentPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    Password must be at least 6 characters and include uppercase, lowercase, and a number.
+                  </p>
+
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-60 disabled:shadow-none font-medium"
+                  >
+                    {passwordLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              </div>
+
+            )}
           </div>
         </main>
       </div>
+
     </div>
   )
 }

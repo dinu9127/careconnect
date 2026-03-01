@@ -155,26 +155,23 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-blue-50">
       {/* Navigation */}
-      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
+      <nav className="sticky top-0 z-40 bg-white/85 backdrop-blur-2xl border-b border-slate-200/60 shadow-md">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img
               src="/images/logo/careconnectlogo.png"
               alt="CareConnect logo"
               className="h-9 w-auto select-none"
               loading="eager"
             />
-            <span className="text-xl font-bold text-slate-900">CareConnect</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">CareConnect</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/login" className="text-slate-700 hover:text-teal-600 font-medium transition">
-              Sign In
-            </Link>
             <Link
-              to="/register"
-              className=" gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+              to="/login"
+              className="inline-flex gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
             >
-              Get Started
+              Sign Up
             </Link>
           </div>
         </div>
@@ -206,7 +203,7 @@ const Home = () => {
 
             <div className="flex flex-wrap gap-4 mb-10">
               <Link
-                to="/register"
+                to="/login"
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-7 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-105"
               >
                 Start Finding Care
@@ -238,18 +235,8 @@ const Home = () => {
                 className="w-full max-h-[620px] rounded-3xl shadow-2xl ring-1 ring-slate-200 object-cover"
                 loading="lazy"
               />
-              {/* Floating stat cards */}
-              <div className="absolute -bottom-8 -left-4 bg-white rounded-2xl shadow-xl p-4 border border-slate-100">
-                <div className="text-2xl font-bold text-indigo-700">500+</div>
-                <div className="text-xs text-slate-600">Verified caregivers</div>
-              </div>
-              <div className="absolute top-12 -right-6 bg-white rounded-2xl shadow-xl p-4 border border-slate-100 flex items-center gap-3">
-                <Star className="w-5 h-5 text-orange-500 fill-orange-500" />
-                <div>
-                  <div className="text-sm font-bold text-slate-900">4.8</div>
-                  <div className="text-xs text-slate-600">User rating</div>
-                </div>
-              </div>
+              
+              
             </div>
           </div>
         </div>
@@ -415,7 +402,7 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/register"
+                to="/login"
                 className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 font-semibold px-8 py-4 rounded-lg transition transform hover:scale-105"
               >
                 Get Started Now

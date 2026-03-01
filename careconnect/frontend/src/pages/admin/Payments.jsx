@@ -110,38 +110,6 @@ const Payments = () => {
               <p className="text-gray-600">View and manage all payments</p>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600 text-sm">Total Revenue</p>
-                  <DollarSign className="w-5 h-5 text-blue-600" />
-                </div>
-                <p className="text-3xl font-bold text-gray-800">${stats.total.toFixed(2)}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600 text-sm">Paid</p>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <p className="text-3xl font-bold text-green-600">${stats.paid.toFixed(2)}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600 text-sm">Pending</p>
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                </div>
-                <p className="text-3xl font-bold text-yellow-600">${stats.pending.toFixed(2)}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-gray-600 text-sm">Unpaid</p>
-                  <X className="w-5 h-5 text-red-600" />
-                </div>
-                <p className="text-3xl font-bold text-red-600">${stats.unpaid.toFixed(2)}</p>
-              </div>
-            </div>
-
             {message.text && (
               <div className={`mb-6 p-4 rounded-lg ${
                 message.type === 'error'
@@ -178,16 +146,6 @@ const Payments = () => {
                 }`}
               >
                 Paid
-              </button>
-              <button
-                onClick={() => setFilter('pending')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  filter === 'pending'
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-white text-yellow-600 border border-yellow-300 hover:border-yellow-400'
-                }`}
-              >
-                Pending Verification
               </button>
               <button
                 onClick={() => setFilter('unpaid')}

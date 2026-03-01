@@ -5,6 +5,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from '../pages/Home'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
+import ForgotPassword from '../pages/auth/ForgotPassword'
+import ResetPassword from '../pages/auth/ResetPassword'
 import Profile from '../pages/Profile'
 import ClientDashboard from '../pages/client/Dashboard'
 import Caregivers from '../pages/client/Caregivers'
@@ -20,6 +22,7 @@ import AdminPayments from '../pages/admin/Payments'
 import AdminUsers from '../pages/admin/Users'
 import AdminCaregivers from '../pages/admin/Caregivers'
 import AdminReports from '../pages/admin/Reports'
+import AdminProfile from '../pages/admin/AdminProfile'
 
 const AppRoutes = () => {
   return (
@@ -28,6 +31,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* Profile Route */}
       <Route path="/profile" element={<Profile />} />
@@ -48,6 +53,7 @@ const AppRoutes = () => {
 
       {/* Admin Routes */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/profile" element={<AdminProfile />} />
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/caregivers" element={<AdminCaregivers />} />
       <Route path="/admin/complaints" element={<AdminComplaints />} />

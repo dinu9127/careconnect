@@ -182,10 +182,8 @@ const Bookings = () => {
         return 'bg-yellow-100 text-yellow-800'
       case 'confirmed':
         return 'bg-blue-100 text-blue-800'
-      case 'in-progress':
-        return 'bg-purple-100 text-purple-800'
       case 'completed':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-green-100 text-green-800'
       case 'cancelled':
         return 'bg-red-100 text-red-800'
       default:
@@ -207,26 +205,26 @@ const Bookings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50">
       <Navbar />
       <div className="flex">
         <Sidebar role="client" />
         <main className="flex-1 p-8">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">My Bookings</h1>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">My Bookings</h1>
               <p className="text-gray-600">View and manage your caregiver bookings</p>
             </div>
 
             {message.text && (
-              <div className={`mb-6 p-4 rounded-lg ${
+              <div className={`mb-6 p-4 rounded-xl border-l-4 ${
                 message.type === 'error'
-                  ? 'bg-red-100 text-red-800 border border-red-300'
-                  : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  ? 'bg-red-50 text-red-800 border-red-300'
+                  : 'bg-teal-50 text-teal-800 border-teal-300'
               }`}>
                 <div className="flex justify-between items-start">
-                  <p>{message.text}</p>
-                  <button onClick={() => setMessage({ type: '', text: '' })}>
+                  <p className="font-medium">{message.text}</p>
+                  <button onClick={() => setMessage({ type: '', text: '' })} className="text-gray-500 hover:text-gray-700">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -234,50 +232,50 @@ const Bookings = () => {
             )}
 
             {loading ? (
-              <div className="text-center py-12">
+              <div className="text-center py-16">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
-                <p className="mt-4 text-gray-600">Loading bookings...</p>
+                <p className="mt-4 text-gray-600 font-medium">Loading bookings...</p>
               </div>
             ) : bookings.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">No Bookings Yet</h3>
+              <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-teal-100">
+                <Calendar className="w-16 h-16 text-teal-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
                 <p className="text-gray-600">You haven't made any bookings yet. Start by finding a caregiver!</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <div key={booking._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                  <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-teal-100 hover:border-teal-300">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-xl font-semibold text-gray-800">
+                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                          <h3 className="text-xl font-bold text-gray-900">
                             {booking.caregiver?.user?.name || 'Caregiver'}
                           </h3>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
                             {booking.status.toUpperCase()}
                           </span>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
                             {booking.paymentStatus.toUpperCase()}
                           </span>
                         </div>
 
                         <div className="space-y-2 text-gray-600">
                           <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-4 h-4 text-teal-600" />
                             <span>
                               {new Date(booking.startDate).toLocaleDateString()} - {new Date(booking.endDate).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-4 h-4 text-teal-600" />
                             <span>{booking.startTime} - {booking.endTime}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4" />
-                            <span className="font-semibold text-teal-600">Rs. {booking.totalAmount}</span>
+                            <DollarSign className="w-4 h-4 text-teal-600" />
+                            <span className="font-semibold text-teal-700">Rs. {booking.totalAmount}</span>
                             {booking.paymentMethod !== 'none' && (
-                              <span className="text-sm">
+                              <span className="text-sm text-gray-500">
                                 ({booking.paymentMethod.replace('_', ' ').toUpperCase()})
                               </span>
                             )}
@@ -285,16 +283,16 @@ const Bookings = () => {
                         </div>
 
                         <div className="mt-3">
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-700">
                             <span className="font-semibold">Service:</span> {booking.serviceType}
                           </p>
                           {booking.notes && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-700 mt-1">
                               <span className="font-semibold">Notes:</span> {booking.notes}
                             </p>
                           )}
                           {booking.transactionId && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-700 mt-1">
                               <span className="font-semibold">Transaction ID:</span> {booking.transactionId}
                             </p>
                           )}
@@ -305,7 +303,7 @@ const Bookings = () => {
                         {booking.status === 'completed' && booking.paymentStatus === 'unpaid' && (
                           <button
                             onClick={() => handlePayment(booking)}
-                            className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                            className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
                             <CreditCard className="w-4 h-4" />
                             Continue Payment
@@ -315,7 +313,7 @@ const Bookings = () => {
                         {booking.status === 'completed' && booking.paymentStatus === 'paid' && !booking.hasReview && (
                           <button
                             onClick={() => handleReview(booking)}
-                            className="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition"
+                            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
                             <Star className="w-4 h-4" />
                             Rate & Review
@@ -323,31 +321,31 @@ const Bookings = () => {
                         )}
 
                         {booking.hasReview && (
-                          <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-sm">
-                            <div className="flex items-center gap-2 text-green-800">
-                              <Star className="w-4 h-4 fill-green-800" />
-                              <span className="font-semibold">Review Submitted</span>
+                          <div className="bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm">
+                            <div className="flex items-center gap-2 text-teal-800 font-medium">
+                              <Star className="w-4 h-4 fill-teal-800" />
+                              <span>Review Submitted</span>
                             </div>
                           </div>
                         )}
 
                         {booking.paymentStatus === 'pending' && (
-                          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 text-sm">
-                            <div className="flex items-center gap-2 text-yellow-800">
+                          <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-3 text-sm">
+                            <div className="flex items-center gap-2 text-yellow-800 font-medium">
                               <AlertCircle className="w-4 h-4" />
-                              <span className="font-semibold">Payment Pending Verification</span>
+                              <span>Payment Pending Verification</span>
                             </div>
                           </div>
                         )}
 
                         {booking.paymentStatus === 'paid' && (
-                          <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-sm">
-                            <div className="flex items-center gap-2 text-green-800">
+                          <div className="bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm">
+                            <div className="flex items-center gap-2 text-teal-800 font-medium">
                               <CheckCircle className="w-4 h-4" />
-                              <span className="font-semibold">Payment Completed</span>
+                              <span>Payment Completed</span>
                             </div>
                             {booking.paymentDate && (
-                              <p className="text-xs text-green-700 mt-1">
+                              <p className="text-xs text-teal-700 mt-1">
                                 Paid on {new Date(booking.paymentDate).toLocaleDateString()}
                               </p>
                             )}
@@ -366,68 +364,68 @@ const Bookings = () => {
       {/* Payment Modal */}
       {showPaymentModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-96 overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Payment</h2>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-96 overflow-y-auto border border-teal-100">
+            <div className="sticky top-0 bg-gradient-to-r from-teal-50 to-teal-50 border-b border-teal-100 p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Payment</h2>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-1 transition"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 mb-1">Amount to Pay</p>
-                <p className="text-3xl font-bold text-teal-600">Rs. {selectedBooking.totalAmount}</p>
+              <div className="bg-teal-50 rounded-xl p-4 mb-6 border border-teal-200">
+                <p className="text-sm text-gray-600 font-medium mb-1">Amount to Pay</p>
+                <p className="text-3xl font-bold text-teal-700">Rs. {selectedBooking.totalAmount}</p>
               </div>
 
               <form onSubmit={handleSubmitPayment}>
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Card Number</label>
                     <input
                       type="text"
                       name="cardNumber"
                       value={cardDetails.cardNumber}
                       onChange={handleCardInputChange}
                       placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cardholder Name</label>
                     <input
                       type="text"
                       name="cardName"
                       value={cardDetails.cardName}
                       onChange={handleCardInputChange}
                       placeholder="JOHN DOE"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Expiry Date</label>
                       <input
                         type="text"
                         name="expiryDate"
                         value={cardDetails.expiryDate}
                         onChange={handleCardInputChange}
                         placeholder="MM/YY"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
                       <input
                         type="text"
                         name="cvv"
                         value={cardDetails.cvv}
                         onChange={handleCardInputChange}
                         placeholder="123"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       />
                     </div>
                   </div>
@@ -436,7 +434,7 @@ const Bookings = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
+                  className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Processing...' : `Pay Rs. ${selectedBooking.totalAmount}`}
                 </button>
@@ -449,21 +447,21 @@ const Bookings = () => {
       {/* Review Modal */}
       {showReviewModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-6 flex justify-between items-center rounded-t-lg">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-amber-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-6 flex justify-between items-center">
               <h2 className="text-2xl font-bold">Rate & Review</h2>
               <button
                 onClick={() => setShowReviewModal(false)}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2"
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 mb-1">Caregiver</p>
-                <p className="text-lg font-bold text-gray-800">{selectedBooking.caregiver?.user?.name}</p>
+              <div className="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-200">
+                <p className="text-sm text-gray-600 font-medium mb-1">Caregiver</p>
+                <p className="text-lg font-bold text-gray-900">{selectedBooking.caregiver?.user?.name}</p>
                 <p className="text-sm text-gray-600 mt-1">{selectedBooking.serviceType}</p>
               </div>
 
@@ -471,7 +469,7 @@ const Bookings = () => {
                 <div className="space-y-6">
                   {/* Star Rating */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
                       How was your experience? *
                     </label>
                     <div className="flex gap-2 justify-center">
@@ -480,12 +478,12 @@ const Bookings = () => {
                           key={star}
                           type="button"
                           onClick={() => handleRatingClick(star)}
-                          className="transition-transform hover:scale-110"
+                          className="transition-transform hover:scale-110 active:scale-95"
                         >
                           <Star
                             className={`w-10 h-10 ${
                               star <= reviewData.rating
-                                ? 'fill-yellow-400 text-yellow-400'
+                                ? 'fill-amber-400 text-amber-400'
                                 : 'text-gray-300'
                             }`}
                           />
@@ -493,7 +491,7 @@ const Bookings = () => {
                       ))}
                     </div>
                     {reviewData.rating > 0 && (
-                      <p className="text-center text-sm text-gray-600 mt-2">
+                      <p className="text-center text-sm text-gray-600 mt-2 font-medium">
                         {reviewData.rating === 1 && 'Poor'}
                         {reviewData.rating === 2 && 'Fair'}
                         {reviewData.rating === 3 && 'Good'}
@@ -505,7 +503,7 @@ const Bookings = () => {
 
                   {/* Review Text */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Share your experience (Optional)
                     </label>
                     <textarea
@@ -513,7 +511,7 @@ const Bookings = () => {
                       onChange={(e) => setReviewData(prev => ({ ...prev, reviewText: e.target.value }))}
                       rows="4"
                       placeholder="Tell us about your experience with this caregiver..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition resize-none"
                     />
                   </div>
                 </div>
@@ -522,14 +520,14 @@ const Bookings = () => {
                   <button
                     type="button"
                     onClick={() => setShowReviewModal(false)}
-                    className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting || reviewData.rating === 0}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? 'Submitting...' : 'Submit Review'}
                   </button>

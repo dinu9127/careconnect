@@ -42,6 +42,8 @@ export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/profile'),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (token, data) => api.put(`/auth/reset-password/${token}`, data),
 }
 
 export const userService = {
@@ -49,12 +51,28 @@ export const userService = {
   getUserById: (id) => api.get(`/users/${id}`),
   updateUser: (id, data) => api.put(`/users/${id}`, data),
   deleteUser: (id) => api.delete(`/users/${id}`),
+  deleteMe: () => api.delete('/users/me'),
+  changePassword: (data) => api.put('/users/me/password', data),
 }
 
 export const caregiverService = {
   getCaregivers: () => api.get('/caregivers'),
   getCaregiverById: (id) => api.get(`/caregivers/${id}`),
   updateCaregiver: (id, data) => api.put(`/caregivers/${id}`, data),
+  uploadProfileImage: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/caregivers/me/profile-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  uploadVerificationDocument: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/caregivers/me/verification-document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
 }
 
 export const bookingService = {

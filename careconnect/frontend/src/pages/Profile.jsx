@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
+import { userService } from '../services/api'
 
 const Profile = () => {
   const navigate = useNavigate()
@@ -13,6 +14,14 @@ const Profile = () => {
     phone: '',
     address: ''
   })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   useEffect(() => {
     // Get user data from localStorage
@@ -65,6 +74,60 @@ const Profile = () => {
       address: userData.address || ''
     })
     setIsEditing(false)
+  }
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault()
+    setPasswordMessage({ type: '', text: '' })
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New password and confirmation do not match' })
+      return
+    }
+
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
+    if (!passwordPattern.test(passwordData.newPassword)) {
+      setPasswordMessage({
+        type: 'error',
+        text: 'Password must be at least 6 characters and include uppercase, lowercase, and a number'
+      })
+      return
+    }
+
+    try {
+      setPasswordLoading(true)
+      await userService.changePassword(passwordData)
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully' })
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error) {
+      setPasswordMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update password'
+      })
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      await userService.deleteMe()
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      navigate('/login')
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to delete account'
+      alert(errorMessage)
+      setShowDeleteModal(false)
+    }
   }
 
   if (!userData) {
@@ -215,22 +278,108 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Account Settings */}
-        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Account Settings</h3>
-          <div className="space-y-4">
-            <button className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition text-slate-700">
-              Change Password
-            </button>
-            <button className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition text-slate-700">
-              Notification Preferences
-            </button>
-            <button className="w-full text-left px-4 py-3 bg-red-50 hover:bg-red-100 rounded-lg transition text-red-600">
-              Delete Account
-            </button>
+        {userData?.role === 'caregiver' && (
+          <div className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Account Settings</h3>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-700">Change Password</h4>
+
+              {passwordMessage.text && (
+                <div className={`rounded-lg px-4 py-3 text-sm ${
+                  passwordMessage.type === 'error'
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-green-50 text-green-700 border border-green-200'
+                }`}>
+                  {passwordMessage.text}
+                </div>
+              )}
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500">
+                Password must be at least 6 characters and include uppercase, lowercase, and a number.
+              </p>
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
+                >
+                  {passwordLoading ? 'Updating...' : 'Update Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900">Delete Account</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Are you sure you want to delete your caregiver account? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

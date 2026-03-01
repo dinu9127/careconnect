@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { User, LogOut } from 'lucide-react'
 
 const Navbar = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -18,47 +20,47 @@ const Navbar = () => {
     navigate('/login')
   }
 
-  const getDashboardLink = () => {
-    if (!user) return '/'
-    switch (user.role) {
-      case 'admin':
-        return '/admin/dashboard'
-      case 'caregiver':
-        return '/caregiver/dashboard'
-      case 'client':
-      default:
-        return '/client/dashboard'
-    }
+  const getProfileLink = () => {
+    const role = user?.role?.toLowerCase()
+
+    if (role === 'caregiver' || location.pathname.startsWith('/caregiver')) return '/caregiver/profile'
+    if (role === 'admin' || location.pathname.startsWith('/admin')) return '/admin/profile'
+    if (role === 'client' || location.pathname.startsWith('/client')) return '/profile'
+
+    return '/profile'
   }
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-slate-900 shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to={getDashboardLink()} className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
             <img src="/images/logo/careconnectlogo.png" alt="CareConnect" className="h-8 w-auto" />
-            <span className="text-2xl font-bold text-blue-600">CareConnect</span>
+            <span className="text-2xl font-bold text-white">CareConnect</span>
           </Link>
           
           <div className="flex items-center gap-6">
-            {user && user.role === 'client' && (
-              <Link 
-                to="/client/caregivers" 
-                className="text-gray-700 hover:text-blue-600 font-medium transition"
-              >
-                Find Caregivers
-              </Link>
+            {user && (
+              <div className="flex items-center gap-4">
+                <span className="text-gray-200 text-sm">
+                  Welcome, <span className="font-semibold text-white">{user.name}</span>
+                </span>
+                <Link 
+                  to={getProfileLink()} 
+                  className="text-gray-100 hover:text-white transition-colors duration-200 hover:scale-110"
+                  aria-label="Profile"
+                  title="Profile"
+                >
+                  <User className="w-5 h-5" aria-hidden="true" />
+                </Link>
+              </div>
             )}
-            <Link 
-              to="/profile" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition"
-            >
-              Profile
-            </Link>
             <button 
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition"
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
               onClick={handleLogout}
+              title="Logout"
             >
+              <LogOut className="w-4 h-4" />
               Logout
             </button>
           </div>

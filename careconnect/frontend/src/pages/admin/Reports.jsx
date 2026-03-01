@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import { userService, caregiverService, bookingService, complaintService } from '../../services/api'
-import jsPDF from 'jspdf'
+import jsPDF from 'jsPDF'
+import { Users, ShieldCheck, BookOpen, AlertCircle, FileText, TrendingUp } from 'lucide-react'
 
 const AdminReports = () => {
   const [loading, setLoading] = useState(true)
@@ -148,63 +149,133 @@ const AdminReports = () => {
             </div>
           ) : (
             <>
-              <div className="grid md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-white p-5 rounded-lg shadow-md">
-                  <h3 className="text-sm text-gray-500">Users</h3>
-                  <p className="text-3xl font-bold text-blue-600">{stats.totalUsers}</p>
-                  <p className="text-sm text-gray-500">Admins: {stats.totalAdmins}</p>
-                  <p className="text-sm text-gray-500">Caregivers: {stats.totalCaregiverUsers}</p>
-                  <p className="text-sm text-gray-500">Clients: {stats.totalClients}</p>
+              {/* Main Stats Cards */}
+              <div className="grid md:grid-cols-4 gap-4 mb-8">
+                {/* Users Card */}
+                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium">Total Users</p>
+                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.totalUsers}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-blue-500 opacity-60" />
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600 mt-4">
+                    <p>Admins: {stats.totalAdmins}</p>
+                    <p>Caregivers: {stats.totalCaregiverUsers}</p>
+                    <p>Clients: {stats.totalClients}</p>
+                  </div>
                 </div>
-                <div className="bg-white p-5 rounded-lg shadow-md">
-                  <h3 className="text-sm text-gray-500">Caregivers</h3>
-                  <p className="text-3xl font-bold text-purple-600">{stats.totalCaregiverProfiles}</p>
-                  <p className="text-sm text-gray-500">Verified: {stats.verifiedCaregivers}</p>
-                  <p className="text-sm text-gray-500">Pending: {stats.pendingCaregivers}</p>
+
+                {/* Caregivers Card */}
+                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-purple-500">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium">Caregiver Profiles</p>
+                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.totalCaregiverProfiles}</p>
+                    </div>
+                    <ShieldCheck className="w-8 h-8 text-purple-500 opacity-60" />
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600 mt-4">
+                    <p>Verified: {stats.verifiedCaregivers}</p>
+                    <p>Pending: {stats.pendingCaregivers}</p>
+                  </div>
                 </div>
-                <div className="bg-white p-5 rounded-lg shadow-md">
-                  <h3 className="text-sm text-gray-500">Bookings</h3>
-                  <p className="text-3xl font-bold text-orange-600">{stats.activeBookings}</p>
-                  <p className="text-sm text-gray-500">Open Complaints: {stats.openComplaints}</p>
+
+                {/* Bookings Card */}
+                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-orange-500">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium">Active Bookings</p>
+                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.activeBookings}</p>
+                    </div>
+                    <BookOpen className="w-8 h-8 text-orange-500 opacity-60" />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">Current active and pending</p>
+                </div>
+
+                {/* Complaints Card */}
+                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-red-500">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium">Open Complaints</p>
+                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.openComplaints}</p>
+                    </div>
+                    <AlertCircle className="w-8 h-8 text-red-500 opacity-60" />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">Require attention</p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Bookings</h2>
-                  {data.bookings.length === 0 ? (
-                    <p className="text-gray-600">No bookings available</p>
-                  ) : (
-                    <ul className="space-y-3 max-h-80 overflow-auto">
-                      {data.bookings.slice(0, 8).map((booking) => (
-                        <li key={booking._id} className="border-b border-gray-100 pb-3">
-                          <div className="text-sm font-semibold text-gray-800">
-                            {booking.client?.name || 'Client'} ➜ {booking.caregiver?.user?.name || 'Caregiver'}
-                          </div>
-                          <div className="text-xs text-gray-500 capitalize">Status: {booking.status || 'N/A'}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">Open Complaints</h2>
-                  {stats.openComplaints === 0 ? (
-                    <p className="text-blue-600 font-semibold">No open complaints</p>
-                  ) : (
-                    <ul className="space-y-3 max-h-80 overflow-auto">
-                      {data.complaints
-                        .filter((c) => c.status === 'open')
-                        .slice(0, 8)
-                        .map((complaint) => (
-                          <li key={complaint._id} className="border-b border-gray-100 pb-3">
-                            <div className="text-sm font-semibold text-gray-800">{complaint.title || 'Complaint'}</div>
-                            <div className="text-xs text-gray-500">Severity: {complaint.severity || 'medium'}</div>
+                {/* Recent Bookings */}
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-orange-600" />
+                      <h2 className="text-lg font-bold text-gray-800">Recent Bookings</h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {data.bookings.length === 0 ? (
+                      <p className="text-gray-600">No bookings available</p>
+                    ) : (
+                      <ul className="space-y-3 max-h-96 overflow-auto">
+                        {data.bookings.slice(0, 8).map((booking) => (
+                          <li key={booking._id} className="border-l-4 border-orange-300 pl-4 py-2">
+                            <div className="text-sm font-semibold text-gray-800">
+                              {booking.client?.name || 'Client'} ➜ {booking.caregiver?.user?.name || 'Caregiver'}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                                booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {booking.status || 'N/A'}
+                              </span>
+                            </div>
                           </li>
                         ))}
-                    </ul>
-                  )}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* Open Complaints */}
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                      <h2 className="text-lg font-bold text-gray-800">Open Complaints</h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {stats.openComplaints === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-lg text-green-600 font-semibold">✓ No open complaints</p>
+                        <p className="text-xs text-gray-500 mt-2">All issues resolved</p>
+                      </div>
+                    ) : (
+                      <ul className="space-y-3 max-h-96 overflow-auto">
+                        {data.complaints
+                          .filter((c) => c.status === 'open')
+                          .slice(0, 8)
+                          .map((complaint) => (
+                            <li key={complaint._id} className="border-l-4 border-red-300 pl-4 py-2">
+                              <div className="text-sm font-semibold text-gray-800">{complaint.title || 'Complaint'}</div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-xs px-2 py-1 rounded font-medium ${
+                                  complaint.severity === 'high' ? 'bg-red-100 text-red-700' :
+                                  complaint.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {complaint.severity || 'medium'} priority
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
             </>

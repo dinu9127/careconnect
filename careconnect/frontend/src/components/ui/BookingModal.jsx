@@ -18,12 +18,27 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [bookedDates, setBookedDates] = useState([])
 
   const userData = caregiver?.user || {}
+  const serviceTypes = caregiver?.serviceTypes || []
 
   useEffect(() => {
     if (isOpen && caregiver) {
       fetchBookedDates()
     }
   }, [isOpen, caregiver])
+
+  useEffect(() => {
+    if (serviceTypes.length === 1) {
+      setFormData(prev => ({
+        ...prev,
+        serviceType: serviceTypes[0]
+      }))
+    } else if (serviceTypes.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        serviceType: prev.serviceType && serviceTypes.includes(prev.serviceType) ? prev.serviceType : ''
+      }))
+    }
+  }, [serviceTypes])
 
   const fetchBookedDates = async () => {
     try {
@@ -180,10 +195,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     today.setHours(0, 0, 0, 0)
     if (date < today) return false
     if (isDateBooked(date)) return false
-    
-    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]
-    const hasAvailability = caregiver.availability?.some(avail => avail.day === dayName)
-    return hasAvailability
+    return true
   }
 
   const handleDateClick = (date) => {
@@ -250,18 +262,26 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     return date >= start && date <= end
   }
 
-  // Calculate estimated total
-  const calculateTotal = () => {
+  const calculateDays = () => {
     if (!formData.startDate || !formData.endDate) return 0
     const startDate = new Date(formData.startDate)
     const endDate = new Date(formData.endDate)
-    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
-    
+    return Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
+  }
+
+  const calculateHoursPerDay = () => {
+    if (!formData.startTime || !formData.endTime) return 0
     const [startHour, startMin] = formData.startTime.split(':').map(Number)
     const [endHour, endMin] = formData.endTime.split(':').map(Number)
-    const hours = (endHour - startHour) + (endMin - startMin) / 60
-    
-    return days * hours * caregiver.hourlyRate
+    return Math.max(0, (endHour - startHour) + (endMin - startMin) / 60)
+  }
+
+  const calculateCostPerDay = () => {
+    return calculateHoursPerDay() * caregiver.hourlyRate
+  }
+
+  const calculateTotal = () => {
+    return calculateDays() * calculateHoursPerDay() * caregiver.hourlyRate
   }
 
   return (
@@ -302,8 +322,10 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
-              <option value="">Select a service type</option>
-              {caregiver.serviceTypes?.map((service) => (
+              {serviceTypes.length > 1 && (
+                <option value="">Select a service type</option>
+              )}
+              {serviceTypes.map((service) => (
                 <option key={service} value={service}>
                   {service}
                 </option>
@@ -496,7 +518,13 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               <span className="font-semibold">Rs. {caregiver.hourlyRate}</span>
             </div>
             <div className="border-t border-slate-200 pt-2 flex justify-between">
-              <span className="font-semibold text-slate-900">Estimated Total:</span>
+              <span className="font-semibold text-slate-900">Cost per day:</span>
+              <span className="text-lg font-bold text-teal-600">
+                Rs. {Math.round(calculateCostPerDay()).toLocaleString()}
+              </span>
+            </div>
+            <div className="border-t border-slate-200 pt-2 mt-2 flex justify-between">
+              <span className="font-semibold text-slate-900">Total Cost:</span>
               <span className="text-lg font-bold text-teal-600">
                 Rs. {Math.round(calculateTotal()).toLocaleString()}
               </span>

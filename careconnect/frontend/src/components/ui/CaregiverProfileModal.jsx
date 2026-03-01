@@ -99,34 +99,13 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
             </div>
           </div>
 
-          {/* About */}
+          {/* Bio */}
           {caregiver.bio && (
             <div className="mb-8 pb-8 border-b border-slate-200">
               <h4 className="text-lg font-bold text-slate-900 mb-3">About</h4>
               <p className="text-slate-700">{caregiver.bio}</p>
             </div>
           )}
-
-          {/* Availability */}
-          <div className="mb-8">
-            <h4 className="text-lg font-bold text-slate-900 mb-4">Availability</h4>
-            <div className="bg-slate-50 p-4 rounded-lg">
-              {caregiver.availability && caregiver.availability.length > 0 ? (
-                <div className="space-y-2">
-                  {caregiver.availability.map((avail, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-teal-600" />
-                      <span className="text-slate-700">
-                        <strong>{avail.day}</strong>: {avail.startTime} - {avail.endTime}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-600">No availability information</p>
-              )}
-            </div>
-          </div>
 
           {/* Certifications */}
           {caregiver.certifications && caregiver.certifications.length > 0 && (

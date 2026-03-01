@@ -30,11 +30,29 @@ const Schedule = () => {
     }
   }
 
-  const updateBookingStatus = async (bookingId, newStatus) => {
+  const updateBookingStatus = async (booking, newStatus) => {
+    if (newStatus === 'cancelled') {
+      const confirmCancel = window.confirm('Are you sure you want to cancel this booking?')
+      if (!confirmCancel) {
+        return
+      }
+    }
+
     try {
-      setUpdatingId(bookingId)
-      const response = await api.put(`/bookings/${bookingId}`, { status: newStatus })
-      setBookings(bookings.map(b => b._id === bookingId ? response.data.data : b))
+      setUpdatingId(booking._id)
+      const updatePayload = { status: newStatus }
+
+      if (newStatus === 'cancelled' && booking.status === 'confirmed') {
+        const reason = window.prompt('Please enter a cancellation reason (required):', '')
+        if (!reason || !reason.trim()) {
+          setUpdatingId(null)
+          return
+        }
+        updatePayload.cancellationReason = reason.trim()
+      }
+
+      const response = await api.put(`/bookings/${booking._id}`, updatePayload)
+      setBookings(bookings.map(b => b._id === booking._id ? response.data.data : b))
       setMessage({
         type: 'success',
         text: `Booking ${newStatus} successfully`
@@ -56,8 +74,6 @@ const Schedule = () => {
         return { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300' }
       case 'confirmed':
         return { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' }
-      case 'in-progress':
-        return { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' }
       case 'completed':
         return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' }
       case 'cancelled':
@@ -98,53 +114,53 @@ const Schedule = () => {
 
             {/* Stats Cards */}
             <div className="grid md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
                     <p className="text-3xl font-bold text-blue-600">{bookings.length}</p>
                   </div>
-                  <Calendar className="w-8 h-8 text-blue-300" />
+                  <Calendar className="w-8 h-8 text-blue-400" />
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-sky-500 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Upcoming</p>
-                    <p className="text-3xl font-bold text-purple-600">{upcomingBookings}</p>
+                    <p className="text-3xl font-bold text-sky-600">{upcomingBookings}</p>
                   </div>
-                  <Clock className="w-8 h-8 text-purple-300" />
+                  <Clock className="w-8 h-8 text-sky-400" />
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-green-600 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Completed</p>
                     <p className="text-3xl font-bold text-green-600">{completedBookings}</p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-green-300" />
+                  <CheckCircle className="w-8 h-8 text-green-400" />
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-orange-600 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Total Hours</p>
                     <p className="text-3xl font-bold text-orange-600">{totalHours.toFixed(1)}</p>
                   </div>
-                  <Clock className="w-8 h-8 text-orange-300" />
+                  <Clock className="w-8 h-8 text-orange-400" />
                 </div>
               </div>
             </div>
 
             {/* Message */}
             {message.text && (
-              <div className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
                 message.type === 'error'
-                  ? 'bg-red-100 text-red-800 border border-red-300'
-                  : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600'
+                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
               }`}>
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <p>{message.text}</p>
@@ -152,14 +168,14 @@ const Schedule = () => {
             )}
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 mb-6 border-b">
-              {['all', 'pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map(status => (
+            <div className="flex gap-2 mb-6 border-b-2 border-gray-200">
+              {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(status => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-2 font-medium border-b-2 transition ${
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
                     filterStatus === status
-                      ? 'border-teal-600 text-teal-600'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
                       : 'border-transparent text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -171,11 +187,11 @@ const Schedule = () => {
             {/* Loading State */}
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
                 <p className="mt-4 text-gray-600">Loading schedule...</p>
               </div>
             ) : filteredBookings.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <div className="bg-white rounded-xl shadow-md p-12 text-center border-t-4 border-t-blue-600">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">No Bookings</h3>
                 <p className="text-gray-600">
@@ -272,7 +288,7 @@ const Schedule = () => {
                             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-200">
                               {booking.status === 'pending' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking._id, 'confirmed')}
+                                  onClick={() => updateBookingStatus(booking, 'confirmed')}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
@@ -280,9 +296,9 @@ const Schedule = () => {
                                 </button>
                               )}
 
-                              {(booking.status === 'confirmed' || booking.status === 'in-progress') && (
+                              {booking.status === 'confirmed' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking._id, 'completed')}
+                                  onClick={() => updateBookingStatus(booking, 'completed')}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
@@ -292,7 +308,7 @@ const Schedule = () => {
 
                               {booking.status !== 'completed' && booking.status !== 'cancelled' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking._id, 'cancelled')}
+                                  onClick={() => updateBookingStatus(booking, 'cancelled')}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
