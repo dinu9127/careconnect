@@ -51,7 +51,7 @@ const AdminUsers = () => {
     try {
       setCaregiverLoading(true)
       setCaregiverError(null)
-      const response = await caregiverService.getCaregivers()
+      const response = await caregiverService.getAllCaregiversAdmin()
       setCaregivers(response.data.data || [])
     } catch (err) {
       console.error('Error fetching caregivers:', err)
@@ -538,12 +538,14 @@ const AdminUsers = () => {
                           {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => openDeleteConfirmation(user)}
-                            className="text-red-600 hover:text-red-900 transition font-semibold"
-                          >
-                            Delete
-                          </button>
+                          {user.role !== 'admin' && (
+                            <button
+                              onClick={() => openDeleteConfirmation(user)}
+                              className="text-red-600 hover:text-red-900 transition font-semibold"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

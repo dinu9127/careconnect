@@ -270,7 +270,7 @@ const ClientDashboard = () => {
                     </div>
                   ))}
                 </div>
-              )}}
+              )}
 
               {recentActivities.length > 0 && (
                 <div className="mt-6 text-center">

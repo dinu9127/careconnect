@@ -171,7 +171,7 @@ const Home = () => {
               to="/login"
               className="inline-flex gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
             >
-              Sign Up
+              Sign In
             </Link>
           </div>
         </div>
@@ -458,7 +458,7 @@ const Home = () => {
               <ul className="space-y-2 text-sm">
                 <li>✉ support@careconnect.lk</li>
                 <li>📞 +94 (0) 11 123 4567</li>
-                <li className="pt-2">Follow us on social media</li>
+                
               </ul>
             </div>
           </div>
@@ -466,11 +466,7 @@ const Home = () => {
           <div className="border-t border-slate-800 pt-8">
             <div className="flex flex-col sm:flex-row items-center justify-between text-sm">
               <p>© {new Date().getFullYear()} CareConnect. All rights reserved.</p>
-              <div className="flex gap-6 mt-4 sm:mt-0">
-                <button className="hover:text-white transition">Facebook</button>
-                <button className="hover:text-white transition">Twitter</button>
-                <button className="hover:text-white transition">Instagram</button>
-              </div>
+              
             </div>
           </div>
         </div>

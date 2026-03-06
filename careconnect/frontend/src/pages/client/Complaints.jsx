@@ -15,7 +15,8 @@ const Complaints = () => {
     category: 'service_quality',
     severity: 'medium',
     caregiverId: '',
-    bookingId: ''
+    bookedDate: '',
+    bookedTime: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -76,7 +77,8 @@ const Complaints = () => {
         category: 'service_quality',
         severity: 'medium',
         caregiverId: '',
-        bookingId: ''
+        bookedDate: '',
+        bookedTime: ''
       })
       setShowForm(false)
       
@@ -206,7 +208,7 @@ const Complaints = () => {
                         value={formData.title}
                         onChange={handleFormChange}
                         placeholder="Brief summary of your complaint"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                         required
                       />
                     </div>
@@ -219,7 +221,7 @@ const Complaints = () => {
                         name="category"
                         value={formData.category}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                         required
                       >
                         <option value="service_quality">Service Quality</option>
@@ -238,7 +240,7 @@ const Complaints = () => {
                         name="severity"
                         value={formData.severity}
                         onChange={handleFormChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -249,15 +251,27 @@ const Complaints = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Booking ID (Optional)
+                        Booked Date (Optional)
                       </label>
                       <input
-                        type="text"
-                        name="bookingId"
-                        value={formData.bookingId}
+                        type="date"
+                        name="bookedDate"
+                        value={formData.bookedDate}
                         onChange={handleFormChange}
-                        placeholder="Related booking ID"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Booked Time (Optional)
+                      </label>
+                      <input
+                        type="time"
+                        name="bookedTime"
+                        value={formData.bookedTime}
+                        onChange={handleFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       />
                     </div>
                   </div>
@@ -272,7 +286,7 @@ const Complaints = () => {
                       onChange={handleFormChange}
                       placeholder="Please provide detailed information about your complaint..."
                       rows="5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition resize-none"
                       required
                     />
                   </div>
@@ -280,7 +294,7 @@ const Complaints = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
                   >
                     <Send className="w-5 h-5" />
                     {submitting ? 'Submitting...' : 'Submit Complaint'}

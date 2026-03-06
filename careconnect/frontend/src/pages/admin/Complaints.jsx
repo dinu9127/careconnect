@@ -33,7 +33,10 @@ const AdminComplaints = () => {
       setLoading(true)
       const params = filterStatus !== 'all' ? `?status=${filterStatus}` : ''
       const response = await api.get(`/complaints/admin/all${params}`)
-      setComplaints(response.data.data)
+      const filteredComplaints = (response.data.data || []).filter(
+        complaint => complaint.status !== 'in_progress'
+      )
+      setComplaints(filteredComplaints)
     } catch (error) {
       setMessage({
         type: 'error',
@@ -180,10 +183,7 @@ const AdminComplaints = () => {
                 <p className="text-gray-600 text-sm mb-2">Open</p>
                 <p className="text-3xl font-bold text-red-600">{stats.openComplaints}</p>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <p className="text-gray-600 text-sm mb-2">In Progress</p>
-                <p className="text-3xl font-bold text-yellow-600">{stats.inProgressComplaints}</p>
-              </div>
+              
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <p className="text-gray-600 text-sm mb-2">Resolved</p>
                 <p className="text-3xl font-bold text-green-600">{stats.resolvedComplaints}</p>
@@ -227,16 +227,6 @@ const AdminComplaints = () => {
                 }`}
               >
                 Open
-              </button>
-              <button
-                onClick={() => setFilterStatus('in_progress')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  filterStatus === 'in_progress'
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-white text-yellow-600 border border-yellow-300 hover:border-yellow-400'
-                }`}
-              >
-                In Progress
               </button>
               <button
                 onClick={() => setFilterStatus('resolved')}
@@ -358,7 +348,6 @@ const AdminComplaints = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="open">Open</option>
-                          <option value="in_progress">In Progress</option>
                           <option value="resolved">Resolved</option>
                           <option value="closed">Closed</option>
                         </select>

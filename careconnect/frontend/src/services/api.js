@@ -57,6 +57,7 @@ export const userService = {
 
 export const caregiverService = {
   getCaregivers: () => api.get('/caregivers'),
+    getAllCaregiversAdmin: () => api.get('/caregivers/admin/all'),
   getCaregiverById: (id) => api.get(`/caregivers/${id}`),
   updateCaregiver: (id, data) => api.put(`/caregivers/${id}`, data),
   uploadProfileImage: (file) => {
