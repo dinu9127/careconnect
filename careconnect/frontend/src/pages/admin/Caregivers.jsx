@@ -8,7 +8,7 @@ const AdminCaregivers = () => {
   const [caregivers, setCaregivers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [filter, setFilter] = useState('all') // all, verified, pending, rejected
+  const [filter, setFilter] = useState('all') 
   const [selectedCaregiver, setSelectedCaregiver] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [verificationConfirm, setVerificationConfirm] = useState({ show: false, caregiverId: null, status: null })

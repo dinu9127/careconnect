@@ -75,10 +75,15 @@ const UpdateProfile = () => {
   })
 
   const locations = [
-    'Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 
-    'Anuradhapura', 'Trincomalee', 'Batticaloa', 'Matara', 
-    'Kurunegala', 'Ratnapura', 'Badulla', 'Nuwara Eliya', 
-    'Hambantota', 'Ampara'
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const serviceTypes = [

@@ -22,21 +22,15 @@ const Caregivers = () => {
 
   const locations = [
     'All Locations',
-    'Colombo',
-    'Kandy',
-    'Galle',
-    'Jaffna',
-    'Trincomalee',
-    'Matara',
-    'Negombo',
-    'Badulla',
-    'Ratnapura',
-    'Anuradhapura',
-    'Polonnaruwa',
-    'Ampara',
-    'Batticaloa',
-    'Mullaitvu',
-    'Vavuniya'
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const services = [
