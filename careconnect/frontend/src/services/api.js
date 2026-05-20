@@ -99,4 +99,15 @@ export const reviewService = {
   getAllReviews: () => api.get('/reviews/admin'), // admin
 }
 
+export const uploadService = {
+  uploadDocument: ({ file, fileType }) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('fileType', fileType)
+    return api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
+}
+
 export default api

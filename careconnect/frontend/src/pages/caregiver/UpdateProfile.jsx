@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
+import DocumentUploadCard from '../../components/ui/DocumentUploadCard'
 import { User, Phone, Mail, MapPin, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
 import api, { userService } from '../../services/api'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -883,22 +884,6 @@ const UpdateProfile = () => {
                         Use Current Location
                       </button>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-4 mb-3">
-                      <input
-                        type="text"
-                        value={formData.latitude}
-                        readOnly
-                        placeholder="Latitude"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                      />
-                      <input
-                        type="text"
-                        value={formData.longitude}
-                        readOnly
-                        placeholder="Longitude"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                      />
-                    </div>
                     <div className="flex flex-col md:flex-row gap-3 mb-3">
                       <input
                         type="text"
@@ -1102,6 +1087,10 @@ const UpdateProfile = () => {
                     <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
                     <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
                   </div>
+                </div>
+
+                <div className="mb-8">
+                  <DocumentUploadCard />
                 </div>
 
                 {/* Step 1: Identity Verification */}
