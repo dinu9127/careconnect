@@ -2,8 +2,40 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
+import DocumentUploadCard from '../../components/ui/DocumentUploadCard'
 import { User, Phone, Mail, MapPin, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
 import api, { userService } from '../../services/api'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow
+})
+
+const caregiverPin = new L.Icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
+const LocationPicker = ({ onSelect }) => {
+  useMapEvents({
+    click: (event) => {
+      onSelect(event.latlng)
+    }
+  })
+
+  return null
+}
 
 const UpdateProfile = () => {
   const navigate = useNavigate()
@@ -19,6 +51,8 @@ const UpdateProfile = () => {
     email: '',
     phone: '',
     location: '',
+    latitude: '',
+    longitude: '',
     bio: '',
     hourlyRate: '',
     experience: '',
@@ -73,12 +107,21 @@ const UpdateProfile = () => {
     nvq: null,
     professional: null
   })
+  const [locationSearchQuery, setLocationSearchQuery] = useState('')
+  const [locationSearchResults, setLocationSearchResults] = useState([])
+  const [locationSearchError, setLocationSearchError] = useState('')
+  const [locationSearching, setLocationSearching] = useState(false)
 
   const locations = [
-    'Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 
-    'Anuradhapura', 'Trincomalee', 'Batticaloa', 'Matara', 
-    'Kurunegala', 'Ratnapura', 'Badulla', 'Nuwara Eliya', 
-    'Hambantota', 'Ampara'
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const serviceTypes = [
@@ -149,6 +192,9 @@ const UpdateProfile = () => {
     try {
       const response = await api.get('/caregivers/me')
       const caregiver = response.data.data
+      const coords = caregiver.geoLocation?.coordinates
+      const longitude = Array.isArray(coords) ? coords[0] : ''
+      const latitude = Array.isArray(coords) ? coords[1] : ''
       
       // Store caregiver ID for updates
       setCaregiverId(caregiver._id)
@@ -158,6 +204,8 @@ const UpdateProfile = () => {
         email: caregiver.user?.email || '',
         phone: caregiver.user?.phone || '',
         location: caregiver.location || '',
+        latitude: latitude !== '' ? String(latitude) : '',
+        longitude: longitude !== '' ? String(longitude) : '',
         bio: caregiver.bio || '',
         hourlyRate: caregiver.hourlyRate || '',
         experience: caregiver.experience || '',
@@ -182,6 +230,72 @@ const UpdateProfile = () => {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleUseCurrentLocation = () => {
+    setMessage('')
+    if (!navigator.geolocation) {
+      setMessage('Geolocation is not supported by your browser')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setFormData(prev => ({
+          ...prev,
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6)
+        }))
+      },
+      () => {
+        setMessage('Unable to fetch your location. Please allow location access.')
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const handleLocationSearch = async () => {
+    const query = locationSearchQuery.trim()
+    if (!query) {
+      setLocationSearchResults([])
+      setLocationSearchError('')
+      return
+    }
+
+    setLocationSearching(true)
+    setLocationSearchError('')
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=lk`
+      )
+      const data = await response.json()
+      const results = Array.isArray(data) ? data : []
+
+      if (results.length === 0) {
+        setLocationSearchError('No places found. Try a different search.')
+      }
+
+      setLocationSearchResults(results)
+    } catch (error) {
+      setLocationSearchError('Search failed. Please try again.')
+    } finally {
+      setLocationSearching(false)
+    }
+  }
+
+  const handleMapSelect = ({ lat, lng }) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    }))
+  }
+
+  const handleMarkerDragEnd = (event) => {
+    const { lat, lng } = event.target.getLatLng()
+    handleMapSelect({ lat, lng })
   }
 
   const handleProfilePictureChange = (e) => {
@@ -266,6 +380,13 @@ const UpdateProfile = () => {
           date: null
         })),
         serviceTypes: formData.serviceTypes
+      }
+
+      const latitude = Number.parseFloat(formData.latitude)
+      const longitude = Number.parseFloat(formData.longitude)
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        caregiverData.latitude = latitude
+        caregiverData.longitude = longitude
       }
 
       // If there's a new profile picture, upload it
@@ -553,6 +674,12 @@ const UpdateProfile = () => {
     setCurrentStep(1)
   }
 
+  const parsedLatitude = Number.parseFloat(formData.latitude)
+  const parsedLongitude = Number.parseFloat(formData.longitude)
+  const hasCoords = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
+  const mapCenter = hasCoords ? [parsedLatitude, parsedLongitude] : [7.8731, 80.7718]
+  const mapZoom = hasCoords ? 13 : 7
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -744,6 +871,91 @@ const UpdateProfile = () => {
                     </select>
                   </div>
 
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Choose Your Location on Map
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleUseCurrentLocation}
+                        className="text-sm text-blue-700 hover:text-blue-900 font-medium"
+                      >
+                        Use Current Location
+                      </button>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-3 mb-3">
+                      <input
+                        type="text"
+                        value={locationSearchQuery}
+                        onChange={(e) => setLocationSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleLocationSearch()
+                          }
+                        }}
+                        placeholder="Search a place or landmark"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleLocationSearch}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      >
+                        {locationSearching ? 'Searching...' : 'Search on Map'}
+                      </button>
+                    </div>
+                    {locationSearchError && (
+                      <p className="text-sm text-red-600 mb-2">{locationSearchError}</p>
+                    )}
+                    {locationSearchResults.length > 0 && (
+                      <div className="mb-3 grid gap-2">
+                        {locationSearchResults.map((result) => (
+                          <button
+                            key={`${result.place_id}`}
+                            type="button"
+                            onClick={() => {
+                              const lat = Number.parseFloat(result.lat)
+                              const lng = Number.parseFloat(result.lon)
+                              if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                                handleMapSelect({ lat, lng })
+                              }
+                              setLocationSearchResults([])
+                            }}
+                            className="text-left px-3 py-2 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition"
+                          >
+                            <span className="text-sm text-gray-800">{result.display_name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="h-[320px] w-full rounded-xl overflow-hidden border border-gray-200">
+                      <MapContainer
+                        key={`${parsedLatitude || 'na'}-${parsedLongitude || 'na'}`}
+                        center={mapCenter}
+                        zoom={mapZoom}
+                        scrollWheelZoom
+                        className="h-full w-full"
+                      >
+                        <TileLayer
+                          attribution="&copy; OpenStreetMap contributors"
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <LocationPicker onSelect={handleMapSelect} />
+                        {hasCoords && (
+                          <Marker
+                            position={[parsedLatitude, parsedLongitude]}
+                            icon={caregiverPin}
+                            draggable
+                            eventHandlers={{ dragend: handleMarkerDragEnd }}
+                          />
+                        )}
+                      </MapContainer>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Search, click the map, or drag the pin to set your location for nearby searches.</p>
+                  </div>
+
                   {/* Hourly Rate */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -875,6 +1087,10 @@ const UpdateProfile = () => {
                     <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
                     <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
                   </div>
+                </div>
+
+                <div className="mb-8">
+                  <DocumentUploadCard />
                 </div>
 
                 {/* Step 1: Identity Verification */}
