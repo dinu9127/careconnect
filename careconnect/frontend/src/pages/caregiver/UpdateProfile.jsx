@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import DocumentUploadCard from '../../components/ui/DocumentUploadCard'
-import { User, Phone, Mail, MapPin, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
+import { User, Phone, Mail, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
 import api, { userService } from '../../services/api'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
@@ -50,7 +50,7 @@ const UpdateProfile = () => {
     name: '',
     email: '',
     phone: '',
-    location: '',
+    gender: '',
     latitude: '',
     longitude: '',
     bio: '',
@@ -111,18 +111,6 @@ const UpdateProfile = () => {
   const [locationSearchResults, setLocationSearchResults] = useState([])
   const [locationSearchError, setLocationSearchError] = useState('')
   const [locationSearching, setLocationSearching] = useState(false)
-
-  const locations = [
-    'Colombo', 'Gampaha', 'Kalutara',
-    'Kandy', 'Matale', 'Nuwara Eliya',
-    'Galle', 'Matara', 'Hambantota',
-    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
-    'Puttalam', 'Kurunegala',
-    'Anuradhapura', 'Polonnaruwa',
-    'Trincomalee', 'Batticaloa', 'Ampara',
-    'Badulla', 'Monaragala',
-    'Ratnapura', 'Kegalle'
-  ]
 
   const serviceTypes = [
     'Elderly Care',
@@ -203,7 +191,7 @@ const UpdateProfile = () => {
         name: caregiver.user?.name || '',
         email: caregiver.user?.email || '',
         phone: caregiver.user?.phone || '',
-        location: caregiver.location || '',
+        gender: caregiver.gender || caregiver.user?.gender || '',
         latitude: latitude !== '' ? String(latitude) : '',
         longitude: longitude !== '' ? String(longitude) : '',
         bio: caregiver.bio || '',
@@ -351,10 +339,18 @@ const UpdateProfile = () => {
         return
       }
       
-      // Validate phone number - must be exactly 10 digits
-      const phoneDigits = formData.phone.replace(/\D/g, '')
-      if (phoneDigits.length !== 10) {
-        setMessage('Phone number must be exactly 10 digits')
+      const normalizeSriLankaPhone = (phone) => {
+        const digits = phone.replace(/\D/g, '')
+        if (digits.startsWith('94') && digits.length === 11) {
+          return `0${digits.slice(2)}`
+        }
+        return digits
+      }
+
+      // Validate Sri Lanka phone numbers (0XXXXXXXXX or +94XXXXXXXXX)
+      const phoneDigits = normalizeSriLankaPhone(formData.phone)
+      if (!/^0\d{9}$/.test(phoneDigits)) {
+        setMessage('Phone number must be a valid Sri Lanka number (0XXXXXXXXX or +94XXXXXXXXX)')
         setLoading(false)
         return
       }
@@ -367,9 +363,9 @@ const UpdateProfile = () => {
         phone: phoneDigits
       })
 
-      // Prepare caregiver data (without gender field)
+      // Prepare caregiver data
       const caregiverData = {
-        location: formData.location,
+        gender: formData.gender,
         bio: formData.bio,
         hourlyRate: Number(formData.hourlyRate),
         experience: Number(formData.experience),
@@ -843,31 +839,31 @@ const UpdateProfile = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="0771234567"
-                      pattern="[0-9]{10}"
+                      pattern="^(?:0\d{9}|\+?94\d{9})$"
                       maxLength="10"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Enter 10 digit phone number (e.g., 0771234567)</p>
+                    <p className="text-xs text-gray-500 mt-1">Use 0XXXXXXXXX or +94XXXXXXXXX (e.g., 0771234567)</p>
                   </div>
 
-                  {/* Location */}
+                  {/* Gender */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <MapPin className="w-4 h-4 inline mr-2" />
-                      Location
+                      <User className="w-4 h-4 inline mr-2" />
+                      Gender
                     </label>
                     <select
-                      name="location"
-                      value={formData.location}
+                      name="gender"
+                      value={formData.gender}
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     >
-                      <option value="">Select Location</option>
-                      {locations.map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))}
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
 
@@ -1057,38 +1053,12 @@ const UpdateProfile = () => {
 
             {/* Verification Tab / Step-by-Step Setup */}
             {(activeTab === 'verification' || isNewCaregiverSetup) && (
-              <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
-                {/* Progress Steps */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between">
-                    {[1, 2, 3].map(step => (
-                      <React.Fragment key={step}>
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                            step <= currentStep
-                              ? 'bg-blue-600 text-white shadow-md'
-                              : 'bg-gray-300 text-gray-700'
-                          }`}
-                        >
-                          {step < currentStep ? <CheckCircle className="w-6 h-6" /> : step}
-                        </div>
-                        {step < 3 && (
-                          <div
-                            className={`flex-1 h-1 mx-2 transition-all duration-300 ${
-                              step < currentStep ? 'bg-blue-600' : 'bg-gray-300'
-                            }`}
-                          />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-4 text-sm">
-                    <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Identity</span>
-                    <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
-                    <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
-                  </div>
+              <div>
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">Verification Documents</h2>
+                  <p className="text-sm text-gray-600">Upload verification documents (max 5MB).</p>
                 </div>
-
+                <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
                 <div className="mb-8">
                   <DocumentUploadCard />
                 </div>
@@ -1334,6 +1304,7 @@ const UpdateProfile = () => {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             )}
 

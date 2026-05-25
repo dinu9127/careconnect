@@ -100,12 +100,18 @@ export const reviewService = {
 }
 
 export const uploadService = {
-  uploadDocument: ({ file, fileType }) => {
+  uploadDocument: ({ file, fileType, metadata = {}, onUploadProgress }) => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('fileType', fileType)
+    Object.entries(metadata).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value)
+      }
+    })
     return api.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress
     })
   }
 }
