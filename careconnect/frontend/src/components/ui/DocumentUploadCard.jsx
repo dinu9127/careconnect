@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Upload } from 'lucide-react'
 import { uploadService } from '../../services/api'
 
@@ -18,23 +18,8 @@ const isAllowedFile = (file) => {
   return allowedExtensions.some((ext) => name.endsWith(ext))
 }
 
-const DocumentUploadCard = () => {
-  const [fileType, setFileType] = useState('NIC')
-  const [file, setFile] = useState(null)
+const usePreviewUrl = (file) => {
   const [previewUrl, setPreviewUrl] = useState('')
-  const [status, setStatus] = useState({ type: '', text: '' })
-  const [uploadedUrl, setUploadedUrl] = useState('')
-  const [uploading, setUploading] = useState(false)
-
-  const fileTypes = useMemo(
-    () => [
-      { label: 'NIC', value: 'NIC' },
-      { label: 'Certificate', value: 'Certificate' },
-      { label: 'Profile Picture', value: 'ProfilePicture' },
-      { label: 'Other', value: 'Other' }
-    ],
-    []
-  )
 
   useEffect(() => {
     if (!file || !file.type.startsWith('image/')) {
@@ -50,7 +35,41 @@ const DocumentUploadCard = () => {
     }
   }, [file])
 
-  const handleFileChange = (event) => {
+  return previewUrl
+}
+
+const DocumentUploadCard = () => {
+  const [nicFile, setNicFile] = useState(null)
+  const [passportFile, setPassportFile] = useState(null)
+  const [drivingFile, setDrivingFile] = useState(null)
+  const [policeFile, setPoliceFile] = useState(null)
+  const [qualificationFile, setQualificationFile] = useState(null)
+
+  const [nicStatus, setNicStatus] = useState({ type: '', text: '' })
+  const [passportStatus, setPassportStatus] = useState({ type: '', text: '' })
+  const [drivingStatus, setDrivingStatus] = useState({ type: '', text: '' })
+  const [policeStatus, setPoliceStatus] = useState({ type: '', text: '' })
+  const [qualificationStatus, setQualificationStatus] = useState({ type: '', text: '' })
+
+  const [nicUploadedUrl, setNicUploadedUrl] = useState('')
+  const [passportUploadedUrl, setPassportUploadedUrl] = useState('')
+  const [drivingUploadedUrl, setDrivingUploadedUrl] = useState('')
+  const [policeUploadedUrl, setPoliceUploadedUrl] = useState('')
+  const [qualificationUploadedUrl, setQualificationUploadedUrl] = useState('')
+
+  const [nicUploading, setNicUploading] = useState(false)
+  const [passportUploading, setPassportUploading] = useState(false)
+  const [drivingUploading, setDrivingUploading] = useState(false)
+  const [policeUploading, setPoliceUploading] = useState(false)
+  const [qualificationUploading, setQualificationUploading] = useState(false)
+
+  const nicPreviewUrl = usePreviewUrl(nicFile)
+  const passportPreviewUrl = usePreviewUrl(passportFile)
+  const drivingPreviewUrl = usePreviewUrl(drivingFile)
+  const policePreviewUrl = usePreviewUrl(policeFile)
+  const qualificationPreviewUrl = usePreviewUrl(qualificationFile)
+
+  const handleFileChange = (event, setFile, setStatus, setUploadedUrl) => {
     const selectedFile = event.target.files?.[0] || null
     setStatus({ type: '', text: '' })
     setUploadedUrl('')
@@ -78,7 +97,14 @@ const DocumentUploadCard = () => {
     setFile(selectedFile)
   }
 
-  const handleUpload = async () => {
+  const handleUpload = async ({
+    file,
+    fileType,
+    setStatus,
+    setUploadedUrl,
+    setUploading,
+    setFile
+  }) => {
     if (!file) {
       setStatus({ type: 'error', text: 'Please select a file to upload.' })
       return
@@ -100,62 +126,51 @@ const DocumentUploadCard = () => {
     }
   }
 
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+  const renderUploadSection = ({
+    title,
+    file,
+    previewUrl,
+    status,
+    uploadedUrl,
+    uploading,
+    onFileChange,
+    onUpload
+  }) => (
+    <div className="rounded-lg border border-slate-200 p-4">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900">Quick Document Upload</h3>
-          <p className="text-sm text-slate-600">Upload images or documents (max 5MB).</p>
-        </div>
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Document Type</label>
-          <select
-            value={fileType}
-            onChange={(event) => setFileType(event.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          >
-            {fileTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            <Upload className="inline h-4 w-4 mr-2" />
-            Select File
-          </label>
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf,.docx"
-            onChange={handleFileChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-          {file && (
-            <p className="mt-2 text-sm text-slate-600">Selected: {file.name}</p>
-          )}
-        </div>
+      <div className="mt-3">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          <Upload className="inline h-4 w-4 mr-2" />
+          Select File
+        </label>
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.pdf,.docx"
+          onChange={onFileChange}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+        {file && (
+          <p className="mt-2 text-sm text-slate-600">Selected: {file.name}</p>
+        )}
       </div>
 
       {previewUrl && (
-        <div className="mt-4">
+        <div className="mt-3">
           <img
             src={previewUrl}
             alt="Upload preview"
-            className="h-32 w-32 rounded-lg border border-slate-200 object-cover"
+            className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
           />
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={handleUpload}
+          onClick={onUpload}
           disabled={uploading}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-slate-400"
         >
@@ -175,7 +190,7 @@ const DocumentUploadCard = () => {
 
       {status.text && (
         <div
-          className={`mt-4 rounded-lg px-3 py-2 text-sm ${
+          className={`mt-3 rounded-lg px-3 py-2 text-sm ${
             status.type === 'error'
               ? 'bg-red-50 text-red-700'
               : 'bg-green-50 text-green-700'
@@ -184,6 +199,124 @@ const DocumentUploadCard = () => {
           {status.text}
         </div>
       )}
+    </div>
+  )
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">Verification Documents</h3>
+          <p className="text-sm text-slate-600">Upload verification documents (max 5MB).</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {renderUploadSection({
+          title: 'NIC',
+          file: nicFile,
+          previewUrl: nicPreviewUrl,
+          status: nicStatus,
+          uploadedUrl: nicUploadedUrl,
+          uploading: nicUploading,
+          onFileChange: (event) =>
+            handleFileChange(event, setNicFile, setNicStatus, setNicUploadedUrl),
+          onUpload: () =>
+            handleUpload({
+              file: nicFile,
+              fileType: 'NIC',
+              setStatus: setNicStatus,
+              setUploadedUrl: setNicUploadedUrl,
+              setUploading: setNicUploading,
+              setFile: setNicFile
+            })
+        })}
+
+        {renderUploadSection({
+          title: 'Passport',
+          file: passportFile,
+          previewUrl: passportPreviewUrl,
+          status: passportStatus,
+          uploadedUrl: passportUploadedUrl,
+          uploading: passportUploading,
+          onFileChange: (event) =>
+            handleFileChange(event, setPassportFile, setPassportStatus, setPassportUploadedUrl),
+          onUpload: () =>
+            handleUpload({
+              file: passportFile,
+              fileType: 'Passport',
+              setStatus: setPassportStatus,
+              setUploadedUrl: setPassportUploadedUrl,
+              setUploading: setPassportUploading,
+              setFile: setPassportFile
+            })
+        })}
+
+        {renderUploadSection({
+          title: 'Driving License',
+          file: drivingFile,
+          previewUrl: drivingPreviewUrl,
+          status: drivingStatus,
+          uploadedUrl: drivingUploadedUrl,
+          uploading: drivingUploading,
+          onFileChange: (event) =>
+            handleFileChange(event, setDrivingFile, setDrivingStatus, setDrivingUploadedUrl),
+          onUpload: () =>
+            handleUpload({
+              file: drivingFile,
+              fileType: 'DrivingLicense',
+              setStatus: setDrivingStatus,
+              setUploadedUrl: setDrivingUploadedUrl,
+              setUploading: setDrivingUploading,
+              setFile: setDrivingFile
+            })
+        })}
+
+        {renderUploadSection({
+          title: 'Police Clearance Certificate',
+          file: policeFile,
+          previewUrl: policePreviewUrl,
+          status: policeStatus,
+          uploadedUrl: policeUploadedUrl,
+          uploading: policeUploading,
+          onFileChange: (event) =>
+            handleFileChange(event, setPoliceFile, setPoliceStatus, setPoliceUploadedUrl),
+          onUpload: () =>
+            handleUpload({
+              file: policeFile,
+              fileType: 'PoliceClearance',
+              setStatus: setPoliceStatus,
+              setUploadedUrl: setPoliceUploadedUrl,
+              setUploading: setPoliceUploading,
+              setFile: setPoliceFile
+            })
+        })}
+
+        {renderUploadSection({
+          title: 'NVQ / Other Qualification',
+          file: qualificationFile,
+          previewUrl: qualificationPreviewUrl,
+          status: qualificationStatus,
+          uploadedUrl: qualificationUploadedUrl,
+          uploading: qualificationUploading,
+          onFileChange: (event) =>
+            handleFileChange(
+              event,
+              setQualificationFile,
+              setQualificationStatus,
+              setQualificationUploadedUrl
+            ),
+          onUpload: () =>
+            handleUpload({
+              file: qualificationFile,
+              fileType: 'Qualification',
+              setStatus: setQualificationStatus,
+              setUploadedUrl: setQualificationUploadedUrl,
+              setUploading: setQualificationUploading,
+              setFile: setQualificationFile
+            })
+        })}
+      </div>
     </div>
   )
 }

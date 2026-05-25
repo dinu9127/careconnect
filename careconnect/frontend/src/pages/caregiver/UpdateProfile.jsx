@@ -626,7 +626,7 @@ const UpdateProfile = () => {
       }
 
       const user = JSON.parse(localStorage.getItem('user'))
-      const endpoint = docType === 'identity' 
+      const endpoint = docType === 'identity'
         ? `/caregivers/${user.id}/identity-verification`
         : docType === 'nvq'
         ? `/caregivers/${user.id}/nvq-certifications`
@@ -1092,97 +1092,6 @@ const UpdateProfile = () => {
                 <div className="mb-8">
                   <DocumentUploadCard />
                 </div>
-
-                {/* Step 1: Identity Verification */}
-                {currentStep === 1 && (
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <p className="text-sm text-blue-800">Upload your identification document (PDF or DOCX)</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ID Type
-                        </label>
-                        <select
-                          value={identityData.idType}
-                          onChange={(e) => setIdentityData(prev => ({ ...prev, idType: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        >
-                          <option value="">Select ID Type</option>
-                          {idTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
-                        {identityData.idType && (
-                          <p className="mt-2 text-xs text-gray-600">
-                            {identityData.idType === 'National Identity Card' && '9 digits (old format) or 12 digits (new format)'}
-                            {identityData.idType === 'Passport' && '6-12 characters'}
-                            {identityData.idType === 'Driving License' && '8-10 digits'}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ID Number
-                        </label>
-                        <input
-                          type="text"
-                          value={identityData.idNumber}
-                          onChange={(e) => setIdentityData(prev => ({ ...prev, idNumber: e.target.value }))}
-                          placeholder="Enter your ID number"
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors ${
-                            identityData.idNumber 
-                              ? validateIdNumber(identityData.idType, identityData.idNumber).valid
-                                ? 'border-green-500 focus:ring-green-500 bg-green-50'
-                                : 'border-red-500 focus:ring-red-500 bg-red-50'
-                              : 'border-gray-300 focus:ring-blue-600'
-                          }`}
-                        />
-                        {identityData.idNumber && (
-                          <p className={`mt-2 text-sm font-medium ${
-                            validateIdNumber(identityData.idType, identityData.idNumber).valid
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}>
-                            {validateIdNumber(identityData.idType, identityData.idNumber).valid ? (
-                              <>✓ Valid {identityData.idType} format</>
-                            ) : (
-                              <>✗ {validateIdNumber(identityData.idType, identityData.idNumber).message}</>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Upload className="w-4 h-4 inline mr-2" />
-                        Upload Document (PDF/DOCX)
-                      </label>
-                      <input
-                        type="file"
-                        accept=".pdf,.docx"
-                        onChange={handleIdentityFileChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                      />
-                      {identityData.file && (
-                        <p className="mt-2 text-sm text-green-600">✓ {identityData.file.name}</p>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => uploadDocument('identity', identityData, identityData.file)}
-                      disabled={loading || !identityData.idType || !identityData.idNumber || !identityData.file || !validateIdNumber(identityData.idType, identityData.idNumber).valid}
-                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
-                    >
-                      {loading ? 'Uploading...' : 'Upload & Continue'}
-                    </button>
-                  </div>
-                )}
 
                 {/* Step 2: NVQ Certification */}
                 {currentStep === 2 && (

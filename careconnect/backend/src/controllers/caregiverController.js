@@ -51,6 +51,11 @@ const sanitizeFilename = (filename) =>
 // @query   name, location, serviceType, date, sortBy
 export const getCaregivers = async (req, res) => {
   try {
+    console.log('Verification upload envs:', {
+      hasPrivateToken: Boolean(process.env.BLOB_PRIVATE_READ_WRITE_TOKEN),
+      hasReadWriteToken: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      hasPublicToken: Boolean(process.env.BLOB_PUBLIC_READ_WRITE_TOKEN)
+    });
     const { name, location, serviceType, sortBy } = req.query;
     
     // Build filter object
@@ -282,8 +287,10 @@ export const uploadProfileImage = async (req, res) => {
       });
     }
 
-    const publicToken = process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
-    if (!publicToken) {
+    const privateToken =
+      process.env.BLOB_PRIVATE_READ_WRITE_TOKEN ||
+      process.env.BLOB_READ_WRITE_TOKEN;
+    if (!privateToken) {
       return res.status(500).json({
         success: false,
         message: 'Blob storage token is not configured'
@@ -323,6 +330,11 @@ export const uploadProfileImage = async (req, res) => {
 // @access  Private/Caregiver
 export const uploadVerificationDocument = async (req, res) => {
   try {
+    console.log('Verification upload envs:', {
+      hasPrivateToken: Boolean(process.env.BLOB_PRIVATE_READ_WRITE_TOKEN),
+      hasReadWriteToken: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      hasPublicToken: Boolean(process.env.BLOB_PUBLIC_READ_WRITE_TOKEN)
+    });
     // Validate the uploaded file is present.
     if (!req.file) {
       return res.status(400).json({
@@ -331,8 +343,8 @@ export const uploadVerificationDocument = async (req, res) => {
       });
     }
 
-    const privateToken = process.env.BLOB_PRIVATE_READ_WRITE_TOKEN;
-    if (!privateToken) {
+    const publicToken = process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
+    if (!publicToken) {
       return res.status(500).json({
         success: false,
         message: 'Blob storage token is not configured'
@@ -347,9 +359,9 @@ export const uploadVerificationDocument = async (req, res) => {
 
     // Store the private document in Vercel Blob.
     const { url } = await put(key, req.file.buffer, {
-      access: 'private',
+      access: 'public',
       contentType: req.file.mimetype,
-      token: privateToken
+      token: publicToken
     });
 
     // Track metadata so admins can request signed URLs later.
@@ -367,6 +379,7 @@ export const uploadVerificationDocument = async (req, res) => {
       data: { url }
     });
   } catch (error) {
+    console.error('Verification upload error:', error);
     return res.status(500).json({
       success: false,
       message: error.message
@@ -379,8 +392,8 @@ export const uploadVerificationDocument = async (req, res) => {
 // @access  Private/Admin
 export const getVerificationDocumentSignedUrl = async (req, res) => {
   try {
-    const privateToken = process.env.BLOB_PRIVATE_READ_WRITE_TOKEN;
-    if (!privateToken) {
+    const publicToken = process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
+    if (!publicToken) {
       return res.status(500).json({
         success: false,
         message: 'Blob storage token is not configured'
@@ -405,7 +418,7 @@ export const getVerificationDocumentSignedUrl = async (req, res) => {
 
     // Generate a short-lived signed URL for admin viewing.
     const blobInfo = await head(document.url, {
-      token: privateToken
+      token: publicToken
     });
 
     return res.status(200).json({

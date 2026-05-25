@@ -12,9 +12,15 @@ const allowedMimeTypes = new Set([
 const allowedExtensions = new Set(['.jpg', '.jpeg', '.png', '.pdf', '.docx']);
 const allowedFileTypes = new Map([
   ['nic', 'NIC'],
-  ['certificate', 'Certificate'],
-  ['profilepicture', 'ProfilePicture'],
-  ['profile picture', 'ProfilePicture'],
+  ['passport', 'Passport'],
+  ['drivinglicense', 'DrivingLicense'],
+  ['driving license', 'DrivingLicense'],
+  ['policeclearance', 'PoliceClearance'],
+  ['police clearance', 'PoliceClearance'],
+  ['nvq', 'NVQ'],
+  ['nvq certificate', 'NVQ'],
+  ['qualification', 'Qualification'],
+  ['other qualification', 'Qualification'],
   ['other', 'Other']
 ]);
 
@@ -82,14 +88,22 @@ export const uploadFile = async (req, res) => {
     const extension = path.extname(safeName) || '';
     const typeSegment = resolvedFileType.toLowerCase();
     const key = `uploads/${userId}/${typeSegment}/${Date.now()}${extension}`;
-    const access = resolvedFileType === 'ProfilePicture' ? 'public' : 'private';
+    const access = 'public';
+    const blobToken = process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
+
+    if (!blobToken) {
+      return res.status(500).json({
+        success: false,
+        message: 'Blob storage token is not configured'
+      });
+    }
 
     const { url } = await uploadToBlob({
       key,
       buffer: req.file.buffer,
       contentType: req.file.mimetype,
       access,
-      token: process.env.BLOB_READ_WRITE_TOKEN
+      token: blobToken
     });
 
     const document = await Document.create({
