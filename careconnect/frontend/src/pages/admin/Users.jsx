@@ -18,6 +18,14 @@ const AdminUsers = () => {
   const [rejectionReason, setRejectionReason] = useState('')
   const [showRejectionModal, setShowRejectionModal] = useState(false)
   const [pendingRejectionId, setPendingRejectionId] = useState(null)
+  const [actionMessage, setActionMessage] = useState({ type: '', text: '' })
+
+  const showActionMessage = (type, text) => {
+    setActionMessage({ type, text })
+    window.setTimeout(() => {
+      setActionMessage({ type: '', text: '' })
+    }, 4000)
+  }
 
   useEffect(() => {
     fetchUsers()
@@ -72,7 +80,7 @@ const AdminUsers = () => {
 
   const submitRejection = () => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a reason for rejection')
+      showActionMessage('error', 'Please provide a reason for rejection')
       return
     }
     setVerificationConfirm({ show: true, caregiverId: pendingRejectionId, status: 'rejected', reason: rejectionReason })
@@ -93,10 +101,10 @@ const AdminUsers = () => {
         cg._id === caregiverId ? { ...cg, verificationStatus: status, verificationNotes: reason || cg.verificationNotes } : cg
       ))
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
-      alert(`Caregiver ${status} successfully${reason ? ' with reason: ' + reason : ''}`)
+      showActionMessage('success', `Caregiver ${status} successfully${reason ? ' with reason: ' + reason : ''}`)
     } catch (err) {
       console.error('Error updating verification:', err)
-      alert(`Failed to update verification status: ${err.response?.data?.message || err.message}`)
+      showActionMessage('error', `Failed to update verification status: ${err.response?.data?.message || err.message}`)
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
     }
   }
@@ -110,9 +118,9 @@ const AdminUsers = () => {
       
       // Show success message with any warnings
       if (response.data.warning) {
-        alert(`User deleted successfully. Note: ${response.data.warning}`)
+        showActionMessage('success', `User deleted successfully. Note: ${response.data.warning}`)
       } else {
-        alert('User deleted successfully')
+        showActionMessage('success', 'User deleted successfully')
       }
     } catch (err) {
       console.error('Error deleting user:', err)
@@ -120,7 +128,7 @@ const AdminUsers = () => {
       
       // Show user-friendly error message
       const errorMsg = err.response?.data?.message || 'Failed to delete user'
-      alert(errorMsg)
+      showActionMessage('error', errorMsg)
     }
   }
 
@@ -242,6 +250,30 @@ const AdminUsers = () => {
             <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-4 py-4 rounded-lg mb-6 shadow-md">
               <p className="font-semibold">Error</p>
               <p className="text-sm mt-1">{caregiverError}</p>
+            </div>
+          )}
+
+          {actionMessage.text && (
+            <div className={`px-4 py-4 rounded-lg mb-6 shadow-md border-l-4 ${
+              actionMessage.type === 'success'
+                ? 'bg-green-50 border-green-600 text-green-800'
+                : 'bg-red-50 border-red-600 text-red-800'
+            }`}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold">
+                    {actionMessage.type === 'success' ? 'Success' : 'Error'}
+                  </p>
+                  <p className="text-sm mt-1">{actionMessage.text}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActionMessage({ type: '', text: '' })}
+                  className="text-sm font-semibold hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           )}
 
