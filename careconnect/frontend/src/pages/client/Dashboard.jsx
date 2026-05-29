@@ -132,7 +132,7 @@ const ClientDashboard = () => {
           {/* Quick Stats */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {/* Total Bookings */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-teal-600 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Total Confirmed Bookings</p>
@@ -147,7 +147,7 @@ const ClientDashboard = () => {
               </div>
             </div>
                         {/* Completed */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-teal-500 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Completed</p>
@@ -160,7 +160,7 @@ const ClientDashboard = () => {
             </div>
 
             {/* Have to Pay */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-red-500 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Have to Pay</p>

@@ -699,10 +699,10 @@ const UpdateProfile = () => {
 
             {/* Message */}
             {message && (
-              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 transition-all duration-300 ${
                 message.includes('Error') 
-                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600' 
-                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
+                  ? 'bg-red-100 text-red-800 border border-red-300' 
+                  : 'bg-green-100 text-green-800 border border-green-300'
               }`}>
                 {message.includes('Error') ? (
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -751,7 +751,7 @@ const UpdateProfile = () => {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
+              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8">
                 {/* Profile Picture Section */}
                 <div className="mb-8 pb-8 border-b">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -1062,7 +1062,7 @@ const UpdateProfile = () => {
                   <h2 className="text-2xl font-semibold text-gray-900">Verification Documents</h2>
                   <p className="text-sm text-gray-600">Upload verification documents (max 5MB).</p>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
+                <div className="bg-white rounded-xl shadow-md p-8">
                 <div className="mb-8">
                   <DocumentUploadCard certifications={certificationList} />
                 </div>
@@ -1314,16 +1314,16 @@ const UpdateProfile = () => {
 
             {/* Account Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6">Account Settings</h3>
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   <h4 className="text-sm font-semibold text-gray-700">Change Password</h4>
 
                   {passwordMessage.text && (
-                    <div className={`rounded-lg px-4 py-3 text-sm border-t-4 transition-all duration-300 ${
+                    <div className={`rounded-lg px-4 py-3 text-sm transition-all duration-300 ${
                       passwordMessage.type === 'error'
-                        ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600'
-                        : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-green-100 text-green-700 border border-green-300'
                     }`}>
                       {passwordMessage.text}
                     </div>

@@ -107,7 +107,7 @@ const CaregiverDashboard = () => {
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-100 border-t-4 border-t-red-600 border border-red-300 text-red-700 rounded-xl flex items-center gap-2 shadow-md">
+              <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-xl flex items-center gap-2 shadow-md">
                 <AlertCircle className="w-5 h-5" />
                 {error}
               </div>
@@ -116,7 +116,7 @@ const CaregiverDashboard = () => {
             {/* Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {/* Connected Clients */}
-              <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Connected Clients</p>
@@ -127,7 +127,7 @@ const CaregiverDashboard = () => {
               </div>
 
               {/* Upcoming Shifts */}
-              <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-t-green-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Upcoming Shifts</p>
@@ -138,7 +138,7 @@ const CaregiverDashboard = () => {
               </div>
 
               {/* Rating */}
-              <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-t-yellow-500 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Rating</p>
@@ -162,7 +162,7 @@ const CaregiverDashboard = () => {
             </div>
 
             {/* Today's Schedule */}
-            <div className="bg-white rounded-xl shadow-md p-6 mb-8 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+            <div className="bg-white rounded-xl shadow-md p-6 mb-8 hover:shadow-lg transition-all duration-300">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Today's Schedule
@@ -191,7 +191,7 @@ const CaregiverDashboard = () => {
             </div>
 
             {/* Recent Bookings */}
-            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Recent Bookings
@@ -237,7 +237,7 @@ const CaregiverDashboard = () => {
             </div>
 
             {/* Recent Reviews */}
-            <div className="bg-white rounded-xl shadow-md p-6 mt-8 border-t-4 border-t-yellow-500 hover:shadow-lg transition-all duration-300">
+            <div className="bg-white rounded-xl shadow-md p-6 mt-8 hover:shadow-lg transition-all duration-300">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500" />
                 Recent Reviews

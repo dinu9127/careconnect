@@ -114,7 +114,7 @@ const Schedule = () => {
 
             {/* Stats Cards */}
             <div className="grid md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
@@ -124,7 +124,7 @@ const Schedule = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-sky-500 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Upcoming</p>
@@ -134,7 +134,7 @@ const Schedule = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-green-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Completed</p>
@@ -144,7 +144,7 @@ const Schedule = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-orange-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Total Hours</p>
@@ -157,10 +157,10 @@ const Schedule = () => {
 
             {/* Message */}
             {message.text && (
-              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 transition-all duration-300 ${
                 message.type === 'error'
-                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600'
-                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
+                  ? 'bg-red-100 text-red-800 border border-red-300'
+                  : 'bg-green-100 text-green-800 border border-green-300'
               }`}>
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <p>{message.text}</p>
@@ -191,7 +191,7 @@ const Schedule = () => {
                 <p className="mt-4 text-gray-600">Loading schedule...</p>
               </div>
             ) : filteredBookings.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-md p-12 text-center border-t-4 border-t-blue-600">
+              <div className="bg-white rounded-xl shadow-md p-12 text-center">
                 <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">No Bookings</h3>
                 <p className="text-gray-600">

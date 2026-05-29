@@ -152,7 +152,7 @@ const AdminReports = () => {
               {/* Main Stats Cards */}
               <div className="grid md:grid-cols-4 gap-4 mb-8">
                 {/* Users Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Total Users</p>
@@ -168,7 +168,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Caregivers Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-purple-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Caregiver Profiles</p>
@@ -183,7 +183,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Bookings Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-orange-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Active Bookings</p>
@@ -195,7 +195,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Complaints Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-red-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Open Complaints</p>

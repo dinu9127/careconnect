@@ -184,8 +184,8 @@ const UpdateAvailability = () => {
 
           {message && (
             <div
-              className={`p-4 mb-6 rounded-xl border-t-4 transition-all duration-300 ${
-                message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600' : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+              className={`p-4 mb-6 rounded-xl transition-all duration-300 ${
+                message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
               }`}
             >
               {message}
@@ -265,7 +265,7 @@ const UpdateAvailability = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-red-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   My Leave Slots
@@ -307,7 +307,7 @@ const UpdateAvailability = () => {
             </div>
 
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center justify-between">
                   <span>My Schedule</span>
                   <div className="flex items-center gap-4">

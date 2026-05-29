@@ -352,7 +352,7 @@ const AdminUsers = () => {
             ) : (
               <div className="space-y-6">
                 {/* Pending Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-yellow-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-yellow-50 px-6 py-4 border-b border-yellow-100">
                     <h3 className="text-lg font-bold text-slate-900">Pending Review ({pendingCaregivers.length})</h3>
                     <p className="text-sm text-slate-600 mt-1">Awaiting approval</p>
@@ -452,7 +452,7 @@ const AdminUsers = () => {
                 </div>
 
                 {/* Verified Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-green-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-green-50 px-6 py-4 border-b border-green-100">
                     <h3 className="text-lg font-bold text-slate-900">Verified ({verifiedCaregivers.length})</h3>
                     <p className="text-sm text-slate-600 mt-1">Approved caregivers</p>
@@ -523,7 +523,7 @@ const AdminUsers = () => {
                 </div>
 
                 {/* Rejected Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-red-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-red-50 px-6 py-4 border-b border-red-100">
                     <h3 className="text-lg font-bold text-slate-900">Rejected ({rejectedCaregivers.length})</h3>
                     <p className="text-sm text-slate-600 mt-1">Verification not approved</p>
