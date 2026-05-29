@@ -174,18 +174,18 @@ const UpdateAvailability = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="caregiver" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="caregiver" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Leave & Schedule</h1>
           <p className="text-gray-600 mb-6">You are available 24/7 by default. Add leave slots when you're not available.</p>
 
           {message && (
             <div
-              className={`p-4 mb-6 rounded-xl border-t-4 transition-all duration-300 ${
-                message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600' : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+              className={`p-4 mb-6 rounded-xl transition-all duration-300 ${
+                message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-green-100 text-green-700 border border-green-300'
               }`}
             >
               {message}
@@ -265,7 +265,7 @@ const UpdateAvailability = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-red-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   My Leave Slots
@@ -307,7 +307,7 @@ const UpdateAvailability = () => {
             </div>
 
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center justify-between">
                   <span>My Schedule</span>
                   <div className="flex items-center gap-4">

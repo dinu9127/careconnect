@@ -142,12 +142,12 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-      <Navbar />
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 overflow-hidden">
+      <Navbar isFixed />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-y-auto h-[calc(100vh-4rem)]">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 border-b-2 border-purple-200 pb-4">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">My Profile</h1>
           <p className="text-slate-600">Manage your account information</p>
         </div>

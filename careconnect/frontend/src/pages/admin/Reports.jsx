@@ -118,12 +118,12 @@ const AdminReports = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
-          <div className="flex items-center justify-between mb-6">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
+          <div className="flex items-center justify-between mb-6 border-b-2 border-purple-200 pb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
               <p className="text-gray-600">Generate downloadable PDF summaries</p>
@@ -152,7 +152,7 @@ const AdminReports = () => {
               {/* Main Stats Cards */}
               <div className="grid md:grid-cols-4 gap-4 mb-8">
                 {/* Users Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Total Users</p>
@@ -168,7 +168,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Caregivers Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-purple-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Caregiver Profiles</p>
@@ -183,7 +183,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Bookings Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-orange-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Active Bookings</p>
@@ -195,7 +195,7 @@ const AdminReports = () => {
                 </div>
 
                 {/* Complaints Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 border-t-4 border-red-500">
+                <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Open Complaints</p>

@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -30,6 +30,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -59,6 +62,7 @@ export const caregiverService = {
   getCaregivers: () => api.get('/caregivers'),
     getAllCaregiversAdmin: () => api.get('/caregivers/admin/all'),
   getCaregiverById: (id) => api.get(`/caregivers/${id}`),
+  getCaregiverDocuments: (id) => api.get(`/caregivers/${id}/documents`),
   updateCaregiver: (id, data) => api.put(`/caregivers/${id}`, data),
   uploadProfileImage: (file) => {
     const formData = new FormData()
@@ -113,7 +117,8 @@ export const uploadService = {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress
     })
-  }
+  },
+  getUserDocuments: (userId) => api.get(`/upload/user/${userId}`)
 }
 
 export default api

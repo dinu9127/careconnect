@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { User, LogOut } from 'lucide-react'
 
-const Navbar = () => {
+const Navbar = ({ isFixed = false }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
@@ -31,7 +31,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-slate-900 shadow-lg">
+    <nav className={`bg-slate-900 shadow-lg ${isFixed ? 'fixed top-0 left-0 right-0 z-50' : ''}`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">

@@ -120,6 +120,19 @@ const caregiverSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  profileImageData: {
+    data: {
+      type: Buffer,
+      select: false
+    },
+    contentType: String,
+    originalName: String,
+    size: Number,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
   verificationDocuments: [{
     url: {
       type: String,

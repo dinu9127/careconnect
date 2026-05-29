@@ -161,14 +161,14 @@ const AdminComplaints = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 border-b-2 border-purple-200 pb-4">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Complaints</h1>
               <p className="text-gray-600">Review and take action on client complaints</p>
             </div>

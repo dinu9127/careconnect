@@ -205,11 +205,11 @@ const Bookings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="client" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="client" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-2">My Bookings</h1>
@@ -245,22 +245,22 @@ const Bookings = () => {
             ) : (
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-teal-100 hover:border-teal-300">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-5 border border-teal-100 hover:border-teal-300">
+                    <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="text-xl font-bold text-gray-900">
                             {booking.caregiver?.user?.name || 'Caregiver'}
                           </h3>
-                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
                             {booking.status.toUpperCase()}
                           </span>
-                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
                             {booking.paymentStatus.toUpperCase()}
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-gray-600">
+                        <div className="grid gap-2 text-gray-600 sm:grid-cols-2">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-teal-600" />
                             <span>
@@ -282,7 +282,7 @@ const Bookings = () => {
                           </div>
                         </div>
 
-                        <div className="mt-3">
+                        <div className="mt-2">
                           <p className="text-sm text-gray-700">
                             <span className="font-semibold">Service:</span> {booking.serviceType}
                           </p>

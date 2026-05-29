@@ -385,26 +385,23 @@ const UpdateProfile = () => {
         caregiverData.longitude = longitude
       }
 
-      // If there's a new profile picture, upload it
+      // If there's a new profile picture, upload it first
       if (formData.profilePicture) {
-        const formDataToSend = new FormData()
-        formDataToSend.append('profilePicture', formData.profilePicture)
-        
-        Object.keys(caregiverData).forEach(key => {
-          if (Array.isArray(caregiverData[key])) {
-            formDataToSend.append(key, JSON.stringify(caregiverData[key]))
-          } else {
-            formDataToSend.append(key, caregiverData[key])
-          }
-        })
+        const imageData = new FormData()
+        imageData.append('file', formData.profilePicture)
 
-        await api.put(`/caregivers/${caregiverId}`, formDataToSend, {
+        const uploadResponse = await api.post('/caregivers/me/profile-image', imageData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-      } else {
-        // Update caregiver data without profile picture
-        await api.put(`/caregivers/${caregiverId}`, caregiverData)
+
+        const uploadedUrl = uploadResponse?.data?.data?.url
+        if (uploadedUrl) {
+          setFormData(prev => ({ ...prev, profilePicturePreview: uploadedUrl }))
+        }
       }
+
+      // Update caregiver data without profile picture
+      await api.put('/caregivers/me', caregiverData)
 
       setMessage('Profile updated successfully!')
       setFormData(prev => ({ ...prev, profilePicture: null }))
@@ -675,6 +672,10 @@ const UpdateProfile = () => {
   const hasCoords = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
   const mapCenter = hasCoords ? [parsedLatitude, parsedLongitude] : [7.8731, 80.7718]
   const mapZoom = hasCoords ? 13 : 7
+  const certificationList = formData.certifications
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -695,10 +696,10 @@ const UpdateProfile = () => {
 
             {/* Message */}
             {message && (
-              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 transition-all duration-300 ${
                 message.includes('Error') 
-                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600' 
-                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
+                  ? 'bg-red-100 text-red-800 border border-red-300' 
+                  : 'bg-green-100 text-green-800 border border-green-300'
               }`}>
                 {message.includes('Error') ? (
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -747,7 +748,7 @@ const UpdateProfile = () => {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
+              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8">
                 {/* Profile Picture Section */}
                 <div className="mb-8 pb-8 border-b">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -1058,9 +1059,9 @@ const UpdateProfile = () => {
                   <h2 className="text-2xl font-semibold text-gray-900">Verification Documents</h2>
                   <p className="text-sm text-gray-600">Upload verification documents (max 5MB).</p>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
+                <div className="bg-white rounded-xl shadow-md p-8">
                 <div className="mb-8">
-                  <DocumentUploadCard />
+                  <DocumentUploadCard certifications={certificationList} />
                 </div>
 
                 {/* Step 2: NVQ Certification */}
@@ -1310,16 +1311,16 @@ const UpdateProfile = () => {
 
             {/* Account Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6">Account Settings</h3>
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   <h4 className="text-sm font-semibold text-gray-700">Change Password</h4>
 
                   {passwordMessage.text && (
-                    <div className={`rounded-lg px-4 py-3 text-sm border-t-4 transition-all duration-300 ${
+                    <div className={`rounded-lg px-4 py-3 text-sm transition-all duration-300 ${
                       passwordMessage.type === 'error'
-                        ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600'
-                        : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-green-100 text-green-700 border border-green-300'
                     }`}>
                       {passwordMessage.text}
                     </div>
