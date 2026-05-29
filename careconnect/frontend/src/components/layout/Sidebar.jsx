@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, LayoutDashboard, Users, Calendar, Settings, AlertCircle, CreditCard, FileText, Home } from 'lucide-react'
 
-const Sidebar = ({ role = 'client' }) => {
+const Sidebar = ({ role = 'client', isFixed = false }) => {
   const [isOpen, setIsOpen] = useState(true)
   const location = useLocation()
 
@@ -73,7 +73,11 @@ const Sidebar = ({ role = 'client' }) => {
       <aside
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed md:relative md:translate-x-0 transition-transform duration-300 w-64 bg-slate-900 min-h-screen z-40 shadow-2xl`}
+        } ${
+          isFixed
+            ? 'fixed top-16 h-[calc(100vh-4rem)] md:translate-x-0'
+            : 'fixed md:relative md:translate-x-0 min-h-screen'
+        } transition-transform duration-300 w-64 bg-slate-900 z-40 shadow-2xl`}
       >
         {/* Header */}
         <div className={`bg-gradient-to-r ${colors.header} text-white p-6 shadow-lg`}>

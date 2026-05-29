@@ -118,11 +118,11 @@ const AdminReports = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Reports</h1>

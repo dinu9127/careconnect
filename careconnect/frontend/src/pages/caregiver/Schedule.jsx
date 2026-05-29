@@ -100,11 +100,11 @@ const Schedule = () => {
   }, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="caregiver" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="caregiver" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-8">

@@ -143,11 +143,11 @@ const AdminProfile = () => {
   // Show loading spinner while fetching data
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar />
-        <div className="flex">
-          <Sidebar role="admin" />
-          <main className="flex-1 p-8">
+      <div className="h-screen bg-slate-50 overflow-hidden">
+        <Navbar isFixed />
+        <div className="flex pt-16 h-full">
+          <Sidebar role="admin" isFixed />
+          <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
             <div className="flex justify-center items-center h-96">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -165,11 +165,11 @@ const AdminProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-6">
+    <div className="h-screen bg-slate-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-6 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           {/* Header */}
           <div className="mb-6 border-b-2 border-purple-300 pb-3">
             <h1 className="text-2xl font-bold text-slate-900">Admin Profile</h1>
