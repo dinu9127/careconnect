@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
-import { userService, caregiverService } from '../../services/api'
+import { userService, caregiverService, uploadService } from '../../services/api'
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
 const AdminUsers = () => {
@@ -19,12 +19,65 @@ const AdminUsers = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false)
   const [pendingRejectionId, setPendingRejectionId] = useState(null)
   const [actionMessage, setActionMessage] = useState({ type: '', text: '' })
+  const [documentsModal, setDocumentsModal] = useState({ open: false, caregiver: null })
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+  const [documentsError, setDocumentsError] = useState('')
+  const [documentsData, setDocumentsData] = useState({
+    uploads: [],
+    nvqCertifications: [],
+    professionalDocuments: [],
+    verificationDocuments: []
+  })
 
   const showActionMessage = (type, text) => {
     setActionMessage({ type, text })
     window.setTimeout(() => {
       setActionMessage({ type: '', text: '' })
     }, 4000)
+  }
+
+  const formatDate = (value) => {
+    if (!value) return 'N/A'
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return 'N/A'
+    return parsed.toLocaleDateString()
+  }
+
+  const openDocumentsModal = async (caregiver) => {
+    setDocumentsModal({ open: true, caregiver })
+    setDocumentsLoading(true)
+    setDocumentsError('')
+    setDocumentsData({
+      uploads: [],
+      nvqCertifications: [],
+      professionalDocuments: [],
+      verificationDocuments: caregiver?.verificationDocuments || []
+    })
+
+    try {
+      const userId = caregiver?.user?._id
+      const [caregiverDocsResponse, userDocsResponse] = await Promise.all([
+        caregiverService.getCaregiverDocuments(caregiver._id),
+        userId ? uploadService.getUserDocuments(userId) : Promise.resolve({ data: { data: [] } })
+      ])
+
+      setDocumentsData({
+        uploads: userDocsResponse.data?.data || [],
+        nvqCertifications: caregiverDocsResponse.data?.data?.nvqCertifications || [],
+        professionalDocuments: caregiverDocsResponse.data?.data?.professionalDocuments || [],
+        verificationDocuments: caregiver?.verificationDocuments || []
+      })
+    } catch (err) {
+      console.error('Error fetching caregiver documents:', err)
+      setDocumentsError('Failed to load caregiver documents. Please try again.')
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }
+
+  const closeDocumentsModal = () => {
+    setDocumentsModal({ open: false, caregiver: null })
+    setDocumentsError('')
   }
 
   useEffect(() => {
@@ -179,6 +232,15 @@ const AdminUsers = () => {
     }
   }
 
+  const groupedUploads = documentsData.uploads.reduce((acc, doc) => {
+    const key = doc.fileType || 'Other'
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(doc)
+    return acc
+  }, {})
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -331,6 +393,12 @@ const AdminUsers = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex gap-2 items-center">
+                              <button
+                                onClick={() => openDocumentsModal(caregiver)}
+                                className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                              >
+                                Documents
+                              </button>
                               {(caregiver.verificationStatus || 'pending') === 'pending' && (
                                 <>
                                   <button
@@ -426,6 +494,12 @@ const AdminUsers = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex gap-2 items-center">
                                   <button
+                                    onClick={() => openDocumentsModal(caregiver)}
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                                  >
+                                    Documents
+                                  </button>
+                                  <button
                                     onClick={() => handleVerificationUpdate(caregiver._id, 'rejected')}
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
                                   >
@@ -490,6 +564,12 @@ const AdminUsers = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex gap-2 items-center">
+                                  <button
+                                    onClick={() => openDocumentsModal(caregiver)}
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                                  >
+                                    Documents
+                                  </button>
                                   <button
                                     onClick={() => handleVerificationUpdate(caregiver._id, 'verified')}
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
@@ -588,6 +668,166 @@ const AdminUsers = () => {
           )}
         </main>
       </div>
+
+      {/* Documents Modal */}
+      {documentsModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Caregiver Documents</h3>
+                <p className="text-sm text-slate-600">
+                  {documentsModal.caregiver?.user?.name || 'Caregiver'}
+                </p>
+              </div>
+              <button
+                onClick={closeDocumentsModal}
+                className="text-sm font-semibold text-slate-600 hover:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+
+            {documentsLoading ? (
+              <div className="py-12 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto mb-3"></div>
+                <p className="text-slate-600">Loading documents...</p>
+              </div>
+            ) : documentsError ? (
+              <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-4 py-4 rounded-lg">
+                <p className="font-semibold">Error</p>
+                <p className="text-sm mt-1">{documentsError}</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-2">Uploaded Files (Identity/Police/Qualification)</h4>
+                  {Object.keys(groupedUploads).length === 0 ? (
+                    <p className="text-sm text-slate-500">No uploaded files found.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {Object.entries(groupedUploads).map(([type, docs]) => (
+                        <div key={type} className="rounded-lg border border-slate-200 p-3">
+                          <p className="text-xs font-bold uppercase text-slate-500">{type}</p>
+                          <div className="mt-2 space-y-2">
+                            {docs.map((doc) => (
+                              <div key={doc._id} className="flex items-center justify-between gap-3 text-sm">
+                                <div>
+                                  <a
+                                    href={doc.fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-blue-700 underline"
+                                  >
+                                    {doc.fileName || 'View document'}
+                                  </a>
+                                  <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.createdAt)}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-2">NVQ Certifications</h4>
+                  {documentsData.nvqCertifications.length === 0 ? (
+                    <p className="text-sm text-slate-500">No NVQ certifications uploaded.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {documentsData.nvqCertifications.map((cert) => (
+                        <div key={cert._id} className="rounded-lg border border-slate-200 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{cert.level || 'NVQ'}</p>
+                              <p className="text-xs text-slate-500">{cert.subject || 'Subject not provided'}</p>
+                              <p className="text-xs text-slate-500">Issued: {formatDate(cert.issueDate)}</p>
+                            </div>
+                            {cert.documentUrl && (
+                              <a
+                                href={cert.documentUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm text-blue-700 underline"
+                              >
+                                View document
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-2">Professional Documents</h4>
+                  {documentsData.professionalDocuments.length === 0 ? (
+                    <p className="text-sm text-slate-500">No professional documents uploaded.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {documentsData.professionalDocuments.map((doc) => (
+                        <div key={doc._id} className="rounded-lg border border-slate-200 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{doc.title || doc.documentType || 'Document'}</p>
+                              <p className="text-xs text-slate-500">{doc.issuer || 'Issuer not provided'}</p>
+                              <p className="text-xs text-slate-500">Issued: {formatDate(doc.issueDate)}</p>
+                            </div>
+                            {doc.documentUrl && (
+                              <a
+                                href={doc.documentUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm text-blue-700 underline"
+                              >
+                                View document
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-2">Verification Documents</h4>
+                  {documentsData.verificationDocuments.length === 0 ? (
+                    <p className="text-sm text-slate-500">No verification documents uploaded.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {documentsData.verificationDocuments.map((doc) => (
+                        <div key={doc._id} className="rounded-lg border border-slate-200 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{doc.originalName || 'Verification Document'}</p>
+                              <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.uploadedAt)}</p>
+                            </div>
+                            {doc.url && (
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm text-blue-700 underline"
+                              >
+                                View document
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Rejection Reason Modal */}
       {showRejectionModal && (

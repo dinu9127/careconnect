@@ -128,3 +128,24 @@ export const uploadFile = async (req, res) => {
     });
   }
 };
+
+// @desc    Get uploaded documents for a user (admin only)
+// @route   GET /api/upload/user/:id
+// @access  Private/Admin
+export const getUserDocuments = async (req, res) => {
+  try {
+    const documents = await Document.find({ userId: req.params.id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data: documents
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

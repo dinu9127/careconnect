@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Phone, MapPin, Edit2, Save, X, Lock, Loader2 } from 'lucide-react'
+import { User, Mail, Edit2, Save, X, Lock, Loader2 } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import { userService } from '../../services/api'
@@ -15,9 +15,7 @@ const AdminProfile = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    phone: '',
-    address: ''
+    email: ''
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -43,9 +41,7 @@ const AdminProfile = () => {
       setUserData(user)
       setFormData({
         name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || ''
+        email: user.email || ''
       })
     }
     
@@ -66,9 +62,7 @@ const AdminProfile = () => {
 
       // Call API to update profile
       const response = await userService.updateUser(userData._id, {
-        name: formData.name,
-        phone: formData.phone,
-        address: formData.address
+        name: formData.name
       })
 
       // Update localStorage
@@ -94,9 +88,7 @@ const AdminProfile = () => {
   const handleCancel = () => {
     setFormData({
       name: userData.name || '',
-      email: userData.email || '',
-      phone: userData.phone || '',
-      address: userData.address || ''
+      email: userData.email || ''
     })
     setIsEditing(false)
     setMessage({ type: '', text: '' })
@@ -276,29 +268,6 @@ const AdminProfile = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white border border-purple-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-purple-600 font-bold uppercase tracking-wide mb-1">Phone Number</p>
-                        <p className="text-base text-slate-900 font-semibold">{userData.phone || 'Not provided'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-purple-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-purple-600 font-bold uppercase tracking-wide mb-1">Address</p>
-                        <p className="text-base text-slate-900 font-semibold">{userData.address || 'Not provided'}</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -337,39 +306,6 @@ const AdminProfile = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 mb-1.5 uppercase tracking-wide">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white text-slate-900 font-medium text-sm"
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 mb-1.5 uppercase tracking-wide">
-                    Address
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      rows="3"
-                      className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none bg-white text-slate-900 font-medium text-sm"
-                      placeholder="Enter your address"
-                    />
-                  </div>
-                </div>
                 </div>
               )}
             </div>

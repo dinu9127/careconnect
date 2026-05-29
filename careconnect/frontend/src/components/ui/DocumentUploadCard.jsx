@@ -38,12 +38,13 @@ const usePreviewUrl = (file) => {
   return previewUrl
 }
 
-const DocumentUploadCard = () => {
+const DocumentUploadCard = ({ certifications = [] }) => {
   const [activeSection, setActiveSection] = useState(0)
   const [identityType, setIdentityType] = useState('')
   const [identityFile, setIdentityFile] = useState(null)
   const [policeFile, setPoliceFile] = useState(null)
   const [qualificationFile, setQualificationFile] = useState(null)
+  const [qualificationItems, setQualificationItems] = useState([])
   const [identityExtraFiles, setIdentityExtraFiles] = useState([])
   const [identityExtraError, setIdentityExtraError] = useState('')
   const [isDragActive, setIsDragActive] = useState(false)
@@ -468,6 +469,99 @@ const DocumentUploadCard = () => {
   }
 
   const showIdentityExtras = identityStatus.type === 'success' || Boolean(identityUploadedUrl)
+  const normalizedCertifications = Array.isArray(certifications)
+    ? certifications.map((item) => item.trim()).filter(Boolean)
+    : []
+
+  useEffect(() => {
+    if (normalizedCertifications.length === 0) {
+      setQualificationItems([])
+      return
+    }
+
+    setQualificationItems((prev) => {
+      const next = normalizedCertifications.map((name, index) => {
+        const existing = prev.find((item) => item.name === name)
+        if (existing) {
+          return existing
+        }
+        return {
+          id: `${name}-${index}`,
+          name,
+          file: null,
+          status: { type: '', text: '' },
+          uploadedUrl: '',
+          uploading: false
+        }
+      })
+      return next
+    })
+  }, [normalizedCertifications])
+
+  const updateQualificationItem = (name, updates) => {
+    setQualificationItems((prev) =>
+      prev.map((item) => (item.name === name ? { ...item, ...updates } : item))
+    )
+  }
+
+  const handleQualificationFileSelect = (event, name) => {
+    const selectedFile = event.target.files?.[0] || null
+    updateQualificationItem(name, { status: { type: '', text: '' }, uploadedUrl: '' })
+
+    if (!selectedFile) {
+      updateQualificationItem(name, { file: null })
+      return
+    }
+
+    if (!isAllowedFile(selectedFile)) {
+      updateQualificationItem(name, {
+        file: null,
+        status: { type: 'error', text: 'Only JPG, PNG, PDF, or DOCX files are allowed.' }
+      })
+      return
+    }
+
+    if (selectedFile.size > MAX_FILE_BYTES) {
+      updateQualificationItem(name, {
+        file: null,
+        status: { type: 'error', text: 'File size must be 5MB or less.' }
+      })
+      return
+    }
+
+    updateQualificationItem(name, { file: selectedFile })
+  }
+
+  const handleQualificationUpload = async (item) => {
+    if (!item.file) {
+      updateQualificationItem(item.name, {
+        status: { type: 'error', text: 'Please select a file to upload.' }
+      })
+      return
+    }
+
+    try {
+      updateQualificationItem(item.name, { uploading: true, status: { type: '', text: '' } })
+      const response = await uploadService.uploadDocument({
+        file: item.file,
+        fileType: 'Qualification',
+        metadata: { certificationName: item.name }
+      })
+      const fileUrl = response.data?.data?.fileUrl || ''
+      updateQualificationItem(item.name, {
+        uploading: false,
+        file: null,
+        uploadedUrl: fileUrl,
+        status: { type: 'success', text: response.data?.message || 'Upload complete.' }
+      })
+    } catch (error) {
+      const message = error.response?.data?.message || 'Upload failed. Please try again.'
+      updateQualificationItem(item.name, {
+        uploading: false,
+        status: { type: 'error', text: message }
+      })
+    }
+  }
 
   return (
     <div className="grid gap-4">
@@ -606,31 +700,104 @@ const DocumentUploadCard = () => {
             })
         })}
 
-      {activeSection >= 2 && renderUploadSection({
-          title: 'NVQ / Other Qualification',
-          file: qualificationFile,
-          previewUrl: qualificationPreviewUrl,
-          status: qualificationStatus,
-          uploadedUrl: qualificationUploadedUrl,
-          uploading: qualificationUploading,
-          onFileChange: (event) =>
-            handleFileChange(
-              event,
-              setQualificationFile,
-              setQualificationStatus,
-              setQualificationUploadedUrl
-            ),
-          onUpload: () =>
-            handleUpload({
+      {activeSection >= 2 && (
+        <>
+          <h4 className="text-sm font-semibold text-gray-900">NVQ / Other Qualification</h4>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            If you are unable to add valid certification which is mentioned under profile section, your profile will be rejected.
+          </div>
+
+          {normalizedCertifications.length === 0 ? (
+            renderUploadSection({
+              title: 'NVQ / Other Qualification',
               file: qualificationFile,
-              fileType: 'Qualification',
-              metadata: {},
-              setStatus: setQualificationStatus,
-              setUploadedUrl: setQualificationUploadedUrl,
-              setUploading: setQualificationUploading,
-              setFile: setQualificationFile
+              previewUrl: qualificationPreviewUrl,
+              status: qualificationStatus,
+              uploadedUrl: qualificationUploadedUrl,
+              uploading: qualificationUploading,
+              onFileChange: (event) =>
+                handleFileChange(
+                  event,
+                  setQualificationFile,
+                  setQualificationStatus,
+                  setQualificationUploadedUrl
+                ),
+              onUpload: () =>
+                handleUpload({
+                  file: qualificationFile,
+                  fileType: 'Qualification',
+                  metadata: {},
+                  setStatus: setQualificationStatus,
+                  setUploadedUrl: setQualificationUploadedUrl,
+                  setUploading: setQualificationUploading,
+                  setFile: setQualificationFile
+                })
             })
-        })}
+          ) : (
+            <div className="space-y-3">
+              {qualificationItems.map((item) => (
+                <div key={item.id} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">Upload the certificate for this qualification.</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Upload className="inline h-4 w-4 mr-2" />
+                      Select File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf,.docx"
+                      onChange={(event) => handleQualificationFileSelect(event, item.name)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    />
+                    {item.file && (
+                      <p className="mt-2 text-sm text-gray-600">Selected: {item.file.name}</p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleQualificationUpload(item)}
+                      disabled={item.uploading}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-gray-400"
+                    >
+                      {item.uploading ? 'Uploading...' : 'Upload File'}
+                    </button>
+                    {item.uploadedUrl && (
+                      <a
+                        href={item.uploadedUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-700 underline"
+                      >
+                        View uploaded file
+                      </a>
+                    )}
+                  </div>
+
+                  {item.status.text && (
+                    <div
+                      className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                        item.status.type === 'error'
+                          ? 'bg-red-50 text-red-700'
+                          : 'bg-green-50 text-green-700'
+                      }`}
+                    >
+                      {item.status.text}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

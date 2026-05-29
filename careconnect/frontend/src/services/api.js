@@ -59,6 +59,7 @@ export const caregiverService = {
   getCaregivers: () => api.get('/caregivers'),
     getAllCaregiversAdmin: () => api.get('/caregivers/admin/all'),
   getCaregiverById: (id) => api.get(`/caregivers/${id}`),
+  getCaregiverDocuments: (id) => api.get(`/caregivers/${id}/documents`),
   updateCaregiver: (id, data) => api.put(`/caregivers/${id}`, data),
   uploadProfileImage: (file) => {
     const formData = new FormData()
@@ -113,7 +114,8 @@ export const uploadService = {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress
     })
-  }
+  },
+  getUserDocuments: (userId) => api.get(`/upload/user/${userId}`)
 }
 
 export default api

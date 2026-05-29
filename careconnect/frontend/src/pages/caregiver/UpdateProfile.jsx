@@ -675,6 +675,10 @@ const UpdateProfile = () => {
   const hasCoords = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
   const mapCenter = hasCoords ? [parsedLatitude, parsedLongitude] : [7.8731, 80.7718]
   const mapZoom = hasCoords ? 13 : 7
+  const certificationList = formData.certifications
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1060,7 +1064,7 @@ const UpdateProfile = () => {
                 </div>
                 <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
                 <div className="mb-8">
-                  <DocumentUploadCard />
+                  <DocumentUploadCard certifications={certificationList} />
                 </div>
 
                 {/* Step 2: NVQ Certification */}
