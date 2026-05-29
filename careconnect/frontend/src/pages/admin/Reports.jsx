@@ -123,7 +123,7 @@ const AdminReports = () => {
       <div className="flex pt-16 h-full">
         <Sidebar role="admin" isFixed />
         <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 border-b-2 border-purple-200 pb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
               <p className="text-gray-600">Generate downloadable PDF summaries</p>

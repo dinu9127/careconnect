@@ -109,7 +109,7 @@ const AdminCaregivers = () => {
       <div className="flex pt-16 h-full">
         <Sidebar role="admin" isFixed />
         <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 border-b-2 border-purple-200 pb-4">
             <h1 className="text-3xl font-bold text-gray-800">Caregiver Management</h1>
             <div className="text-sm text-gray-600">
               Total: {filteredCaregivers.length} caregiver{filteredCaregivers.length !== 1 ? 's' : ''}

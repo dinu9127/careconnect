@@ -263,7 +263,7 @@ const ClientDashboard = () => {
                             to="/client/bookings"
                             className="text-teal-600 hover:text-teal-700 text-sm font-medium mt-2 inline-block hover:underline"
                           >
-                            View Details →
+                            View Details
                           </Link>
                         </div>
                       </div>
@@ -278,7 +278,7 @@ const ClientDashboard = () => {
                     to="/client/bookings"
                     className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                   >
-                    View All Bookings →
+                    View All Bookings
                   </Link>
                 </div>
               )}

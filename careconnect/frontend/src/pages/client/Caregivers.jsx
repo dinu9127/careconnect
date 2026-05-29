@@ -4,6 +4,7 @@ import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import CaregiverProfileModal from '../../components/ui/CaregiverProfileModal'
 import BookingModal from '../../components/ui/BookingModal'
+import { getAvatarPlaceholder } from '../../utils/avatar'
 import axios from 'axios'
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet'
 import L from 'leaflet'
@@ -158,6 +159,7 @@ const Caregivers = () => {
 
   const CaregiverCard = ({ caregiver }) => {
     const userData = caregiver.user || {}
+    const avatarSrc = caregiver.profileImage || getAvatarPlaceholder(userData.name)
     
     return (
       <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-teal-100 hover:border-teal-300 group">
@@ -166,11 +168,12 @@ const Caregivers = () => {
             {/* Profile Image */}
             <div className="relative flex-shrink-0">
               <img
-                src={caregiver.profileImage || `https://via.placeholder.com/150/4A5568/FFFFFF?text=${userData.name?.split(' ')[0]}`}
+                src={avatarSrc}
                 alt={userData.name}
                 className="w-24 h-24 rounded-xl object-cover ring-2 ring-teal-200 group-hover:ring-teal-400 transition"
                 onError={(e) => {
-                  e.target.src = `https://via.placeholder.com/150/4A5568/FFFFFF?text=${userData.name?.split(' ')[0]}`
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = getAvatarPlaceholder(userData.name)
                 }}
               />
               <div className="absolute -top-1 -right-1 bg-teal-600 rounded-full p-1 shadow-lg">

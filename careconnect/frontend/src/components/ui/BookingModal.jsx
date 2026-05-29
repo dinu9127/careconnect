@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, Calendar, Clock, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
-import axios from 'axios'
+import api from '../../services/api'
 
 const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -17,11 +17,29 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [selectingEndDate, setSelectingEndDate] = useState(false)
   const [bookedDates, setBookedDates] = useState([])
 
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const userData = caregiver?.user || {}
   const serviceTypes = caregiver?.serviceTypes || []
 
   useEffect(() => {
     if (isOpen && caregiver) {
+      setFormData({
+        startDate: '',
+        endDate: '',
+        startTime: '09:00',
+        endTime: '17:00',
+        serviceType: '',
+        notes: ''
+      })
+      setError('')
+      setSelectingEndDate(false)
+      setCurrentMonth(new Date())
       fetchBookedDates()
     }
   }, [isOpen, caregiver])
@@ -46,11 +64,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
         console.error('Caregiver ID is missing')
         return
       }
-      const response = await axios.get(`/api/caregivers/${caregiver._id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await api.get(`/caregivers/${caregiver._id}`)
       setBookedDates(response.data.data?.bookedDates || [])
     } catch (err) {
       console.error('Failed to fetch booked dates:', err)
@@ -143,11 +157,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
         totalAmount: Math.round(totalAmount)
       }
 
-      const response = await axios.post('/api/bookings', bookingData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await api.post('/bookings', bookingData)
 
       if (response.data.success) {
         setFormData({
@@ -201,7 +211,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const handleDateClick = (date) => {
     if (!isDateAvailable(date)) return
     
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatLocalDate(date)
     
     if (!selectingEndDate) {
       setFormData(prev => ({
@@ -302,7 +312,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-gap-2">
@@ -371,8 +381,9 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
 
                 const isAvailable = isDateAvailable(date)
                 const isBooked = isDateBooked(date)
-                const isSelected = formData.startDate === date.toISOString().split('T')[0] || 
-                                  formData.endDate === date.toISOString().split('T')[0]
+                const dateStr = formatLocalDate(date)
+                const isSelected = formData.startDate === dateStr || 
+                                  formData.endDate === dateStr
                 const isInRange = isDateInRange(date)
                 const isToday = date.toDateString() === new Date().toDateString()
 
@@ -439,7 +450,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               name="startDate"
               value={formData.startDate}
               onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
+              min={formatLocalDate(new Date())}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
@@ -457,7 +468,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               name="endDate"
               value={formData.endDate}
               onChange={handleChange}
-              min={formData.startDate || new Date().toISOString().split('T')[0]}
+              min={formData.startDate || formatLocalDate(new Date())}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>

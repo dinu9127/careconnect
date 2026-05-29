@@ -1,5 +1,6 @@
 import React from 'react'
 import { X, Star, MapPin, Clock, Award, Phone, Mail, DollarSign } from 'lucide-react'
+import { getAvatarPlaceholder } from '../../utils/avatar'
 
 const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
   if (!isOpen || !caregiver) return null
@@ -34,7 +35,7 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
           <div className="flex gap-6 mb-8 pb-8 border-b border-slate-200">
             <div>
               <img
-                src={caregiver.profileImage || `https://via.placeholder.com/150/4A5568/FFFFFF?text=${userData.name?.split(' ')[0]}`}
+                src={caregiver.profileImage || getAvatarPlaceholder(userData.name)}
                 alt={userData.name}
                 className="w-32 h-32 rounded-xl object-cover ring-2 ring-slate-200"
               />
