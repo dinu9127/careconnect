@@ -8,6 +8,7 @@ import {
   createCaregiver,
   updateCaregiver,
   uploadProfileImage,
+  getCaregiverProfileImage,
   uploadVerificationDocument,
   getVerificationDocumentSignedUrl,
   addNVQCertification,
@@ -39,6 +40,7 @@ router.get('/admin/all', protect, authorize('admin'), getAllCaregiversAdmin);
 // Basic caregiver routes
 router.get('/nearby', getCaregiversNearby);
 router.get('/', getCaregivers);
+router.get('/:id([0-9a-fA-F]{24})/profile-image', getCaregiverProfileImage);
 router.get('/me', protect, authorize('caregiver'), getMyCaregiverProfile);
 router.post(
   '/me/profile-image',

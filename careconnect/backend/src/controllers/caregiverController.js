@@ -286,37 +286,55 @@ export const uploadProfileImage = async (req, res) => {
         message: 'Please attach an image file'
       });
     }
-
-    const privateToken =
-      process.env.BLOB_PRIVATE_READ_WRITE_TOKEN ||
-      process.env.BLOB_READ_WRITE_TOKEN;
-    if (!privateToken) {
-      return res.status(500).json({
-        success: false,
-        message: 'Blob storage token is not configured'
-      });
-    }
-
-    // Resolve caregiver profile and build a scoped blob key.
+    // Resolve caregiver profile and store the image in MongoDB.
     const caregiver = await ensureCaregiverProfile(req.user.id || req.user._id);
-    const safeName = sanitizeFilename(req.file.originalname || 'profile');
-    const extension = path.extname(safeName) || '';
-    const key = `caregivers/profile-images/${caregiver._id}/${Date.now()}${extension}`;
 
-    // Store the file in Vercel Blob and persist the URL.
-    const { url } = await put(key, req.file.buffer, {
-      access: 'public',
+    caregiver.profileImageData = {
+      data: req.file.buffer,
       contentType: req.file.mimetype,
-      token: publicToken
-    });
-
-    caregiver.profileImage = url;
+      originalName: req.file.originalname,
+      size: req.file.size,
+      uploadedAt: new Date()
+    };
+    caregiver.profileImage = `/api/caregivers/${caregiver._id}/profile-image`;
     await caregiver.save();
 
     return res.status(200).json({
       success: true,
-      data: { url }
+      data: {
+        url: `${caregiver.profileImage}?t=${Date.now()}`
+      }
     });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get caregiver profile image
+// @route   GET /api/caregivers/:id/profile-image
+// @access  Public
+export const getCaregiverProfileImage = async (req, res) => {
+  try {
+    const caregiver = await Caregiver.findById(req.params.id)
+      .select('profileImageData.contentType profileImageData.size')
+      .select('+profileImageData.data');
+
+    if (!caregiver || !caregiver.profileImageData?.data) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile image not found'
+      });
+    }
+
+    res.set('Content-Type', caregiver.profileImageData.contentType || 'application/octet-stream');
+    if (caregiver.profileImageData.size) {
+      res.set('Content-Length', caregiver.profileImageData.size);
+    }
+    res.set('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(caregiver.profileImageData.data);
   } catch (error) {
     return res.status(500).json({
       success: false,

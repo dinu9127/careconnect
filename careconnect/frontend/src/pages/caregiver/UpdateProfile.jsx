@@ -385,26 +385,23 @@ const UpdateProfile = () => {
         caregiverData.longitude = longitude
       }
 
-      // If there's a new profile picture, upload it
+      // If there's a new profile picture, upload it first
       if (formData.profilePicture) {
-        const formDataToSend = new FormData()
-        formDataToSend.append('profilePicture', formData.profilePicture)
-        
-        Object.keys(caregiverData).forEach(key => {
-          if (Array.isArray(caregiverData[key])) {
-            formDataToSend.append(key, JSON.stringify(caregiverData[key]))
-          } else {
-            formDataToSend.append(key, caregiverData[key])
-          }
-        })
+        const imageData = new FormData()
+        imageData.append('file', formData.profilePicture)
 
-        await api.put(`/caregivers/${caregiverId}`, formDataToSend, {
+        const uploadResponse = await api.post('/caregivers/me/profile-image', imageData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-      } else {
-        // Update caregiver data without profile picture
-        await api.put(`/caregivers/${caregiverId}`, caregiverData)
+
+        const uploadedUrl = uploadResponse?.data?.data?.url
+        if (uploadedUrl) {
+          setFormData(prev => ({ ...prev, profilePicturePreview: uploadedUrl }))
+        }
       }
+
+      // Update caregiver data without profile picture
+      await api.put('/caregivers/me', caregiverData)
 
       setMessage('Profile updated successfully!')
       setFormData(prev => ({ ...prev, profilePicture: null }))
