@@ -189,7 +189,7 @@ const ClientDashboard = () => {
           </div>
 
           {/* Recent Activity Section */}
-          <div className="bg-white rounded-2xl shadow-md border border-teal-100">
+          <div className="bg-white rounded-2xl shadow-md border border-teal-100 mb-8">
             <div className="p-6 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-teal-50">
               <h2 className="text-2xl font-bold text-gray-900">Recent Activities</h2>
               <p className="text-gray-600 text-sm mt-1">Your latest bookings and activities</p>
@@ -290,7 +290,7 @@ const ClientDashboard = () => {
             <div className="bg-white rounded-2xl shadow-md border border-red-100 mb-8 overflow-hidden">
               <div className="p-6 border-b border-red-100 bg-gradient-to-r from-red-50 to-pink-50">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                
                   <h2 className="text-2xl font-bold text-gray-900">Recently Submitted Complaints</h2>
                 </div>
                 <p className="text-gray-600 text-sm mt-1">Your latest complaints and issues</p>
