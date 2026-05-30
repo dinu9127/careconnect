@@ -106,7 +106,7 @@ const Payments = () => {
         <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8 border-b-2 border-purple-200 pb-4">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Payment Management</h1>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">Payments</h1>
               <p className="text-gray-600">View and manage all payments</p>
             </div>
 
@@ -185,9 +185,6 @@ const Payments = () => {
                         Service
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Method
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -195,9 +192,6 @@ const Payments = () => {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -224,11 +218,6 @@ const Payments = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-teal-600">
-                            ${booking.totalAmount}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2 text-sm text-gray-900">
                             {getPaymentMethodIcon(booking.paymentMethod)}
                             <span className="capitalize">
@@ -246,25 +235,6 @@ const Payments = () => {
                             ? new Date(booking.paymentDate).toLocaleDateString()
                             : '-'
                           }
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {booking.paymentStatus === 'pending' && (
-                            <button
-                              onClick={() => {
-                                setSelectedBooking(booking)
-                                setShowModal(true)
-                              }}
-                              className="flex items-center gap-1 text-teal-600 hover:text-teal-800 font-medium"
-                            >
-                              <Eye className="w-4 h-4" />
-                              Verify
-                            </button>
-                          )}
-                          {booking.paymentStatus === 'paid' && booking.transactionId && (
-                            <div className="text-xs text-gray-500">
-                              ID: {booking.transactionId.substring(0, 12)}...
-                            </div>
-                          )}
                         </td>
                       </tr>
                     ))}

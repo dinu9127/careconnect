@@ -169,7 +169,7 @@ const AdminComplaints = () => {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8 border-b-2 border-purple-200 pb-4">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Manage Complaints</h1>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">Manage Complaints</h1>
               <p className="text-gray-600">Review and take action on client complaints</p>
             </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Edit2, Save, X, Lock, Loader2 } from 'lucide-react'
+import { User, Mail, Save, X, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import { userService } from '../../services/api'
@@ -22,6 +22,11 @@ const AdminProfile = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  })
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
   })
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
   const [passwordLoading, setPasswordLoading] = useState(false)
@@ -102,6 +107,13 @@ const AdminProfile = () => {
     }))
   }
 
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
     setPasswordMessage({ type: '', text: '' })
@@ -172,7 +184,7 @@ const AdminProfile = () => {
         <main className="flex-1 p-6 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           {/* Header */}
           <div className="mb-6 border-b-2 border-purple-300 pb-3">
-            <h1 className="text-2xl font-bold text-slate-900">Admin Profile</h1>
+            <h1 className="text-4xl font-bold text-slate-900">Admin Profile</h1>
             <p className="text-slate-600 text-sm mt-1">Manage your administrator account settings</p>
           </div>
 
@@ -190,55 +202,10 @@ const AdminProfile = () => {
           <div className="max-w-4xl mx-auto">
             {/* Profile Card */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-            {/* Header Section */}
-            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-5 py-5">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm">
-                  <User className="w-7 h-7 text-purple-600" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">{userData.name}</h2>
-                  <p className="text-purple-100 uppercase text-xs font-bold tracking-wide mt-0.5">Administrator</p>
-                </div>
-              </div>
-            </div>
-
             {/* Profile Info - View Mode (Read-only cards) */}
             <div className="p-5">
-              <div className="flex justify-between items-center mb-5">
+              <div className="mb-5">
                 <h3 className="text-base font-bold text-slate-900">Personal Information</h3>
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-semibold text-sm"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSave}
-                      disabled={saveLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md font-semibold text-sm"
-                    >
-                      {saveLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4" />
-                      )}
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      disabled={saveLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md font-semibold text-sm"
-                    >
-                      <X className="w-4 h-4" />
-                      Cancel
-                    </button>
-                  </div>
-                )}
               </div>
 
               {!isEditing ? (
@@ -312,93 +279,100 @@ const AdminProfile = () => {
           </div>
 
           {/* Change Password Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-700 to-purple-800 px-5 py-4">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <Lock className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-base font-bold text-white">Change Password</h3>
-              </div>
-            </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-6">Account Settings</h3>
 
-            <div className="p-5">
-              {/* Password Messages */}
-              {passwordMessage.text && (
-                <div className={`mb-4 p-3 rounded-lg border-l-4 text-xs font-semibold ${
-                  passwordMessage.type === 'success' 
-                    ? 'bg-green-50 text-green-800 border-green-500' 
-                    : 'bg-red-50 text-red-800 border-red-500'
-                }`}>
-                  <p>{passwordMessage.text}</p>
-                </div>
-              )}
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700">Change Password</h4>
 
-              <form onSubmit={handlePasswordSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 mb-1.5 uppercase tracking-wide">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white text-slate-900 font-medium text-sm"
-                    placeholder="Enter your current password"
-                    required
-                  />
-                </div>
+                {passwordMessage.text && (
+                  <div className={`rounded-lg px-4 py-3 text-sm ${
+                    passwordMessage.type === 'success'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {passwordMessage.text}
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 mb-1.5 uppercase tracking-wide">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white text-slate-900 font-medium text-sm"
-                    placeholder="Enter new password"
-                    required
-                  />
-                  <p className="mt-2 text-xs text-slate-600 bg-slate-50 p-2 rounded">
-                    Must be at least 6 characters with uppercase, lowercase, and a number
-                  </p>
-                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.currentPassword ? 'text' : 'password'}
+                        name="currentPassword"
+                        value={passwordData.currentPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('currentPassword')}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                        aria-label={showPasswords.currentPassword ? 'Hide current password' : 'Show current password'}
+                      >
+                        {showPasswords.currentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 mb-1.5 uppercase tracking-wide">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white text-slate-900 font-medium text-sm"
-                    placeholder="Confirm new password"
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.newPassword ? 'text' : 'password'}
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('newPassword')}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                        aria-label={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
+                      >
+                        {showPasswords.newPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg">
+                      Must be at least 6 characters with uppercase, lowercase, and a number.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.confirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                        aria-label={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                      >
+                        {showPasswords.confirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-sm hover:shadow-md mt-3 text-sm"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
                 >
-                  {passwordLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Updating Password...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-5 h-5" />
-                      Update Password
-                    </>
-                  )}
+                  {passwordLoading ? 'Updating...' : 'Update Password'}
                 </button>
               </form>
             </div>

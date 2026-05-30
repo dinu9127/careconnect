@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, LayoutDashboard, Users, Calendar, Settings, AlertCircle, CreditCard, FileText, Home } from 'lucide-react'
+import { Menu, X, LayoutDashboard, Users, Calendar, Settings, AlertCircle, CreditCard, Home } from 'lucide-react'
 
 const Sidebar = ({ role = 'client', isFixed = false }) => {
   const [isOpen, setIsOpen] = useState(true)
@@ -25,7 +25,6 @@ const Sidebar = ({ role = 'client', isFixed = false }) => {
     { name: 'User Management', path: '/admin/users', icon: Users },
     { name: 'Payments', path: '/admin/payments', icon: CreditCard },
     { name: 'Complaints', path: '/admin/complaints', icon: AlertCircle },
-    { name: 'Reports', path: '/admin/reports', icon: FileText },
     { name: 'Profile', path: '/admin/profile', icon: Users },
   ]
 

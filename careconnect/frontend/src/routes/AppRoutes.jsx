@@ -21,7 +21,6 @@ import AdminComplaints from '../pages/admin/Complaints'
 import AdminPayments from '../pages/admin/Payments'
 import AdminUsers from '../pages/admin/Users'
 import AdminCaregivers from '../pages/admin/Caregivers'
-import AdminReports from '../pages/admin/Reports'
 import AdminProfile from '../pages/admin/AdminProfile'
 
 const AppRoutes = () => {
@@ -58,7 +57,6 @@ const AppRoutes = () => {
       <Route path="/admin/caregivers" element={<AdminCaregivers />} />
       <Route path="/admin/complaints" element={<AdminComplaints />} />
       <Route path="/admin/payments" element={<AdminPayments />} />
-      <Route path="/admin/reports" element={<AdminReports />} />
 
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
