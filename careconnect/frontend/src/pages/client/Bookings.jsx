@@ -291,11 +291,7 @@ const Bookings = () => {
                               <span className="font-semibold">Notes:</span> {booking.notes}
                             </p>
                           )}
-                          {booking.transactionId && (
-                            <p className="text-sm text-gray-700 mt-1">
-                              <span className="font-semibold">Transaction ID:</span> {booking.transactionId}
-                            </p>
-                          )}
+                          
                         </div>
                       </div>
 

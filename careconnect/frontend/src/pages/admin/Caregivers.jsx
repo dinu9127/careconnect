@@ -383,8 +383,8 @@ const AdminCaregivers = () => {
                   {selectedCaregiver.certifications.map((cert, idx) => (
                     <div key={idx} className="bg-gray-50 p-3 rounded-lg">
                       <p className="font-medium text-gray-900">{cert.name || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">Issuer: {cert.issuer || 'Not specified'}</p>
-                      <p className="text-sm text-gray-600">Date: {cert.date ? new Date(cert.date).toLocaleDateString() : 'Not specified'}</p>
+                      <p className="text-sm text-gray-600">Issuer: {cert.issuer || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">Date: {cert.date ? new Date(cert.date).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   ))}
                 </div>

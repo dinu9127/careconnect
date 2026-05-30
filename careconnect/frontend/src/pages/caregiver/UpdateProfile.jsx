@@ -56,6 +56,8 @@ const UpdateProfile = () => {
     bio: '',
     hourlyRate: '',
     experience: '',
+    residentDistrict: '',
+    boardingDistrict: '',
     certifications: '',
     serviceTypes: [],
     profilePicture: null,
@@ -117,6 +119,18 @@ const UpdateProfile = () => {
     'Childcare',
     'Hospital Companion Care',
     'Disability Support'
+  ]
+
+  const districts = [
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const idTypes = ['National Identity Card', 'Passport', 'Driving License']
@@ -197,6 +211,8 @@ const UpdateProfile = () => {
         bio: caregiver.bio || '',
         hourlyRate: caregiver.hourlyRate || '',
         experience: caregiver.experience || '',
+        residentDistrict: caregiver.residentDistrict || '',
+        boardingDistrict: caregiver.boardingDistrict || '',
         certifications: Array.isArray(caregiver.certifications) 
           ? caregiver.certifications.map(c => c.name || c).join(', ')
           : '',
@@ -377,6 +393,10 @@ const UpdateProfile = () => {
         })),
         serviceTypes: formData.serviceTypes
       }
+
+      // Include district fields if provided
+      if (formData.residentDistrict) caregiverData.residentDistrict = formData.residentDistrict
+      if (formData.boardingDistrict) caregiverData.boardingDistrict = formData.boardingDistrict
 
       const latitude = Number.parseFloat(formData.latitude)
       const longitude = Number.parseFloat(formData.longitude)
@@ -796,6 +816,39 @@ const UpdateProfile = () => {
                         <p className="mt-2 text-sm text-green-600">✓ {formData.profilePicture.name}</p>
                       )}
                     </div>
+                  </div>
+                </div>
+                
+                {/* Districts */}
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Resident District</label>
+                    <select
+                      name="residentDistrict"
+                      value={formData.residentDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select resident district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Boarding District</label>
+                    <select
+                      name="boardingDistrict"
+                      value={formData.boardingDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select boarding district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

@@ -75,6 +75,36 @@ const caregiverSchema = new mongoose.Schema({
       'Ratnapura', 'Kegalle'
     ]
   },
+  // Optional finer-grained district fields: resident (where caregiver lives)
+  // and boarding (where caregiver can provide boarding services)
+  residentDistrict: {
+    type: String,
+    enum: [
+      'Colombo', 'Gampaha', 'Kalutara',
+      'Kandy', 'Matale', 'Nuwara Eliya',
+      'Galle', 'Matara', 'Hambantota',
+      'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+      'Puttalam', 'Kurunegala',
+      'Anuradhapura', 'Polonnaruwa',
+      'Trincomalee', 'Batticaloa', 'Ampara',
+      'Badulla', 'Monaragala',
+      'Ratnapura', 'Kegalle'
+    ]
+  },
+  boardingDistrict: {
+    type: String,
+    enum: [
+      'Colombo', 'Gampaha', 'Kalutara',
+      'Kandy', 'Matale', 'Nuwara Eliya',
+      'Galle', 'Matara', 'Hambantota',
+      'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+      'Puttalam', 'Kurunegala',
+      'Anuradhapura', 'Polonnaruwa',
+      'Trincomalee', 'Batticaloa', 'Ampara',
+      'Badulla', 'Monaragala',
+      'Ratnapura', 'Kegalle'
+    ]
+  },
   geoLocation: {
     type: {
       type: String,

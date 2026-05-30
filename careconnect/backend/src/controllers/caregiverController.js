@@ -48,7 +48,7 @@ const sanitizeFilename = (filename) =>
 // @desc    Get all caregivers with filters and search
 // @route   GET /api/caregivers
 // @access  Public
-// @query   name, location, serviceType, date, sortBy
+// @query   name, location, serviceType, date, sortBy, district
 export const getCaregivers = async (req, res) => {
   try {
     console.log('Verification upload envs:', {
@@ -56,19 +56,24 @@ export const getCaregivers = async (req, res) => {
       hasReadWriteToken: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
       hasPublicToken: Boolean(process.env.BLOB_PUBLIC_READ_WRITE_TOKEN)
     });
-    const { name, location, serviceType, sortBy } = req.query;
+    const { name, location, serviceType, sortBy, district } = req.query;
     
     // Build filter object
     let filter = {
       verificationStatus: 'verified'
     };
 
-    if (location && location !== 'All Locations') {
-      filter.location = location;
-    }
 
     if (serviceType && serviceType !== 'All Services') {
       filter.serviceTypes = { $in: [serviceType] };
+    }
+
+    // District filter: match either residentDistrict or boardingDistrict
+    if (district && district !== 'All Locations') {
+      filter.$or = [
+        { residentDistrict: district },
+        { boardingDistrict: district }
+      ];
     }
 
     let caregivers = await Caregiver.find(filter).populate({
@@ -127,12 +132,16 @@ export const getCaregiversNearby = async (req, res) => {
     const maxDistanceMeters = Math.max(radiusKm, 0) * 1000;
     const match = { verificationStatus: 'verified' };
 
-    if (req.query.location && req.query.location !== 'All Locations') {
-      match.location = req.query.location;
-    }
-
     if (req.query.serviceType && req.query.serviceType !== 'All Services') {
       match.serviceTypes = { $in: [req.query.serviceType] };
+    }
+
+    // District filter for nearby: match resident or boarding district
+    if (req.query.district && req.query.district !== 'All Locations') {
+      match.$or = [
+        { residentDistrict: req.query.district },
+        { boardingDistrict: req.query.district }
+      ];
     }
 
     const pipeline = [
@@ -201,11 +210,6 @@ export const getAllCaregiversAdmin = async (req, res) => {
     
     // Build filter object
     let filter = {};
-
-    if (location && location !== 'All Locations') {
-      filter.location = location;
-    }
-
     if (serviceType && serviceType !== 'All Services') {
       filter.serviceTypes = { $in: [serviceType] };
     }

@@ -49,7 +49,9 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
                   <span className="text-slate-600">({caregiver.reviewCount} reviews)</span>
                 </div>
               </div>
-              <p className="text-slate-600 mb-4">{caregiver.specialization}</p>
+              {caregiver.specialization && caregiver.specialization !== 'Not specified' && (
+                <p className="text-slate-600 mb-4">{caregiver.specialization}</p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {caregiver.serviceTypes?.map((service, index) => (
                   <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
@@ -116,7 +118,9 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
                 {caregiver.certifications.map((cert, index) => (
                   <div key={index} className="bg-slate-50 p-3 rounded-lg">
                     <p className="font-semibold text-slate-900">{cert.name}</p>
-                    <p className="text-sm text-slate-600">{cert.issuer}</p>
+                    {cert.issuer && (
+                      <p className="text-sm text-slate-600">{cert.issuer}</p>
+                    )}
                   </div>
                 ))}
               </div>

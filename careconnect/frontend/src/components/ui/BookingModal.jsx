@@ -139,10 +139,8 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     setLoading(true)
 
     try {
-      // Calculate total amount
-      const startDate = new Date(formData.startDate)
-      const endDate = new Date(formData.endDate)
-      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
+      // Calculate total amount using inclusive booked days.
+      const days = calculateDays()
       
       // Calculate hours per day
       const [startHour, startMin] = formData.startTime.split(':').map(Number)
@@ -168,8 +166,10 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
           serviceType: '',
           notes: ''
         })
-        onSuccess?.(response.data.data)
-        onClose()
+        const booking = response.data.data
+        // Redirect to backend checkout endpoint which will forward to PayHere
+        const checkoutUrl = `${api.defaults.baseURL}/payhere/checkout/${booking._id}`
+        window.location.href = checkoutUrl
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create booking')
@@ -276,7 +276,9 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     if (!formData.startDate || !formData.endDate) return 0
     const startDate = new Date(formData.startDate)
     const endDate = new Date(formData.endDate)
-    return Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
+    startDate.setHours(0, 0, 0, 0)
+    endDate.setHours(0, 0, 0, 0)
+    return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
   }
 
   const calculateHoursPerDay = () => {

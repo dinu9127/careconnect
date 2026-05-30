@@ -31,7 +31,8 @@ const caregiverPin = new L.Icon({
 const Caregivers = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedService, setSelectedService] = useState('All Services')
-  const [selectedLocation, setSelectedLocation] = useState('All Locations')
+  const [selectedDistrict, setSelectedDistrict] = useState('All Locations')
+
   const [caregivers, setCaregivers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -46,7 +47,15 @@ const Caregivers = () => {
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [selectedCaregiverForBooking, setSelectedCaregiverForBooking] = useState(null)
 
-  const locations = [
+  const services = [
+    'All Services',
+    'Childcare',
+    'Elderly Care',
+    'Hospital Companion Care',
+    'Disability Support'
+  ]
+
+  const districts = [
     'All Locations',
     'Colombo', 'Gampaha', 'Kalutara',
     'Kandy', 'Matale', 'Nuwara Eliya',
@@ -57,14 +66,6 @@ const Caregivers = () => {
     'Trincomalee', 'Batticaloa', 'Ampara',
     'Badulla', 'Monaragala',
     'Ratnapura', 'Kegalle'
-  ]
-
-  const services = [
-    'All Services',
-    'Childcare',
-    'Elderly Care',
-    'Hospital Companion Care',
-    'Disability Support'
   ]
 
   const requestUserLocation = () => {
@@ -97,7 +98,7 @@ const Caregivers = () => {
         setError('')
 
         const params = new URLSearchParams()
-        if (selectedLocation !== 'All Locations') params.append('location', selectedLocation)
+      
         if (selectedService !== 'All Services') params.append('serviceType', selectedService)
 
         let caregiversData = []
@@ -106,11 +107,12 @@ const Caregivers = () => {
           params.append('lat', userCoords.lat)
           params.append('lng', userCoords.lng)
           params.append('radiusKm', radiusKm)
-
+          if (selectedDistrict && selectedDistrict !== 'All Locations') params.append('district', selectedDistrict)
           const response = await axios.get(`/api/caregivers/nearby?${params.toString()}`)
           caregiversData = response.data.data || []
         } else {
           if (searchQuery) params.append('name', searchQuery)
+          if (selectedDistrict && selectedDistrict !== 'All Locations') params.append('district', selectedDistrict)
           const response = await axios.get(`/api/caregivers?${params.toString()}`)
           caregiversData = response.data.data || []
         }
@@ -136,7 +138,7 @@ const Caregivers = () => {
     }, 500)
 
     return () => clearTimeout(debounceTimer)
-  }, [searchQuery, selectedService, selectedLocation, useNearby, userCoords, radiusKm])
+  }, [searchQuery, selectedService, useNearby, userCoords, radiusKm])
 
   const handleViewProfile = (caregiver) => {
     setSelectedCaregiverProfile(caregiver)
@@ -188,7 +190,9 @@ const Caregivers = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
                 {userData.name}
               </h3>
-              <p className="text-sm text-gray-600 mb-2">{caregiver.specialization}</p>
+              {caregiver.specialization && caregiver.specialization !== 'Not specified' && (
+                <p className="text-sm text-gray-600 mb-2">{caregiver.specialization}</p>
+              )}
 
               {/* Rating */}
               <div className="flex items-center gap-2 mb-2">
@@ -284,20 +288,6 @@ const Caregivers = () => {
                 />
               </div>
 
-              {/* Location Filter */}
-              <div className="relative">
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition appearance-none bg-white cursor-pointer"
-                >
-                  {locations.map(location => (
-                    <option key={location} value={location}>{location}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
-
               {/* Service Filter */}
               <div className="relative">
                 <select
@@ -311,19 +301,23 @@ const Caregivers = () => {
                 </select>
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
+                {/* District Filter */}
+                <div className="relative">
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition appearance-none bg-white cursor-pointer"
+                  >
+                    {districts.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={requestUserLocation}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
-              >
-                <LocateFixed className="w-4 h-4" />
-                Use My Location
-              </button>
-
-              <button
+               <button
                 type="button"
                 onClick={() => {
                   setUseNearby(false)
@@ -333,6 +327,18 @@ const Caregivers = () => {
               >
                 Show All Caregivers
               </button>
+              <button
+                type="button"
+                onClick={requestUserLocation}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+              >
+                <LocateFixed className="w-4 h-4" />
+                Use My Location
+              </button>
+
+             
+
+              
 
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <span>Radius</span>
@@ -345,6 +351,24 @@ const Caregivers = () => {
                     <option key={radius} value={radius}>{radius} km</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="ml-auto">
+                <span
+                  onClick={() => {
+                    // Reset all filters to defaults
+                    setSearchQuery('')
+                    setSelectedService('All Services')
+                    setSelectedDistrict('All Locations')
+                    setUseNearby(false)
+                    setUserCoords(null)
+                    setRadiusKm(10)
+                    setLocationError('')
+                  }}
+                  className="text-sm text-gray-600 hover:underline cursor-pointer"
+                >
+                  Reset Filters
+                </span>
               </div>
 
               {useNearby && userCoords && (
