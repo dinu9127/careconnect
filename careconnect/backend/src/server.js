@@ -13,6 +13,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import payhereRoutes from './routes/payhereRoutes.js';
 import debugRoutes from './routes/debugRoutes.js';
+import { autoCancelExpiredPendingBookings } from './controllers/bookingController.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -68,3 +69,16 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
+const autoCancelIntervalMs = 60 * 1000;
+
+setInterval(async () => {
+  try {
+    const cancelledCount = await autoCancelExpiredPendingBookings();
+    if (cancelledCount > 0) {
+      console.log(`Auto-cancelled ${cancelledCount} expired pending booking(s)`);
+    }
+  } catch (error) {
+    console.error('Auto-cancel worker failed:', error.message);
+  }
+}, autoCancelIntervalMs);

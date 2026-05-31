@@ -224,12 +224,15 @@ const Schedule = () => {
                   const startDate = new Date(booking.startDate)
                   const isUpcoming = startDate > new Date() && (booking.status === 'confirmed' || booking.status === 'pending')
                   const clientPhoneRaw = booking.client?.phone
-                  const contactVisible = booking.status === 'confirmed' && visibleContactBookingId === booking._id
+                  const responseDeadline = new Date(booking.responseDeadline || (new Date(booking.createdAt).getTime() + 5 * 60 * 1000))
+                  const contactVisible = booking.status === 'pending' || (booking.status === 'confirmed' && visibleContactBookingId === booking._id)
                   const clientPhoneDisplay = !clientPhoneRaw
                     ? 'N/A'
                     : (booking.status === 'cancelled' || booking.status === 'rejected')
                       ? 'N/A'
-                      : maskPhone(clientPhoneRaw)
+                      : contactVisible
+                        ? clientPhoneRaw
+                        : maskPhone(clientPhoneRaw)
 
                   // Flags to determine which contact fields to show (hide missing fields)
                   const hasClientName = !!booking.client?.name
@@ -242,7 +245,7 @@ const Schedule = () => {
 
                   return (
                     <div key={booking._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden border-l-4" 
-                         style={{ borderLeftColor: isUpcoming ? '#2dd4bf' : '#9ca3af' }}>
+                         style={{ borderLeftColor: isUpcoming ? '#2563eb' : '#9ca3af' }}>
                       <div className="p-6">
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           {/* Left - Booking Details */}
@@ -266,20 +269,20 @@ const Schedule = () => {
                             {/* Booking Details Grid */}
                             <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-teal-600" />
+                                <Calendar className="w-4 h-4 text-blue-600" />
                                 <span>{startDate.toLocaleDateString()} to {new Date(booking.endDate).toLocaleDateString()}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-teal-600" />
+                                <Clock className="w-4 h-4 text-blue-600" />
                                 <span>{booking.startTime} - {booking.endTime}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-teal-600" />
-                                <span className="font-semibold text-teal-600">Rs. {booking.totalAmount}</span>
+                                <DollarSign className="w-4 h-4 text-blue-600" />
+                                <span className="font-semibold text-blue-600">Rs. {booking.totalAmount}</span>
                               </div>
                               {hasPhone && (
                                 <div className="flex items-center gap-2">
-                                  <User className="w-4 h-4 text-teal-600" />
+                                  <User className="w-4 h-4 text-blue-600" />
                                   <span>{contactVisible && clientPhoneRaw ? clientPhoneRaw : clientPhoneDisplay}</span>
                                 </div>
                               )}
@@ -287,27 +290,31 @@ const Schedule = () => {
 
                             {/* Contact availability messages */}
                             {booking.status === 'pending' && (
-                              <p className="mt-2 text-sm text-gray-500 italic">Contact details will be available once the booking is accepted.</p>
+                              <p className="mt-2 text-sm text-orange-700 italic">
+                                Please accept or reject before {responseDeadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}; this booking auto-cancels in 5 minutes.
+                              </p>
                             )}
                             {booking.status === 'rejected' && (
                               <p className="mt-2 text-sm text-gray-500 italic">Contact details are hidden for rejected bookings.</p>
                             )}
 
-                            {booking.status === 'confirmed' && (
+                            {(booking.status === 'pending' || booking.status === 'confirmed') && (
                               <div className="mt-3">
-                                <button
-                                  type="button"
-                                  onClick={() => setVisibleContactBookingId(prev => prev === booking._id ? null : booking._id)}
-                                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition"
-                                >
-                                  <User className="w-4 h-4" />
-                                  {contactVisible ? 'Hide Contact Details' : 'View Contact Details'}
-                                </button>
+                                {booking.status === 'confirmed' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setVisibleContactBookingId(prev => prev === booking._id ? null : booking._id)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                                  >
+                                    <User className="w-4 h-4" />
+                                    {contactVisible ? 'Hide Contact Details' : 'View Contact Details'}
+                                  </button>
+                                )}
 
                                 {contactVisible && (
-                                  <div className="mt-3 rounded-xl border border-teal-200 bg-teal-50 p-4 space-y-2 text-sm text-gray-700">
+                                  <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-2 text-sm text-gray-700">
                                     <div className="flex items-center gap-2 font-semibold text-gray-900">
-                                      <User className="w-4 h-4 text-teal-600" />
+                                      <User className="w-4 h-4 text-blue-600" />
                                       <span>Client Details</span>
                                     </div>
                                     {hasClientName && (
@@ -316,7 +323,7 @@ const Schedule = () => {
                                     {hasPhone && (
                                       <div>
                                         <span className="font-semibold">Client Phone Number:</span>{' '}
-                                        <a href={`tel:${clientPhoneRaw}`} className="text-teal-700 font-medium">{clientPhoneRaw}</a>
+                                        <a href={`tel:${clientPhoneRaw}`} className="text-blue-700 font-medium">{clientPhoneRaw}</a>
                                       </div>
                                     )}
                                     {hasCareReceiver && (
@@ -336,14 +343,14 @@ const Schedule = () => {
                                     )}
                                     {hasGeo && (
                                       <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-teal-600" />
+                                        <MapPin className="w-4 h-4 text-blue-600" />
                                         <span>
                                           <span className="font-semibold">Map Location:</span>{' '}
                                           <a
                                             href={`https://www.google.com/maps?q=${booking.client.geoLocation.coordinates[1]},${booking.client.geoLocation.coordinates[0]}`}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="text-teal-700 font-medium underline"
+                                            className="text-blue-700 font-medium underline"
                                           >
                                             Open in Google Maps
                                           </a>

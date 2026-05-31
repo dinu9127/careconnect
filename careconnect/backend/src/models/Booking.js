@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+const CAREGIVER_RESPONSE_WINDOW_MS = 5 * 60 * 1000;
+
 const bookingSchema = new mongoose.Schema({
   client: {
     type: mongoose.Schema.Types.ObjectId,
@@ -49,6 +51,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'confirmed', 'completed', 'cancelled'],
     default: 'pending'
+  },
+  responseDeadline: {
+    type: Date,
+    default: () => new Date(Date.now() + CAREGIVER_RESPONSE_WINDOW_MS)
   },
   confirmedAt: {
     type: Date,

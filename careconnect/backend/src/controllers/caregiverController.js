@@ -557,6 +557,17 @@ export const updateCaregiver = async (req, res) => {
         message: 'Caregiver not found'
       });
     }
+
+    if (req.body.verificationStatus) {
+      const shouldActivateUser = req.body.verificationStatus !== 'rejected';
+      const caregiverUserId = caregiver.user?._id || caregiver.user;
+
+      if (caregiverUserId) {
+        await User.findByIdAndUpdate(caregiverUserId, {
+          isActive: shouldActivateUser
+        });
+      }
+    }
     
     res.status(200).json({
       success: true,
