@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getUsers,
   getUserById,
+  updateCurrentUser,
   updateUser,
   deleteUser,
   deleteCurrentUser,
@@ -13,6 +14,7 @@ import { mongoIdValidation, updateUserValidation } from '../middleware/validator
 const router = express.Router();
 
 router.get('/', protect, authorize('admin'), getUsers);
+router.put('/me', protect, updateUserValidation, updateCurrentUser);
 router.put('/me/password', protect, updateCurrentPassword);
 router.delete('/me', protect, deleteCurrentUser);
 router.get('/:id', protect, mongoIdValidation, getUserById);

@@ -1,10 +1,28 @@
 import Booking from '../models/Booking.js';
 import Caregiver from '../models/Caregiver.js';
+import User from '../models/User.js';
 import {
   isCaregiverAvailable,
   addBookedDate,
   removeBookedDate
 } from '../utils/availabilityHelper.js';
+
+const clientProfileSelection = 'name email phone address careReceiverName careReceiverRelationship specialNotes geoLocation';
+
+const getMissingClientProfileFields = (user) => {
+  const missingFields = [];
+
+  if (!user?.name?.trim()) missingFields.push('full name');
+  if (!user?.phone?.trim()) missingFields.push('phone number');
+  if (!user?.address?.trim()) missingFields.push('address');
+  if (!user?.careReceiverName?.trim()) missingFields.push("care receiver's name");
+  if (!user?.careReceiverRelationship?.trim()) missingFields.push('relationship to care receiver');
+  if (!Array.isArray(user?.geoLocation?.coordinates) || user.geoLocation.coordinates.length !== 2) {
+    missingFields.push('map location');
+  }
+
+  return missingFields;
+};
 
 // @desc    Create new booking
 // @route   POST /api/bookings
@@ -12,6 +30,23 @@ import {
 export const createBooking = async (req, res) => {
   try {
     const { caregiver, startDate, endDate, startTime, endTime } = req.body;
+
+    const client = await User.findById(req.user.id);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client profile not found'
+      });
+    }
+
+    const missingFields = getMissingClientProfileFields(client);
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Please complete your profile before booking. Missing: ${missingFields.join(', ')}.`,
+        missingFields
+      });
+    }
 
     // Check if caregiver exists
     const caregiverData = await Caregiver.findById(caregiver);
@@ -58,7 +93,7 @@ export const createBooking = async (req, res) => {
 export const getBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({})
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -83,7 +118,7 @@ export const getBookings = async (req, res) => {
 export const getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -342,7 +377,7 @@ export const getCaregiverBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find({ caregiver: caregiver._id })
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -370,7 +405,7 @@ export const getClientBookings = async (req, res) => {
     const Review = (await import('../models/Review.js')).default;
     
     const bookings = await Booking.find({ client: req.user.id })
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }

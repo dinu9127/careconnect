@@ -9,6 +9,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 import ResetPassword from '../pages/auth/ResetPassword'
 import Profile from '../pages/Profile'
 import ClientDashboard from '../pages/client/Dashboard'
+import ClientProfile from '../pages/client/Profile'
 import Caregivers from '../pages/client/Caregivers'
 import Bookings from '../pages/client/Bookings'
 import Complaints from '../pages/client/Complaints'
@@ -38,6 +39,7 @@ const AppRoutes = () => {
 
       {/* Client Routes */}
       <Route path="/client/dashboard" element={<ClientDashboard />} />
+      <Route path="/client/profile" element={<ClientProfile />} />
       <Route path="/client/caregivers" element={<Caregivers />} />
       <Route path="/client/bookings" element={<Bookings />} />
       <Route path="/client/complaints" element={<Complaints />} />

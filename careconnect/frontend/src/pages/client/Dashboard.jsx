@@ -9,7 +9,6 @@ const ClientDashboard = () => {
   const [allBookings, setAllBookings] = useState([])
   const [recentActivities, setRecentActivities] = useState([])
   const [recentComplaints, setRecentComplaints] = useState([])
-  const [recentReviews, setRecentReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [userName, setUserName] = useState('')
@@ -55,16 +54,6 @@ const ClientDashboard = () => {
         console.log('Complaints not available')
       }
       
-      // Fetch reviews
-      try {
-        const reviewsResponse = await api.get('/reviews/me')
-        if (reviewsResponse.data.success) {
-          const reviews = (reviewsResponse.data.data || []).slice(0, 2)
-          setRecentReviews(reviews)
-        }
-      } catch (err) {
-        console.log('Reviews not available')
-      }
     } catch (err) {
       console.error('Error fetching activities:', err)
       setError('Unable to load recent activities')
@@ -336,51 +325,6 @@ const ClientDashboard = () => {
             </div>
           )}
 
-          {/* Reviews Section */}
-          {recentReviews.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-md border border-amber-100 overflow-hidden">
-              <div className="p-6 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50">
-                <div className="flex items-center gap-2">
-                  <Star className="w-6 h-6 text-amber-500" />
-                  <h2 className="text-2xl font-bold text-gray-900">Recently Submitted Reviews</h2>
-                </div>
-                <p className="text-gray-600 text-sm mt-1">Your latest caregiver reviews and ratings</p>
-              </div>
-
-              <div className="p-6">
-                <div className="space-y-3">
-                  {recentReviews.map((review) => (
-                    <div 
-                      key={review._id} 
-                      className="p-4 rounded-xl border border-amber-200 bg-amber-50 hover:shadow-md transition-all duration-300"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star 
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= review.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm font-semibold text-gray-900">{review.rating}.0</span>
-                          </div>
-                          {review.reviewText && (
-                            <p className="text-sm text-gray-700 mb-2">"{review.reviewText}"</p>
-                          )}
-                          <p className="text-xs text-gray-600">Reviewed on {formatDate(review.createdAt)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, MapPin, Star, Calendar, ChevronDown, AlertCircle, Loader, LocateFixed } from 'lucide-react'
+import { Search, MapPin, Star, Calendar, ChevronDown, AlertCircle, Loader, LocateFixed, CheckCircle } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import CaregiverProfileModal from '../../components/ui/CaregiverProfileModal'
@@ -46,6 +46,7 @@ const Caregivers = () => {
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [selectedCaregiverForBooking, setSelectedCaregiverForBooking] = useState(null)
+  const [message, setMessage] = useState({ type: '', text: '' })
 
   const services = [
     'All Services',
@@ -159,7 +160,8 @@ const Caregivers = () => {
   const handleBookingSuccess = () => {
     setBookingModalOpen(false)
     setSelectedCaregiverForBooking(null)
-    alert('Booking created successfully!')
+    setMessage({ type: 'success', text: 'Booking created successfully!' })
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000)
   }
 
   const mapCenter = userCoords ? [userCoords.lat, userCoords.lng] : [7.8731, 80.7718]
@@ -441,6 +443,13 @@ const Caregivers = () => {
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 flex items-gap-2">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+          )}
+
+          {message.text && message.type === 'success' && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-8 flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-700 font-medium">{message.text}</p>
             </div>
           )}
 

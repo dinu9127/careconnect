@@ -46,6 +46,53 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// @desc    Update current user profile
+// @route   PUT /api/users/me
+// @access  Private
+export const updateCurrentUser = async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+
+    const latitude = Number.parseFloat(req.body.latitude);
+    const longitude = Number.parseFloat(req.body.longitude);
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      updateData.geoLocation = {
+        type: 'Point',
+        coordinates: [longitude, latitude]
+      };
+    }
+
+    delete updateData.latitude;
+    delete updateData.longitude;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Update user
 // @route   PUT /api/users/:id
 // @access  Private
