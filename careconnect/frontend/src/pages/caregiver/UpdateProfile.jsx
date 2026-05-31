@@ -830,39 +830,6 @@ const UpdateProfile = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Districts */}
-                <div className="grid md:grid-cols-2 gap-6 mt-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Resident District</label>
-                    <select
-                      name="residentDistrict"
-                      value={formData.residentDistrict}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                    >
-                      <option value="">Select resident district (optional)</option>
-                      {districts.map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Boarding District</label>
-                    <select
-                      name="boardingDistrict"
-                      value={formData.boardingDistrict}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                    >
-                      <option value="">Select boarding district (optional)</option>
-                      {districts.map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Name (Read-only) */}
@@ -932,6 +899,40 @@ const UpdateProfile = () => {
                       <option value="other">Other</option>
                     </select>
                   </div>
+                                  
+                {/* Districts */}
+                <div className="md:col-span-2 grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Resident District</label>
+                    <select
+                      name="residentDistrict"
+                      value={formData.residentDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select resident district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Boarding District</label>
+                    <select
+                      name="boardingDistrict"
+                      value={formData.boardingDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select boarding district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
 
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-2">

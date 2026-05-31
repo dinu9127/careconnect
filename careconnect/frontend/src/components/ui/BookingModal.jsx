@@ -155,6 +155,14 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
         totalAmount: Math.round(totalAmount)
       }
 
+      // Ensure user is authenticated before creating a booking
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      if (!token) {
+        // Not logged in — redirect to login page
+        window.location.href = '/login'
+        return
+      }
+
       const response = await api.post('/bookings', bookingData)
 
       if (response.data.success) {
@@ -167,11 +175,16 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
           notes: ''
         })
         const booking = response.data.data
-        // Redirect to backend checkout endpoint which will forward to PayHere
-        const checkoutUrl = `${api.defaults.baseURL}/payhere/checkout/${booking._id}`
-        window.location.href = checkoutUrl
+        // Do not redirect to payment at booking time.
+        // Payment will be handled when the caregiver marks the job completed.
+        if (onSuccess) onSuccess(booking)
+        onClose()
       }
     } catch (err) {
+      if (err.response?.status === 401) {
+        window.location.href = '/login'
+        return
+      }
       setError(err.response?.data?.message || 'Failed to create booking')
     } finally {
       setLoading(false)

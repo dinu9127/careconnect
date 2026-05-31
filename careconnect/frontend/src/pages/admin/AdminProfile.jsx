@@ -205,7 +205,7 @@ const AdminProfile = () => {
             {/* Profile Info - View Mode (Read-only cards) */}
             <div className="p-5">
               <div className="mb-5">
-                <h3 className="text-base font-bold text-slate-900">Personal Information</h3>
+                <h3 className="text-base font-bold text-slate-900">Account Information</h3>
               </div>
 
               {!isEditing ? (

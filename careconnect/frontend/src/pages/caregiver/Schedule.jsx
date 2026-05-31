@@ -271,13 +271,6 @@ const Schedule = () => {
                               {booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'UNPAID'}
                             </div>
                             
-                            {isUpcoming && (
-                              <div className="px-3 py-2 rounded text-sm font-medium text-center bg-blue-100 text-blue-800 whitespace-nowrap">
-                                <Clock className="w-4 h-4 inline mr-1" />
-                                Coming Soon
-                              </div>
-                            )}
-
                             {booking.transactionId && (
                               <div className="text-xs text-gray-600 text-center p-2 bg-gray-50 rounded">
                                 <span className="font-semibold">TXN:</span> {booking.transactionId.substring(0, 15)}...
