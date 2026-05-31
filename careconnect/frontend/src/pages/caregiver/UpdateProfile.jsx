@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import DocumentUploadCard from '../../components/ui/DocumentUploadCard'
-import { User, Phone, Mail, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
+import { User, Phone, Mail, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera, Eye, EyeOff } from 'lucide-react'
 import api, { userService } from '../../services/api'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
@@ -56,6 +56,7 @@ const UpdateProfile = () => {
     bio: '',
     hourlyRate: '',
     experience: '',
+    district: '',
     certifications: '',
     serviceTypes: [],
     profilePicture: null,
@@ -65,6 +66,11 @@ const UpdateProfile = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  })
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
   })
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
   const [passwordLoading, setPasswordLoading] = useState(false)
@@ -117,6 +123,18 @@ const UpdateProfile = () => {
     'Childcare',
     'Hospital Companion Care',
     'Disability Support'
+  ]
+
+  const districts = [
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const idTypes = ['National Identity Card', 'Passport', 'Driving License']
@@ -197,6 +215,7 @@ const UpdateProfile = () => {
         bio: caregiver.bio || '',
         hourlyRate: caregiver.hourlyRate || '',
         experience: caregiver.experience || '',
+        district: caregiver.residentDistrict || caregiver.boardingDistrict || caregiver.location || '',
         certifications: Array.isArray(caregiver.certifications) 
           ? caregiver.certifications.map(c => c.name || c).join(', ')
           : '',
@@ -378,6 +397,16 @@ const UpdateProfile = () => {
         serviceTypes: formData.serviceTypes
       }
 
+      // Use one district input while keeping backward compatibility with existing schema.
+      if (formData.district) {
+        caregiverData.location = formData.district
+        caregiverData.residentDistrict = formData.district
+        caregiverData.boardingDistrict = formData.district
+      } else {
+        caregiverData.residentDistrict = ''
+        caregiverData.boardingDistrict = ''
+      }
+
       const latitude = Number.parseFloat(formData.latitude)
       const longitude = Number.parseFloat(formData.longitude)
       if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
@@ -443,6 +472,13 @@ const UpdateProfile = () => {
     setPasswordData(prev => ({
       ...prev,
       [name]: value
+    }))
+  }
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
     }))
   }
 
@@ -867,6 +903,23 @@ const UpdateProfile = () => {
                       <option value="other">Other</option>
                     </select>
                   </div>
+                                  
+                {/* District */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">District</label>
+                  <select
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  >
+                    <option value="">Select district (optional)</option>
+                    {districts.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
 
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-2">
@@ -1329,36 +1382,66 @@ const UpdateProfile = () => {
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                      <input
-                        type="password"
-                        name="currentPassword"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.currentPassword ? 'text' : 'password'}
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('currentPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.currentPassword ? 'Hide current password' : 'Show current password'}
+                        >
+                          {showPasswords.currentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.newPassword ? 'text' : 'password'}
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('newPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
+                        >
+                          {showPasswords.newPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.confirmPassword ? 'text' : 'password'}
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('confirmPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                        >
+                          {showPasswords.confirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

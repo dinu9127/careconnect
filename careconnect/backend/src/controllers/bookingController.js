@@ -1,10 +1,91 @@
 import Booking from '../models/Booking.js';
 import Caregiver from '../models/Caregiver.js';
+import User from '../models/User.js';
 import {
   isCaregiverAvailable,
   addBookedDate,
   removeBookedDate
 } from '../utils/availabilityHelper.js';
+
+const clientProfileSelection = 'name email phone address careReceiverName careReceiverRelationship specialNotes geoLocation';
+const CAREGIVER_RESPONSE_WINDOW_MS = 5 * 60 * 1000;
+const AUTO_CANCELLATION_REASON = 'Auto-cancelled: caregiver did not respond within 5 minutes';
+
+const buildPendingExpiryQuery = (now = new Date()) => ({
+  status: 'pending',
+  $or: [
+    { responseDeadline: { $lte: now } },
+    {
+      responseDeadline: { $exists: false },
+      createdAt: { $lte: new Date(now.getTime() - CAREGIVER_RESPONSE_WINDOW_MS) }
+    }
+  ]
+});
+
+const getEffectiveResponseDeadline = (booking) => {
+  if (booking?.responseDeadline) {
+    return new Date(booking.responseDeadline);
+  }
+
+  if (booking?.createdAt) {
+    return new Date(new Date(booking.createdAt).getTime() + CAREGIVER_RESPONSE_WINDOW_MS);
+  }
+
+  return new Date(Date.now() + CAREGIVER_RESPONSE_WINDOW_MS);
+};
+
+const isPendingBookingExpired = (booking, now = new Date()) => {
+  if (!booking || booking.status !== 'pending') {
+    return false;
+  }
+
+  return getEffectiveResponseDeadline(booking).getTime() <= now.getTime();
+};
+
+const autoCancelSingleBooking = async (booking) => {
+  const caregiver = await Caregiver.findById(booking.caregiver);
+  if (caregiver) {
+    removeBookedDate(caregiver, booking._id);
+    await caregiver.save();
+  }
+
+  await Booking.findByIdAndUpdate(
+    booking._id,
+    {
+      status: 'cancelled',
+      cancelledAt: new Date(),
+      cancelledBy: 'system',
+      cancellationReason: AUTO_CANCELLATION_REASON
+    },
+    { new: false }
+  );
+};
+
+export const autoCancelExpiredPendingBookings = async () => {
+  const now = new Date();
+  const expiredBookings = await Booking.find(buildPendingExpiryQuery(now));
+
+  for (const booking of expiredBookings) {
+    await autoCancelSingleBooking(booking);
+  }
+
+  return expiredBookings.length;
+};
+
+const getMissingClientProfileFields = (user) => {
+  const missingFields = [];
+
+  if (!user?.name?.trim()) missingFields.push('full name');
+  if (!user?.phone?.trim()) missingFields.push('phone number');
+  if (!user?.address?.trim()) missingFields.push('address');
+  if (!user?.careReceiverName?.trim()) missingFields.push("care receiver's name");
+  if (!user?.careReceiverRelationship?.trim()) missingFields.push('relationship to care receiver');
+  if (!Array.isArray(user?.geoLocation?.coordinates) || user.geoLocation.coordinates.length !== 2) {
+    missingFields.push('map location');
+  }
+
+  return missingFields;
+};
 
 // @desc    Create new booking
 // @route   POST /api/bookings
@@ -12,6 +93,23 @@ import {
 export const createBooking = async (req, res) => {
   try {
     const { caregiver, startDate, endDate, startTime, endTime } = req.body;
+
+    const client = await User.findById(req.user.id);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client profile not found'
+      });
+    }
+
+    const missingFields = getMissingClientProfileFields(client);
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Please complete your profile before booking. Missing: ${missingFields.join(', ')}.`,
+        missingFields
+      });
+    }
 
     // Check if caregiver exists
     const caregiverData = await Caregiver.findById(caregiver);
@@ -33,7 +131,8 @@ export const createBooking = async (req, res) => {
 
     const booking = await Booking.create({
       ...req.body,
-      client: req.user.id
+      client: req.user.id,
+      responseDeadline: new Date(Date.now() + CAREGIVER_RESPONSE_WINDOW_MS)
     });
     
     // Add booked date to caregiver's schedule
@@ -57,8 +156,10 @@ export const createBooking = async (req, res) => {
 // @access  Private
 export const getBookings = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     const bookings = await Booking.find({})
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -82,8 +183,10 @@ export const getBookings = async (req, res) => {
 // @access  Private
 export const getBookingById = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     const booking = await Booking.findById(req.params.id)
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -113,6 +216,8 @@ export const getBookingById = async (req, res) => {
 // @access  Private
 export const updateBooking = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     const { status } = req.body;
     const isCaregiverUser = req.user?.role === 'caregiver';
     const cancellationReason = req.body.cancellationReason || req.body.reason || '';
@@ -122,6 +227,14 @@ export const updateBooking = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
+      });
+    }
+
+    if (isPendingBookingExpired(booking)) {
+      await autoCancelSingleBooking(booking);
+      return res.status(410).json({
+        success: false,
+        message: AUTO_CANCELLATION_REASON
       });
     }
 
@@ -207,6 +320,8 @@ export const updateBooking = async (req, res) => {
 // @access  Private
 export const cancelBooking = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     const booking = await Booking.findById(req.params.id);
     const isCaregiverUser = req.user?.role === 'caregiver';
     const cancellationReason =
@@ -240,8 +355,8 @@ export const cancelBooking = async (req, res) => {
       }
     }
 
-    // If booking was confirmed, remove it from caregiver's booked dates
-    if (booking.status === 'confirmed') {
+    // Remove booking slot reservation from caregiver schedule
+    if (booking.status !== 'cancelled') {
       const caregiver = await Caregiver.findById(booking.caregiver);
       if (caregiver) {
         removeBookedDate(caregiver, booking._id);
@@ -331,6 +446,8 @@ export const updatePayment = async (req, res) => {
 // @access  Private
 export const getCaregiverBookings = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     // Get caregiver ID from the user
     const caregiver = await Caregiver.findOne({ user: req.user.id || req.user._id });
     
@@ -342,7 +459,7 @@ export const getCaregiverBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find({ caregiver: caregiver._id })
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }
@@ -367,10 +484,12 @@ export const getCaregiverBookings = async (req, res) => {
 // @access  Private
 export const getClientBookings = async (req, res) => {
   try {
+    await autoCancelExpiredPendingBookings();
+
     const Review = (await import('../models/Review.js')).default;
     
     const bookings = await Booking.find({ client: req.user.id })
-      .populate('client', 'name email phone')
+      .populate('client', clientProfileSelection)
       .populate({
         path: 'caregiver',
         populate: { path: 'user', select: 'name email phone' }

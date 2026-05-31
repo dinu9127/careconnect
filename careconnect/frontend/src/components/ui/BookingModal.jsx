@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, Calendar, Clock, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
-import api from '../../services/api'
+import api, { authService } from '../../services/api'
 
 const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +16,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectingEndDate, setSelectingEndDate] = useState(false)
   const [bookedDates, setBookedDates] = useState([])
+  const [profileCheck, setProfileCheck] = useState({ complete: true, missingFields: [] })
 
   const formatLocalDate = (date) => {
     const year = date.getFullYear()
@@ -41,6 +42,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       setSelectingEndDate(false)
       setCurrentMonth(new Date())
       fetchBookedDates()
+      checkClientProfileCompleteness()
     }
   }, [isOpen, caregiver])
 
@@ -69,6 +71,32 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     } catch (err) {
       console.error('Failed to fetch booked dates:', err)
       setBookedDates([])
+    }
+  }
+
+  const checkClientProfileCompleteness = async () => {
+    try {
+      const response = await authService.getProfile()
+      const user = response.data.data || {}
+      const missingFields = []
+
+      if (!user.name?.trim()) missingFields.push('full name')
+      if (!user.phone?.trim()) missingFields.push('phone number')
+      if (!user.address?.trim()) missingFields.push('address')
+      if (!user.careReceiverName?.trim()) missingFields.push("care receiver's name")
+      if (!user.careReceiverRelationship?.trim()) missingFields.push('relationship to care receiver')
+      if (!Array.isArray(user.geoLocation?.coordinates) || user.geoLocation.coordinates.length !== 2) {
+        missingFields.push('map location')
+      }
+
+      setProfileCheck({ complete: missingFields.length === 0, missingFields })
+
+      if (missingFields.length > 0) {
+        setError(`Complete your profile before booking. Missing: ${missingFields.join(', ')}.`)
+      }
+    } catch (error) {
+      setProfileCheck({ complete: false, missingFields: ['profile details'] })
+      setError('Please complete your profile before booking.')
     }
   }
 
@@ -132,6 +160,11 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     e.preventDefault()
     setError('')
 
+    if (!profileCheck.complete) {
+      setError(`Complete your profile before booking. Missing: ${profileCheck.missingFields.join(', ')}.`)
+      return
+    }
+
     if (!validateForm()) {
       return
     }
@@ -139,10 +172,8 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     setLoading(true)
 
     try {
-      // Calculate total amount
-      const startDate = new Date(formData.startDate)
-      const endDate = new Date(formData.endDate)
-      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
+      // Calculate total amount using inclusive booked days.
+      const days = calculateDays()
       
       // Calculate hours per day
       const [startHour, startMin] = formData.startTime.split(':').map(Number)
@@ -157,6 +188,14 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
         totalAmount: Math.round(totalAmount)
       }
 
+      // Ensure user is authenticated before creating a booking
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      if (!token) {
+        // Not logged in — redirect to login page
+        window.location.href = '/login'
+        return
+      }
+
       const response = await api.post('/bookings', bookingData)
 
       if (response.data.success) {
@@ -168,10 +207,17 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
           serviceType: '',
           notes: ''
         })
-        onSuccess?.(response.data.data)
+        const booking = response.data.data
+        // Do not redirect to payment at booking time.
+        // Payment will be handled when the caregiver marks the job completed.
+        if (onSuccess) onSuccess(booking)
         onClose()
       }
     } catch (err) {
+      if (err.response?.status === 401) {
+        window.location.href = '/login'
+        return
+      }
       setError(err.response?.data?.message || 'Failed to create booking')
     } finally {
       setLoading(false)
@@ -276,7 +322,9 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     if (!formData.startDate || !formData.endDate) return 0
     const startDate = new Date(formData.startDate)
     const endDate = new Date(formData.endDate)
-    return Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
+    startDate.setHours(0, 0, 0, 0)
+    endDate.setHours(0, 0, 0, 0)
+    return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
   }
 
   const calculateHoursPerDay = () => {
@@ -313,6 +361,12 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
+          {!profileCheck.complete && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              Complete your profile first. Booking is disabled until all required client details are saved.
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-gap-2">
@@ -553,10 +607,10 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !profileCheck.complete}
               className="flex-1 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-cyan-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Booking...' : 'Confirm Booking'}
+              {loading ? 'Booking...' : profileCheck.complete ? 'Confirm Booking' : 'Complete Profile First'}
             </button>
           </div>
         </form>

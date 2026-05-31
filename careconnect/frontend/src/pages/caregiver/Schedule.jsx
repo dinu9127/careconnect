@@ -10,6 +10,7 @@ const Schedule = () => {
   const [message, setMessage] = useState({ type: '', text: '' })
   const [filterStatus, setFilterStatus] = useState('all') // all, upcoming, completed, cancelled
   const [updatingId, setUpdatingId] = useState(null)
+  const [visibleContactBookingId, setVisibleContactBookingId] = useState(null)
 
   useEffect(() => {
     fetchBookings()
@@ -53,9 +54,14 @@ const Schedule = () => {
 
       const response = await api.put(`/bookings/${booking._id}`, updatePayload)
       setBookings(bookings.map(b => b._id === booking._id ? response.data.data : b))
+      if (newStatus === 'confirmed') {
+        setVisibleContactBookingId(booking._id)
+      }
       setMessage({
         type: 'success',
-        text: `Booking ${newStatus} successfully`
+        text: newStatus === 'confirmed'
+          ? 'Booking accepted — contact details are now available.'
+          : `Booking ${newStatus} successfully`
       })
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     } catch (error) {
@@ -83,6 +89,16 @@ const Schedule = () => {
     }
   }
 
+  // Simple phone masker: show first 3 and last 3 digits with middle masked
+  const maskPhone = (phone) => {
+    if (!phone) return 'N/A'
+    const digits = phone.replace(/\D/g, '')
+    if (digits.length <= 6) return digits.replace(/.(?=.{3})/g, 'X')
+    const start = digits.slice(0, 3)
+    const end = digits.slice(-3)
+    return `${start} XXX ${end}`
+  }
+
   const filteredBookings = filterStatus === 'all' 
     ? bookings 
     : bookings.filter(b => b.status === filterStatus)
@@ -108,8 +124,8 @@ const Schedule = () => {
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">My Schedule</h1>
-              <p className="text-gray-600">View and manage your upcoming bookings</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Received Bookings</h1>
+              <p className="text-gray-600">View and manage your bookings</p>
             </div>
 
             {/* Stats Cards */}
@@ -207,10 +223,29 @@ const Schedule = () => {
                   const statusColor = getStatusColor(booking.status)
                   const startDate = new Date(booking.startDate)
                   const isUpcoming = startDate > new Date() && (booking.status === 'confirmed' || booking.status === 'pending')
+                  const clientPhoneRaw = booking.client?.phone
+                  const responseDeadline = new Date(booking.responseDeadline || (new Date(booking.createdAt).getTime() + 5 * 60 * 1000))
+                  const contactVisible = booking.status === 'pending' || (booking.status === 'confirmed' && visibleContactBookingId === booking._id)
+                  const clientPhoneDisplay = !clientPhoneRaw
+                    ? 'N/A'
+                    : (booking.status === 'cancelled' || booking.status === 'rejected')
+                      ? 'N/A'
+                      : contactVisible
+                        ? clientPhoneRaw
+                        : maskPhone(clientPhoneRaw)
+
+                  // Flags to determine which contact fields to show (hide missing fields)
+                  const hasClientName = !!booking.client?.name
+                  const hasPhone = !!clientPhoneRaw && booking.status !== 'cancelled' && booking.status !== 'rejected'
+                  const hasCareReceiver = !!booking.client?.careReceiverName
+                  const hasRelationship = !!booking.client?.careReceiverRelationship
+                  const hasSpecialNotes = !!booking.client?.specialNotes
+                  const hasAddress = !!booking.client?.address
+                  const hasGeo = Array.isArray(booking.client?.geoLocation?.coordinates) && booking.client.geoLocation.coordinates.length === 2
 
                   return (
                     <div key={booking._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden border-l-4" 
-                         style={{ borderLeftColor: isUpcoming ? '#2dd4bf' : '#9ca3af' }}>
+                         style={{ borderLeftColor: isUpcoming ? '#2563eb' : '#9ca3af' }}>
                       <div className="p-6">
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           {/* Left - Booking Details */}
@@ -224,30 +259,111 @@ const Schedule = () => {
                                   <span className="font-semibold">Service Type:</span> {booking.serviceType}
                                 </p>
                               </div>
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${statusColor.bg} ${statusColor.text}`}>
-                                {booking.status.toUpperCase()}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${statusColor.bg} ${statusColor.text}`}>
+                                  {booking.status.toUpperCase()}
+                                </span>
+                              </div>
                             </div>
 
                             {/* Booking Details Grid */}
                             <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-teal-600" />
+                                <Calendar className="w-4 h-4 text-blue-600" />
                                 <span>{startDate.toLocaleDateString()} to {new Date(booking.endDate).toLocaleDateString()}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-teal-600" />
+                                <Clock className="w-4 h-4 text-blue-600" />
                                 <span>{booking.startTime} - {booking.endTime}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-teal-600" />
-                                <span className="font-semibold text-teal-600">Rs. {booking.totalAmount}</span>
+                                <DollarSign className="w-4 h-4 text-blue-600" />
+                                <span className="font-semibold text-blue-600">Rs. {booking.totalAmount}</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 text-teal-600" />
-                                <span>{booking.client?.phone || 'N/A'}</span>
-                              </div>
+                              {hasPhone && (
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4 text-blue-600" />
+                                  <span>{contactVisible && clientPhoneRaw ? clientPhoneRaw : clientPhoneDisplay}</span>
+                                </div>
+                              )}
                             </div>
+
+                            {/* Contact availability messages */}
+                            {booking.status === 'pending' && (
+                              <p className="mt-2 text-sm text-orange-700 italic">
+                                Please accept or reject before {responseDeadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}; this booking auto-cancels in 5 minutes.
+                              </p>
+                            )}
+                            {booking.status === 'rejected' && (
+                              <p className="mt-2 text-sm text-gray-500 italic">Contact details are hidden for rejected bookings.</p>
+                            )}
+
+                            {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                              <div className="mt-3">
+                                {booking.status === 'confirmed' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setVisibleContactBookingId(prev => prev === booking._id ? null : booking._id)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                                  >
+                                    <User className="w-4 h-4" />
+                                    {contactVisible ? 'Hide Contact Details' : 'View Contact Details'}
+                                  </button>
+                                )}
+
+                                {contactVisible && (
+                                  <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-2 text-sm text-gray-700">
+                                    <div className="flex items-center gap-2 font-semibold text-gray-900">
+                                      <User className="w-4 h-4 text-blue-600" />
+                                      <span>Client Details</span>
+                                    </div>
+                                    {hasClientName && (
+                                      <div><span className="font-semibold">Client Name:</span> {booking.client?.name}</div>
+                                    )}
+                                    {hasPhone && (
+                                      <div>
+                                        <span className="font-semibold">Client Phone Number:</span>{' '}
+                                        <a href={`tel:${clientPhoneRaw}`} className="text-blue-700 font-medium">{clientPhoneRaw}</a>
+                                      </div>
+                                    )}
+                                    {hasCareReceiver && (
+                                      <div><span className="font-semibold">Care Receiver Name:</span> {booking.client?.careReceiverName}</div>
+                                    )}
+                                    {hasRelationship && (
+                                      <div><span className="font-semibold">Relationship:</span> {booking.client?.careReceiverRelationship}</div>
+                                    )}
+                                    {hasSpecialNotes && (
+                                      <div><span className="font-semibold">Special Notes:</span> {booking.client?.specialNotes}</div>
+                                    )}
+                                    {hasAddress && (
+                                      <div>
+                                        <span className="font-semibold">Address:</span>{' '}
+                                        {booking.client?.address}
+                                      </div>
+                                    )}
+                                    {hasGeo && (
+                                      <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-blue-600" />
+                                        <span>
+                                          <span className="font-semibold">Map Location:</span>{' '}
+                                          <a
+                                            href={`https://www.google.com/maps?q=${booking.client.geoLocation.coordinates[1]},${booking.client.geoLocation.coordinates[0]}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-blue-700 font-medium underline"
+                                          >
+                                            Open in Google Maps
+                                          </a>
+                                        </span>
+                                      </div>
+                                    )}
+                                    {!(hasClientName || hasPhone || hasCareReceiver || hasRelationship || hasSpecialNotes || hasAddress || hasGeo) && (
+                                      <div className="text-sm text-gray-600 italic">No contact details available.</div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Notes */}
                             {booking.notes && (
@@ -271,13 +387,6 @@ const Schedule = () => {
                               {booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'UNPAID'}
                             </div>
                             
-                            {isUpcoming && (
-                              <div className="px-3 py-2 rounded text-sm font-medium text-center bg-blue-100 text-blue-800 whitespace-nowrap">
-                                <Clock className="w-4 h-4 inline mr-1" />
-                                Coming Soon
-                              </div>
-                            )}
-
                             {booking.transactionId && (
                               <div className="text-xs text-gray-600 text-center p-2 bg-gray-50 rounded">
                                 <span className="font-semibold">TXN:</span> {booking.transactionId.substring(0, 15)}...
@@ -288,7 +397,8 @@ const Schedule = () => {
                             <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-200">
                               {booking.status === 'pending' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking, 'confirmed')}
+                                  type="button"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateBookingStatus(booking, 'confirmed') }}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
@@ -298,7 +408,8 @@ const Schedule = () => {
 
                               {booking.status === 'confirmed' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking, 'completed')}
+                                  type="button"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateBookingStatus(booking, 'completed') }}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
@@ -308,7 +419,8 @@ const Schedule = () => {
 
                               {booking.status !== 'completed' && booking.status !== 'cancelled' && (
                                 <button
-                                  onClick={() => updateBookingStatus(booking, 'cancelled')}
+                                  type="button"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateBookingStatus(booking, 'cancelled') }}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >

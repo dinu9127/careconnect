@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, LayoutDashboard, Users, Calendar, Settings, AlertCircle, CreditCard, FileText, Home } from 'lucide-react'
+import { Menu, X, LayoutDashboard, Users, Calendar, Settings, AlertCircle, CreditCard, Home } from 'lucide-react'
 
 const Sidebar = ({ role = 'client', isFixed = false }) => {
   const [isOpen, setIsOpen] = useState(true)
@@ -10,12 +10,13 @@ const Sidebar = ({ role = 'client', isFixed = false }) => {
     { name: 'Dashboard', path: '/client/dashboard', icon: LayoutDashboard },
     { name: 'Find Caregivers', path: '/client/caregivers', icon: Users },
     { name: 'My Bookings', path: '/client/bookings', icon: Calendar },
+    { name: 'Profile', path: '/client/profile', icon: Users },
     { name: 'Complaints', path: '/client/complaints', icon: AlertCircle },
   ]
 
   const caregiverLinks = [
     { name: 'Dashboard', path: '/caregiver/dashboard', icon: LayoutDashboard },
-    { name: 'My Schedule', path: '/caregiver/schedule', icon: Calendar },
+    { name: 'Received Bookings', path: '/caregiver/schedule', icon: Calendar },
     { name: 'Manage Leave', path: '/caregiver/availability', icon: Settings },
     { name: 'Update Profile', path: '/caregiver/profile', icon: Users },
   ]
@@ -25,7 +26,6 @@ const Sidebar = ({ role = 'client', isFixed = false }) => {
     { name: 'User Management', path: '/admin/users', icon: Users },
     { name: 'Payments', path: '/admin/payments', icon: CreditCard },
     { name: 'Complaints', path: '/admin/complaints', icon: AlertCircle },
-    { name: 'Reports', path: '/admin/reports', icon: FileText },
     { name: 'Profile', path: '/admin/profile', icon: Users },
   ]
 

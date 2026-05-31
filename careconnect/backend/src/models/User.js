@@ -37,6 +37,35 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  careReceiverName: {
+    type: String,
+    default: ''
+  },
+  careReceiverRelationship: {
+    type: String,
+    default: ''
+  },
+  specialNotes: {
+    type: String,
+    default: ''
+  },
+  geoLocation: {
+    type: {
+      type: String,
+      enum: ['Point']
+    },
+    coordinates: {
+      type: [Number],
+      validate: {
+        validator: (coords) => {
+          if (!coords || coords.length === 0) return true;
+          if (coords.length !== 2) return false;
+          return coords.every((value) => Number.isFinite(value));
+        },
+        message: 'Geo coordinates must be [lng, lat]'
+      }
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -52,6 +81,8 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+userSchema.index({ geoLocation: '2dsphere' });
 
 // Encrypt password before saving
 userSchema.pre('save', async function(next) {

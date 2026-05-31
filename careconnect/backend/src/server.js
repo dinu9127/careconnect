@@ -11,6 +11,9 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import payhereRoutes from './routes/payhereRoutes.js';
+import debugRoutes from './routes/debugRoutes.js';
+import { autoCancelExpiredPendingBookings } from './controllers/bookingController.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -37,6 +40,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/payhere', payhereRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -64,3 +69,16 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
+
+const autoCancelIntervalMs = 60 * 1000;
+
+setInterval(async () => {
+  try {
+    const cancelledCount = await autoCancelExpiredPendingBookings();
+    if (cancelledCount > 0) {
+      console.log(`Auto-cancelled ${cancelledCount} expired pending booking(s)`);
+    }
+  } catch (error) {
+    console.error('Auto-cancel worker failed:', error.message);
+  }
+}, autoCancelIntervalMs);

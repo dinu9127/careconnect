@@ -25,7 +25,7 @@ const Navbar = ({ isFixed = false }) => {
 
     if (role === 'caregiver' || location.pathname.startsWith('/caregiver')) return '/caregiver/profile'
     if (role === 'admin' || location.pathname.startsWith('/admin')) return '/admin/profile'
-    if (role === 'client' || location.pathname.startsWith('/client')) return '/profile'
+    if (role === 'client' || location.pathname.startsWith('/client')) return '/client/profile'
 
     return '/profile'
   }

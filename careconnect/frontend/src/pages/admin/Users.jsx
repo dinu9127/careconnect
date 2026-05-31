@@ -133,7 +133,7 @@ const AdminUsers = () => {
 
   const submitRejection = () => {
     if (!rejectionReason.trim()) {
-      showActionMessage('error', 'Please provide a reason for rejection')
+      showActionMessage('error', 'Please provide a reason for suspension')
       return
     }
     setVerificationConfirm({ show: true, caregiverId: pendingRejectionId, status: 'rejected', reason: rejectionReason })
@@ -154,7 +154,8 @@ const AdminUsers = () => {
         cg._id === caregiverId ? { ...cg, verificationStatus: status, verificationNotes: reason || cg.verificationNotes } : cg
       ))
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
-      showActionMessage('success', `Caregiver ${status} successfully${reason ? ' with reason: ' + reason : ''}`)
+      const statusLabel = status === 'rejected' ? 'suspended' : status
+      showActionMessage('success', `Caregiver ${statusLabel} successfully${reason ? ' with reason: ' + reason : ''}`)
     } catch (err) {
       console.error('Error updating verification:', err)
       showActionMessage('error', `Failed to update verification status: ${err.response?.data?.message || err.message}`)
@@ -423,7 +424,7 @@ const AdminUsers = () => {
                                   className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
                                 >
                                   <XCircle className="w-4 h-4" />
-                                  Revoke
+                                  Suspend
                                 </button>
                               )}
                               {(caregiver.verificationStatus || 'pending') === 'rejected' && (
@@ -504,7 +505,7 @@ const AdminUsers = () => {
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
                                   >
                                     <XCircle className="w-4 h-4" />
-                                    Revoke
+                                    Suspend
                                   </button>
                                   <button
                                     onClick={() => openDeleteConfirmation(caregiver.user)}
@@ -525,11 +526,11 @@ const AdminUsers = () => {
                 {/* Rejected Caregivers Section */}
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-red-50 px-6 py-4 border-b border-red-100">
-                    <h3 className="text-lg font-bold text-slate-900">Rejected ({rejectedCaregivers.length})</h3>
-                    <p className="text-sm text-slate-600 mt-1">Verification not approved</p>
+                    <h3 className="text-lg font-bold text-slate-900">Suspended ({rejectedCaregivers.length})</h3>
+                    <p className="text-sm text-slate-600 mt-1">Suspended caregivers cannot log in</p>
                   </div>
                   {rejectedCaregivers.length === 0 ? (
-                    <div className="p-6 text-center text-slate-500 font-medium">No rejected caregivers</div>
+                    <div className="p-6 text-center text-slate-500 font-medium">No suspended caregivers</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-slate-200">
@@ -833,13 +834,13 @@ const AdminUsers = () => {
       {showRejectionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Rejection Reason</h3>
-            <p className="text-slate-600 mb-4 text-sm">Please provide a reason for rejecting this caregiver. This will be recorded and may be communicated to them.</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Suspension Reason</h3>
+            <p className="text-slate-600 mb-4 text-sm">Please provide a reason for suspending this caregiver. This will be recorded and may be communicated to them.</p>
 
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
+              placeholder="Enter suspension reason..."
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none bg-white text-slate-900 placeholder-slate-500"
               rows="4"
             />
@@ -859,7 +860,7 @@ const AdminUsers = () => {
                 onClick={submitRejection}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                Submit Rejection
+                Submit Suspension
               </button>
             </div>
           </div>
@@ -889,17 +890,17 @@ const AdminUsers = () => {
                   {verificationConfirm.status === 'verified'
                     ? 'Approve Caregiver'
                     : verificationConfirm.status === 'rejected'
-                    ? 'Reject Caregiver'
+                    ? 'Suspend Caregiver'
                     : 'Update Verification'}
                 </h3>
                 <p className="text-slate-600 text-sm mb-4">
                   {verificationConfirm.status === 'verified'
                     ? 'This caregiver will be marked as verified and can accept bookings.'
-                    : 'This caregiver will be marked as rejected and cannot accept new bookings.'}
+                    : 'This caregiver will be suspended and cannot log in until re-approved.'}
                 </p>
                 {verificationConfirm.reason && verificationConfirm.status === 'rejected' && (
                   <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded">
-                    <p className="text-xs font-bold text-red-800 mb-1">REJECTION REASON</p>
+                    <p className="text-xs font-bold text-red-800 mb-1">SUSPENSION REASON</p>
                     <p className="text-xs text-red-700">{verificationConfirm.reason}</p>
                   </div>
                 )}
@@ -921,7 +922,7 @@ const AdminUsers = () => {
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {verificationConfirm.status === 'verified' ? 'Approve' : 'Reject'}
+                {verificationConfirm.status === 'verified' ? 'Approve' : 'Suspend'}
               </button>
             </div>
           </div>

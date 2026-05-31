@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, DollarSign, CreditCard, X, CheckCircle, AlertCircle, Star } from 'lucide-react'
+import { Calendar, Clock, DollarSign, CreditCard, X, CheckCircle, AlertCircle, Star, MapPin } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import api from '../../services/api'
@@ -204,6 +204,16 @@ const Bookings = () => {
     }
   }
 
+  // Simple phone masker: show first 3 and last 3 digits with middle masked
+  const maskPhone = (phone) => {
+    if (!phone) return 'N/A'
+    const digits = phone.replace(/\D/g, '')
+    if (digits.length <= 6) return digits.replace(/.(?=.{3})/g, 'X')
+    const start = digits.slice(0, 3)
+    const end = digits.slice(-3)
+    return `${start} XXX ${end}`
+  }
+
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50 overflow-hidden">
       <Navbar isFixed />
@@ -291,11 +301,7 @@ const Bookings = () => {
                               <span className="font-semibold">Notes:</span> {booking.notes}
                             </p>
                           )}
-                          {booking.transactionId && (
-                            <p className="text-sm text-gray-700 mt-1">
-                              <span className="font-semibold">Transaction ID:</span> {booking.transactionId}
-                            </p>
-                          )}
+                          
                         </div>
                       </div>
 
@@ -351,6 +357,28 @@ const Bookings = () => {
                             )}
                           </div>
                         )}
+
+                        {/* Contact Info - visible after confirmation or once completed */}
+                        <div className="bg-white border border-gray-100 rounded-xl p-3 text-sm">
+                          {booking.status === 'confirmed' || booking.status === 'completed' ? (
+                            <div className="space-y-1">
+                              <div className="text-sm text-gray-700 font-semibold">Contact Information</div>
+                              <div className="flex items-center gap-2 text-teal-700">
+                                <a href={`tel:${booking.caregiver?.user?.phone}`} className="font-medium">{booking.caregiver?.user?.phone || 'N/A'}</a>
+                              </div>
+                              {booking.caregiver?.location && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <MapPin className="w-4 h-4 text-teal-600" />
+                                  <span>{booking.caregiver.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : booking.status === 'pending' ? (
+                            <div className="text-sm text-gray-500 italic">Contact details will be available once the booking is accepted.</div>
+                          ) : (
+                            <div className="text-sm text-gray-500 italic">Contact details are hidden for this booking.</div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

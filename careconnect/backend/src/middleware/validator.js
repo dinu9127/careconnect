@@ -76,6 +76,29 @@ export const updateUserValidation = [
     .optional()
     .trim()
     .isLength({ max: 200 }).withMessage('Address must not exceed 200 characters'),
+
+  body('careReceiverName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }).withMessage('Care receiver name must not exceed 100 characters'),
+
+  body('careReceiverRelationship')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }).withMessage('Relationship must not exceed 100 characters'),
+
+  body('specialNotes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage('Special notes must not exceed 500 characters'),
+
+  body('latitude')
+    .optional()
+    .isFloat({ min: -90, max: 90 }).withMessage('Latitude must be a valid number'),
+
+  body('longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 }).withMessage('Longitude must be a valid number'),
   
   handleValidationErrors
 ];

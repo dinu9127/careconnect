@@ -80,7 +80,7 @@ const AdminDashboard = () => {
           <Sidebar role="admin" isFixed />
           <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
             <div className="mb-8 border-b-2 border-purple-200 pb-4">
-              <h1 className="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
               <p className="text-slate-600 mt-1">Welcome back! Here's your platform overview</p>
             </div>
             <div className="flex justify-center items-center h-64">
@@ -115,10 +115,10 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">User Breakdown</p>
-                  <h2 className="text-3xl font-bold text-slate-900">Total Users</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Total Users</h2>
                  
                 </div>
-                <div className="text-5xl font-extrabold text-slate-900">
+                <div className="text-2xl font-extrabold text-slate-900">
                   {stats.totalUsers}
                 </div>
               </div>
@@ -196,10 +196,10 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Pending Verifications</p>
-                  <h2 className="text-3xl font-bold text-slate-900">Awaiting approval</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Awaiting approval</h2>
                   <p className="text-sm text-slate-600 mt-2">Caregivers waiting for verification</p>
                 </div>
-                <div className="text-5xl font-extrabold text-slate-900">
+                <div className="text-2xl font-extrabold text-slate-900">
                   {stats.pendingVerifications}
                 </div>
               </div>
@@ -208,10 +208,10 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Open Complaints</p>
-                  <h2 className="text-3xl font-bold text-slate-900">Requiring attention</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Requiring attention</h2>
                   <p className="text-sm text-slate-600 mt-2">Complaints requiring attention</p>
                 </div>
-                <div className="text-5xl font-extrabold text-slate-900">
+                <div className="text-2xl font-extrabold text-slate-900">
                   {stats.openComplaints}
                 </div>
               </div>
