@@ -8,16 +8,9 @@ const Bookings = () => {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: ''
-  })
   const [reviewData, setReviewData] = useState({
     rating: 0,
     reviewText: ''
@@ -42,89 +35,27 @@ const Bookings = () => {
     }
   }
 
-  const handlePayment = (booking) => {
-    setSelectedBooking(booking)
-    setShowPaymentModal(true)
-    setCardDetails({
-      cardNumber: '',
-      cardName: '',
-      expiryDate: '',
-      cvv: ''
-    })
-  }
-
-  const handleCardInputChange = (e) => {
-    const { name, value } = e.target
-    
-    let formattedValue = value
-
-    if (name === 'cardNumber') {
-      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim()
-      if (formattedValue.replace(/\s/g, '').length > 16) return
-    }
-
-    if (name === 'expiryDate') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length >= 2) {
-        formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2, 4)
-      }
-      if (formattedValue.length > 5) return
-    }
-
-    if (name === 'cvv') {
-      formattedValue = value.replace(/\D/g, '').slice(0, 3)
-    }
-
-    setCardDetails(prev => ({
-      ...prev,
-      [name]: formattedValue
-    }))
-  }
-
-  const processCardPayment = async () => {
-    // Validate card details
-    if (!cardDetails.cardNumber || !cardDetails.cardName || !cardDetails.expiryDate || !cardDetails.cvv) {
-      setMessage({ type: 'error', text: 'Please fill all card details' })
-      return
-    }
-
-    // Simulate card payment processing
-    setSubmitting(true)
-    
+  const handlePayment = async (booking) => {
     try {
-      // In production, integrate with payment gateway (Stripe)
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const transactionId = 'TXN-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-      
-      const response = await api.put(`/bookings/${selectedBooking._id}/payment`, {
-        paymentMethod: 'card',
-        paymentStatus: 'paid',
-        transactionId: transactionId
+      const response = await api.get(`/payhere/checkout/${booking._id}`)
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = response.data.action
+      Object.entries(response.data.fields).forEach(([key, value]) => {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = key
+        input.value = value
+        form.appendChild(input)
       })
-
-      setBookings(prev => prev.map(b => 
-        b._id === selectedBooking._id ? response.data.data : b
-      ))
-
-      setMessage({ type: 'success', text: 'Payment successful!' })
-      setShowPaymentModal(false)
-      
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+      document.body.appendChild(form)
+      form.submit()
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Payment failed. Please try again.'
+        text: error.response?.data?.message || 'Failed to initiate payment'
       })
-    } finally {
-      setSubmitting(false)
     }
-  }
-
-  const handleSubmitPayment = async (e) => {
-    e.preventDefault()
-    await processCardPayment()
   }
 
   const handleReview = (booking) => {
@@ -388,89 +319,6 @@ const Bookings = () => {
           </div>
         </main>
       </div>
-
-      {/* Payment Modal */}
-      {showPaymentModal && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-96 overflow-y-auto border border-teal-100">
-            <div className="sticky top-0 bg-gradient-to-r from-teal-50 to-teal-50 border-b border-teal-100 p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Payment</h2>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-1 transition"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="bg-teal-50 rounded-xl p-4 mb-6 border border-teal-200">
-                <p className="text-sm text-gray-600 font-medium mb-1">Amount to Pay</p>
-                <p className="text-3xl font-bold text-teal-700">Rs. {selectedBooking.totalAmount}</p>
-              </div>
-
-              <form onSubmit={handleSubmitPayment}>
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Card Number</label>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      value={cardDetails.cardNumber}
-                      onChange={handleCardInputChange}
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cardholder Name</label>
-                    <input
-                      type="text"
-                      name="cardName"
-                      value={cardDetails.cardName}
-                      onChange={handleCardInputChange}
-                      placeholder="JOHN DOE"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Expiry Date</label>
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        value={cardDetails.expiryDate}
-                        onChange={handleCardInputChange}
-                        placeholder="MM/YY"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
-                      <input
-                        type="text"
-                        name="cvv"
-                        value={cardDetails.cvv}
-                        onChange={handleCardInputChange}
-                        placeholder="123"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Processing...' : `Pay Rs. ${selectedBooking.totalAmount}`}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Review Modal */}
       {showReviewModal && selectedBooking && (

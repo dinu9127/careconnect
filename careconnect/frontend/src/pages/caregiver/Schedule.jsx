@@ -53,7 +53,7 @@ const Schedule = () => {
       }
 
       const response = await api.put(`/bookings/${booking._id}`, updatePayload)
-      setBookings(bookings.map(b => b._id === booking._id ? response.data.data : b))
+      await fetchBookings()
       if (newStatus === 'confirmed') {
         setVisibleContactBookingId(booking._id)
       }

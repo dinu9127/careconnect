@@ -104,6 +104,11 @@ const ClientProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    if (name === 'phone') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10)
+      setFormData(prev => ({ ...prev, [name]: digitsOnly }))
+      return
+    }
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
@@ -181,6 +186,14 @@ const ClientProfile = () => {
     const missing = requiredFields
       .filter(([, value]) => !String(value || '').trim())
       .map(([label]) => label)
+
+    if (String(formData.phone || '').trim() && !/^\d{10}$/.test(formData.phone)) {
+      setMessage({
+        type: 'error',
+        text: 'Phone number must be exactly 10 digits.'
+      })
+      return
+    }
 
     if (missing.length > 0) {
       setMessage({
@@ -297,6 +310,9 @@ const ClientProfile = () => {
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
+                            inputMode="numeric"
+                            maxLength="10"
+                            pattern="[0-9]{10}"
                             className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                             placeholder="07X XXX XXXX"
                           />
