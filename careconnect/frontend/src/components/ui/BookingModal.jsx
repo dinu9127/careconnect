@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, Calendar, Clock, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import api, { authService } from '../../services/api'
 
 const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',
@@ -92,7 +94,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       setProfileCheck({ complete: missingFields.length === 0, missingFields })
 
       if (missingFields.length > 0) {
-        setError(`Complete your profile before booking. Missing: ${missingFields.join(', ')}.`)
+        setError('Please complete your profile before booking.')
       }
     } catch (error) {
       setProfileCheck({ complete: false, missingFields: ['profile details'] })
@@ -106,6 +108,11 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleUpdateProfile = () => {
+    onClose()
+    navigate('/client/profile')
   }
 
   const validateForm = () => {
@@ -161,7 +168,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     setError('')
 
     if (!profileCheck.complete) {
-      setError(`Complete your profile before booking. Missing: ${profileCheck.missingFields.join(', ')}.`)
+      setError('Please complete your profile before booking.')
       return
     }
 
@@ -258,30 +265,13 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     if (!isDateAvailable(date)) return
     
     const dateStr = formatLocalDate(date)
-    
-    if (!selectingEndDate) {
-      setFormData(prev => ({
-        ...prev,
-        startDate: dateStr,
-        endDate: ''
-      }))
-      setSelectingEndDate(true)
-    } else {
-      const startDate = new Date(formData.startDate)
-      if (date < startDate) {
-        setFormData(prev => ({
-          ...prev,
-          startDate: dateStr,
-          endDate: ''
-        }))
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          endDate: dateStr
-        }))
-        setSelectingEndDate(false)
-      }
-    }
+
+    setFormData(prev => ({
+      ...prev,
+      startDate: dateStr,
+      endDate: dateStr
+    }))
+    setSelectingEndDate(false)
   }
 
   const getDaysArray = () => {
@@ -361,12 +351,6 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
-          {!profileCheck.complete && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-              Complete your profile first. Booking is disabled until all required client details are saved.
-            </div>
-          )}
-
           {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-gap-2">
@@ -485,8 +469,6 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
             {formData.startDate && (
               <div className="mt-3 text-sm text-slate-700">
                 <strong>Selected:</strong> {new Date(formData.startDate).toLocaleDateString()}
-                {formData.endDate && ` - ${new Date(formData.endDate).toLocaleDateString()}`}
-                {!formData.endDate && selectingEndDate && ' (Select end date)'}
               </div>
             )}
           </div>
@@ -605,6 +587,15 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
             >
               Cancel
             </button>
+            {!profileCheck.complete && (
+              <button
+                type="button"
+                onClick={handleUpdateProfile}
+                className="flex-1 px-4 py-2 border-2 border-teal-600 text-teal-700 font-semibold rounded-lg hover:bg-teal-50 transition"
+              >
+                Update your profile
+              </button>
+            )}
             <button
               type="submit"
               disabled={loading || !profileCheck.complete}
