@@ -56,7 +56,8 @@ const UpdateProfile = () => {
     bio: '',
     hourlyRate: '',
     experience: '',
-    district: '',
+    residentDistrict: '',
+    boardingDistrict: '',
     certifications: '',
     serviceTypes: [],
     profilePicture: null,
@@ -215,7 +216,8 @@ const UpdateProfile = () => {
         bio: caregiver.bio || '',
         hourlyRate: caregiver.hourlyRate || '',
         experience: caregiver.experience || '',
-        district: caregiver.residentDistrict || caregiver.boardingDistrict || caregiver.location || '',
+        residentDistrict: caregiver.residentDistrict || '',
+        boardingDistrict: caregiver.boardingDistrict || '',
         certifications: Array.isArray(caregiver.certifications) 
           ? caregiver.certifications.map(c => c.name || c).join(', ')
           : '',
@@ -397,15 +399,9 @@ const UpdateProfile = () => {
         serviceTypes: formData.serviceTypes
       }
 
-      // Use one district input while keeping backward compatibility with existing schema.
-      if (formData.district) {
-        caregiverData.location = formData.district
-        caregiverData.residentDistrict = formData.district
-        caregiverData.boardingDistrict = formData.district
-      } else {
-        caregiverData.residentDistrict = ''
-        caregiverData.boardingDistrict = ''
-      }
+      // Include district fields if provided
+      if (formData.residentDistrict) caregiverData.residentDistrict = formData.residentDistrict
+      if (formData.boardingDistrict) caregiverData.boardingDistrict = formData.boardingDistrict
 
       const latitude = Number.parseFloat(formData.latitude)
       const longitude = Number.parseFloat(formData.longitude)
@@ -904,20 +900,37 @@ const UpdateProfile = () => {
                     </select>
                   </div>
                                   
-                {/* District */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">District</label>
-                  <select
-                    name="district"
-                    value={formData.district}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                  >
-                    <option value="">Select district (optional)</option>
-                    {districts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                {/* Districts */}
+                <div className="md:col-span-2 grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Resident District</label>
+                    <select
+                      name="residentDistrict"
+                      value={formData.residentDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select resident district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Boarding District</label>
+                    <select
+                      name="boardingDistrict"
+                      value={formData.boardingDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select boarding district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
 
