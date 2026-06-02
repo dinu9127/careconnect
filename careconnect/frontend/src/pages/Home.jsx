@@ -224,10 +224,7 @@ const Home = () => {
                 <Shield className="w-5 h-5 text-indigo-600" />
                 <span>Background verified</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-orange-600" />
-                <span>4.8★ Rated</span>
-              </div>
+              
             </div>
           </div>
 

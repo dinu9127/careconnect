@@ -402,7 +402,7 @@ const AdminComplaints = () => {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
                       >
                         <Save className="w-5 h-5" />
                         {submitting ? 'Updating...' : 'Update Complaint'}

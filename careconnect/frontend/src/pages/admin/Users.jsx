@@ -410,7 +410,9 @@ const AdminUsers = () => {
                             <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                            <div className="text-sm text-slate-700">
+                              {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -510,7 +512,9 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -581,7 +585,9 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -697,10 +703,9 @@ const AdminUsers = () => {
       {documentsModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-100">
-            <div className="mb-5 h-1 rounded-full bg-gradient-to-r from-purple-600 via-blue-500 to-emerald-500"></div>
+
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-purple-600">Admin document review</p>
                 <h3 className="text-xl font-bold text-slate-900">Caregiver Documents</h3>
                 <p className="text-sm text-slate-600 mt-1">
                   {documentsModal.caregiver?.user?.name || 'Caregiver'}
@@ -714,24 +719,7 @@ const AdminUsers = () => {
               </button>
             </div>
 
-            {!documentsLoading && !documentsError && (
-              <div className="mb-6 rounded-2xl border border-purple-100 bg-slate-50 p-4 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  {documentSummary.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm shadow-sm border ${item.tone}`}
-                    >
-                      <span className="font-semibold text-slate-900">{item.count}</span>
-                      <span className="text-slate-600">{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-slate-500">
-                  Files are grouped by source so you can scan uploads, certifications, and verification records separately.
-                </p>
-              </div>
-            )}
+            
 
             {documentsLoading ? (
               <div className="py-12 text-center">
@@ -782,9 +770,7 @@ const AdminUsers = () => {
                                     </a>
                                     <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.createdAt)}</p>
                                   </div>
-                                  <span className="inline-flex w-fit rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 border border-purple-100">
-                                    Open file
-                                  </span>
+                                 
                                 </div>
                               </div>
                             ))}
@@ -795,121 +781,10 @@ const AdminUsers = () => {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-sm font-bold text-blue-700">NVQ Certifications</h4>
-                      <p className="text-xs text-slate-500">Qualification and certification records</p>
-                    </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
-                      {documentsData.nvqCertifications.length}
-                    </span>
-                  </div>
-                  {documentsData.nvqCertifications.length === 0 ? (
-                    <p className="text-sm text-slate-500">No NVQ certifications uploaded.</p>
-                  ) : (
-                    <div className="grid gap-3">
-                      {documentsData.nvqCertifications.map((cert) => (
-                        <div key={cert._id} className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-900">{cert.level || 'NVQ'}</p>
-                              <p className="text-xs text-slate-500">{cert.subject || 'Subject not provided'}</p>
-                              <p className="text-xs text-slate-500">Issued: {formatDate(cert.issueDate)}</p>
-                            </div>
-                            {cert.documentUrl && (
-                              <a
-                                href={cert.documentUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex w-fit rounded-full border border-blue-200 bg-white px-3 py-1 text-sm font-semibold text-blue-700 hover:border-blue-300 hover:bg-blue-50"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                
 
-                <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-sm font-bold text-emerald-700">Professional Documents</h4>
-                      <p className="text-xs text-slate-500">Training, registration, and supporting records</p>
-                    </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                      {documentsData.professionalDocuments.length}
-                    </span>
-                  </div>
-                  {documentsData.professionalDocuments.length === 0 ? (
-                    <p className="text-sm text-slate-500">No professional documents uploaded.</p>
-                  ) : (
-                    <div className="grid gap-3">
-                      {documentsData.professionalDocuments.map((doc) => (
-                        <div key={doc._id} className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-900">{doc.title || doc.documentType || 'Document'}</p>
-                              <p className="text-xs text-slate-500">{doc.issuer || 'Issuer not provided'}</p>
-                              <p className="text-xs text-slate-500">Issued: {formatDate(doc.issueDate)}</p>
-                            </div>
-                            {doc.documentUrl && (
-                              <a
-                                href={doc.documentUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex w-fit rounded-full border border-emerald-200 bg-white px-3 py-1 text-sm font-semibold text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-sm font-bold text-amber-700">Verification Documents</h4>
-                      <p className="text-xs text-slate-500">Additional uploaded verification files</p>
-                    </div>
-                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
-                      {documentsData.verificationDocuments.length}
-                    </span>
-                  </div>
-                  {documentsData.verificationDocuments.length === 0 ? (
-                    <p className="text-sm text-slate-500">No verification documents uploaded.</p>
-                  ) : (
-                    <div className="grid gap-3">
-                      {documentsData.verificationDocuments.map((doc) => (
-                        <div key={doc._id} className="rounded-xl border border-amber-100 bg-amber-50/40 p-3">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-900">{doc.originalName || 'Verification Document'}</p>
-                              <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.uploadedAt)}</p>
-                            </div>
-                            {doc.url && (
-                              <a
-                                href={doc.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex w-fit rounded-full border border-amber-200 bg-white px-3 py-1 text-sm font-semibold text-amber-700 hover:border-amber-300 hover:bg-amber-50"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                
+                
               </div>
             )}
           </div>

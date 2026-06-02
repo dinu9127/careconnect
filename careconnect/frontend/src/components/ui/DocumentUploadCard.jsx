@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { FileText, Image as ImageIcon, Upload, X } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { uploadService } from '../../services/api'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -26,10 +26,8 @@ const usePreviewUrl = (file) => {
       setPreviewUrl('')
       return
     }
-
     const nextUrl = URL.createObjectURL(file)
     setPreviewUrl(nextUrl)
-
     return () => {
       URL.revokeObjectURL(nextUrl)
     }
@@ -93,30 +91,12 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     const nextItems = Array.from(files).map((file, index) => {
       const id = `${Date.now()}-${index}-${file.name}`
       if (!isAllowedExtraFile(file)) {
-        return {
-          id,
-          file,
-          status: 'error',
-          progress: 0,
-          error: 'Only PDF, JPG, or PNG files are allowed.'
-        }
+        return { id, file, status: 'error', progress: 0, error: 'Only PDF, JPG, or PNG files are allowed.' }
       }
       if (file.size > MAX_FILE_BYTES) {
-        return {
-          id,
-          file,
-          status: 'error',
-          progress: 0,
-          error: 'File size must be 5MB or less.'
-        }
+        return { id, file, status: 'error', progress: 0, error: 'File size must be 5MB or less.' }
       }
-      return {
-        id,
-        file,
-        status: 'pending',
-        progress: 0,
-        error: ''
-      }
+      return { id, file, status: 'pending', progress: 0, error: '' }
     })
 
     setIdentityExtraFiles((prev) => [...prev, ...nextItems])
@@ -124,9 +104,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
 
   const handleIdentityExtraBrowse = (event) => {
     addIdentityExtraFiles(event.target.files)
-    if (event.target.value) {
-      event.target.value = ''
-    }
+    if (event.target.value) event.target.value = ''
   }
 
   const handleIdentityExtraDrop = (event) => {
@@ -153,10 +131,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
         return uploadService.uploadDocument({
           file: item.file,
           fileType: 'IdentityAdditional',
-          metadata: {
-            identityType,
-            identityNumber: identityMeta.idNumber
-          },
+          metadata: { identityType, identityNumber: identityMeta.idNumber },
           onUploadProgress: (progressEvent) => {
             const total = progressEvent.total || 0
             if (!total) return
@@ -187,20 +162,16 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     )
   }
 
-  const identityNumberLabel = identityType === 'NIC'
-    ? 'NIC Number'
-    : identityType === 'Passport'
-    ? 'Passport Number'
-    : identityType === 'DrivingLicense'
-    ? 'Driving License Number'
+  const identityNumberLabel =
+    identityType === 'NIC' ? 'NIC Number'
+    : identityType === 'Passport' ? 'Passport Number'
+    : identityType === 'DrivingLicense' ? 'Driving License Number'
     : 'Document Number'
 
-  const identityNumberPlaceholder = identityType === 'NIC'
-    ? 'e.g., 200012345678'
-    : identityType === 'Passport'
-    ? 'e.g., N1234567'
-    : identityType === 'DrivingLicense'
-    ? 'e.g., 123456789'
+  const identityNumberPlaceholder =
+    identityType === 'NIC' ? 'e.g., 200012345678'
+    : identityType === 'Passport' ? 'e.g., N1234567'
+    : identityType === 'DrivingLicense' ? 'e.g., 123456789'
     : 'Enter document number'
 
   const handleFileChange = (event, setFile, setStatus, setUploadedUrl) => {
@@ -208,17 +179,11 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     setStatus({ type: '', text: '' })
     setUploadedUrl('')
 
-    if (!selectedFile) {
-      setFile(null)
-      return
-    }
+    if (!selectedFile) { setFile(null); return }
 
     if (!isAllowedFile(selectedFile)) {
       setFile(null)
-      setStatus({
-        type: 'error',
-        text: 'Only JPG, PNG, PDF, or DOCX files are allowed.'
-      })
+      setStatus({ type: 'error', text: 'Only JPG, PNG, PDF, or DOCX files are allowed.' })
       return
     }
 
@@ -232,21 +197,13 @@ const DocumentUploadCard = ({ certifications = [] }) => {
   }
 
   const handleUpload = async ({
-    file,
-    fileType,
-    metadata,
-    setStatus,
-    setUploadedUrl,
-    setUploading,
-    setFile,
-    onSuccess
+    file, fileType, metadata,
+    setStatus, setUploadedUrl, setUploading, setFile, onSuccess
   }) => {
-    if (!file) {
-      setStatus({ type: 'error', text: 'Please select a file to upload.' })
-      return
-    }
+    if (!file) { setStatus({ type: 'error', text: 'Please select a file to upload.' }); return }
 
     const today = new Date()
+
     const validateIssueDate = (issueDate, label) => {
       if (!issueDate) return `${label} is required.`
       const parsed = new Date(issueDate)
@@ -260,9 +217,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
       const issue = new Date(issueDate)
       const expiry = new Date(expiryDate)
       if (Number.isNaN(expiry.getTime())) return `${label} is invalid.`
-      if (!Number.isNaN(issue.getTime()) && expiry < issue) {
-        return `${label} cannot be before issue date.`
-      }
+      if (!Number.isNaN(issue.getTime()) && expiry < issue) return `${label} cannot be before issue date.`
       return ''
     }
 
@@ -274,54 +229,39 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     const validateIdNumber = (type, idNumber) => {
       const trimmed = idNumber.trim()
       if (!trimmed) return 'ID number is required.'
-      if (type === 'NIC') {
-        if (!/^\d{9}[vVxX]?$|^\d{12}$/.test(trimmed)) {
-          return 'NIC must be 9 digits (optionally with V/X) or 12 digits.'
-        }
-      }
-      if (type === 'Passport') {
-        if (!/^[A-Za-z0-9]{6,12}$/.test(trimmed)) {
-          return 'Passport number must be 6-12 letters/numbers.'
-        }
-      }
-      if (type === 'DrivingLicense') {
-        if (!/^\d{8,10}$/.test(trimmed)) {
-          return 'Driving license number must be 8-10 digits.'
-        }
-      }
+      if (type === 'NIC' && !/^\d{9}[vVxX]?$|^\d{12}$/.test(trimmed))
+        return 'NIC must be 9 digits (optionally with V/X) or 12 digits.'
+      if (type === 'Passport' && !/^[A-Za-z0-9]{6,12}$/.test(trimmed))
+        return 'Passport number must be 6-12 letters/numbers.'
+      if (type === 'DrivingLicense' && !/^\d{8,10}$/.test(trimmed))
+        return 'Driving license number must be 8-10 digits.'
       return ''
     }
 
     const validatePoliceNumber = (certificateNumber) => {
       const trimmed = certificateNumber.trim()
       if (!trimmed) return 'Certificate number is required.'
-      if (!/^[A-Za-z0-9\/-]{6,20}$/.test(trimmed)) {
-        return 'Certificate number must be 6-20 characters.'
-      }
+      if (!/^[A-Za-z0-9\/-]{6,20}$/.test(trimmed)) return 'Certificate number must be 6-20 characters.'
       return ''
     }
 
+    if (!fileType) { setStatus({ type: 'error', text: 'Please select a document type.' }); return }
+
     let validationError = ''
-    if (!fileType) {
-      setStatus({ type: 'error', text: 'Please select a document type.' })
-      return
-    }
-
-    if (fileType === 'NIC' || fileType === 'Passport' || fileType === 'DrivingLicense') {
-      validationError = validateIdNumber(fileType, metadata?.idNumber || '')
-        || validateIssueDate(metadata?.issueDate, 'Issue date')
-        || (fileType !== 'NIC' ? requireExpiryDate(metadata?.expiryDate, 'Expiry date') : '')
-        || validateExpiryDate(metadata?.issueDate, metadata?.expiryDate, 'Expiry date')
+    if (['NIC', 'Passport', 'DrivingLicense'].includes(fileType)) {
+      validationError =
+        validateIdNumber(fileType, metadata?.idNumber || '') ||
+        validateIssueDate(metadata?.issueDate, 'Issue date') ||
+        (fileType !== 'NIC' ? requireExpiryDate(metadata?.expiryDate, 'Expiry date') : '') ||
+        validateExpiryDate(metadata?.issueDate, metadata?.expiryDate, 'Expiry date')
     } else if (fileType === 'PoliceClearance') {
-      validationError = validatePoliceNumber(metadata?.certificateNumber || '')
-        || validateIssueDate(metadata?.issueDate, 'Issue date')
-        || validateExpiryDate(metadata?.issueDate, metadata?.expiryDate, 'Expiry date')
+      validationError =
+        validatePoliceNumber(metadata?.certificateNumber || '') ||
+        validateIssueDate(metadata?.issueDate, 'Issue date') ||
+        validateExpiryDate(metadata?.issueDate, metadata?.expiryDate, 'Expiry date')
     }
 
-    if (validationError) {
-      setStatus({ type: 'error', text: validationError })
-      return
-    }
+    if (validationError) { setStatus({ type: 'error', text: validationError }); return }
 
     try {
       setUploading(true)
@@ -331,9 +271,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
       setUploadedUrl(fileUrl)
       setStatus({ type: 'success', text: response.data?.message || 'Upload complete.' })
       setFile(null)
-      if (onSuccess) {
-        onSuccess()
-      }
+      if (onSuccess) onSuccess()
     } catch (error) {
       const message = error.response?.data?.message || 'Upload failed. Please try again.'
       setStatus({ type: 'error', text: message })
@@ -343,17 +281,8 @@ const DocumentUploadCard = ({ certifications = [] }) => {
   }
 
   const renderUploadSection = ({
-    title,
-    file,
-    previewUrl,
-    status,
-    uploadedUrl,
-    uploading,
-    onFileChange,
-    onUpload,
-    extraFields,
-    dragDrop,
-    afterSelectContent
+    title, file, previewUrl, status, uploadedUrl, uploading,
+    onFileChange, onUpload, extraFields, dragDrop, afterSelectContent
   }) => (
     <div className="rounded-lg border border-gray-200 p-4">
       <div className="flex items-center justify-between gap-4">
@@ -361,9 +290,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
       </div>
 
       {extraFields && (
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          {extraFields}
-        </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">{extraFields}</div>
       )}
 
       <div className="mt-3">
@@ -377,9 +304,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
           onChange={onFileChange}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
         />
-        {file && (
-          <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>
-        )}
+        {file && <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>}
       </div>
 
       {dragDrop && (
@@ -387,10 +312,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
           className={`mt-3 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-5 text-center transition ${
             dragDrop.isDragActive ? 'border-blue-600 bg-blue-50' : 'border-gray-300'
           }`}
-          onDragOver={(event) => {
-            event.preventDefault()
-            dragDrop.setIsDragActive(true)
-          }}
+          onDragOver={(event) => { event.preventDefault(); dragDrop.setIsDragActive(true) }}
           onDragLeave={() => dragDrop.setIsDragActive(false)}
           onDrop={dragDrop.onDrop}
           role="button"
@@ -439,36 +361,24 @@ const DocumentUploadCard = ({ certifications = [] }) => {
           {uploading ? 'Uploading...' : 'Upload File'}
         </button>
         {uploadedUrl && (
-          <a
-            href={uploadedUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-blue-700 underline"
-          >
+          <a href={uploadedUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-700 underline">
             View uploaded file
           </a>
         )}
       </div>
 
       {status.text && (
-        <div
-          className={`mt-3 rounded-lg px-3 py-2 text-sm ${
-            status.type === 'error'
-              ? 'bg-red-50 text-red-700'
-              : 'bg-green-50 text-green-700'
-          }`}
-        >
+        <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+          status.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+        }`}>
           {status.text}
         </div>
       )}
     </div>
   )
 
-  const advanceSection = () => {
-    setActiveSection((prev) => Math.min(prev + 1, 2))
-  }
+  const advanceSection = () => setActiveSection((prev) => Math.min(prev + 1, 2))
 
-  const showIdentityExtras = identityStatus.type === 'success' || Boolean(identityUploadedUrl)
   const normalizedCertifications = Array.isArray(certifications)
     ? certifications.map((item) => item.trim()).filter(Boolean)
     : []
@@ -482,15 +392,13 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     setQualificationItems((prev) => {
       const next = normalizedCertifications.map((name, index) => {
         const existing = prev.find((item) => item.name === name)
-        if (existing) {
-          return existing
-        }
+        if (existing) return existing
         return {
           id: `${name}-${index}`,
           name,
-          file: null,
+          files: [],
           status: { type: '', text: '' },
-          uploadedUrl: '',
+          uploadedUrls: [],
           uploading: false
         }
       })
@@ -505,54 +413,75 @@ const DocumentUploadCard = ({ certifications = [] }) => {
   }
 
   const handleQualificationFileSelect = (event, name) => {
-    const selectedFile = event.target.files?.[0] || null
-    updateQualificationItem(name, { status: { type: '', text: '' }, uploadedUrl: '' })
+    const selectedFiles = Array.from(event.target.files || [])
+    updateQualificationItem(name, { status: { type: '', text: '' } })
 
-    if (!selectedFile) {
-      updateQualificationItem(name, { file: null })
-      return
+    const validFiles = []
+    for (const file of selectedFiles) {
+      if (!isAllowedFile(file)) {
+        updateQualificationItem(name, {
+          status: { type: 'error', text: 'Only JPG, PNG, PDF, or DOCX files are allowed.' }
+        })
+        return
+      }
+      if (file.size > MAX_FILE_BYTES) {
+        updateQualificationItem(name, {
+          status: { type: 'error', text: 'File size must be 5MB or less per file.' }
+        })
+        return
+      }
+      validFiles.push(file)
     }
 
-    if (!isAllowedFile(selectedFile)) {
-      updateQualificationItem(name, {
-        file: null,
-        status: { type: 'error', text: 'Only JPG, PNG, PDF, or DOCX files are allowed.' }
-      })
-      return
-    }
+    setQualificationItems((prev) =>
+      prev.map((item) =>
+        item.name === name
+          ? { ...item, files: [...(item.files || []), ...validFiles] }
+          : item
+      )
+    )
+  }
 
-    if (selectedFile.size > MAX_FILE_BYTES) {
-      updateQualificationItem(name, {
-        file: null,
-        status: { type: 'error', text: 'File size must be 5MB or less.' }
-      })
-      return
-    }
-
-    updateQualificationItem(name, { file: selectedFile })
+  const handleQualificationFileRemove = (name, index) => {
+    setQualificationItems((prev) =>
+      prev.map((item) =>
+        item.name === name
+          ? { ...item, files: item.files.filter((_, i) => i !== index) }
+          : item
+      )
+    )
   }
 
   const handleQualificationUpload = async (item) => {
-    if (!item.file) {
+    if (!item.files || item.files.length === 0) {
       updateQualificationItem(item.name, {
-        status: { type: 'error', text: 'Please select a file to upload.' }
+        status: { type: 'error', text: 'Please select at least one file to upload.' }
       })
       return
     }
 
     try {
       updateQualificationItem(item.name, { uploading: true, status: { type: '', text: '' } })
-      const response = await uploadService.uploadDocument({
-        file: item.file,
-        fileType: 'Qualification',
-        metadata: { certificationName: item.name }
-      })
-      const fileUrl = response.data?.data?.fileUrl || ''
+      const uploadedUrls = []
+
+      for (const file of item.files) {
+        const response = await uploadService.uploadDocument({
+          file,
+          fileType: 'Qualification',
+          metadata: { certificationName: item.name }
+        })
+        const fileUrl = response.data?.data?.fileUrl || ''
+        if (fileUrl) uploadedUrls.push(fileUrl)
+      }
+
       updateQualificationItem(item.name, {
         uploading: false,
-        file: null,
-        uploadedUrl: fileUrl,
-        status: { type: 'success', text: response.data?.message || 'Upload complete.' }
+        files: [],
+        uploadedUrls: [...(item.uploadedUrls || []), ...uploadedUrls],
+        status: {
+          type: 'success',
+          text: `${uploadedUrls.length} file${uploadedUrls.length !== 1 ? 's' : ''} uploaded successfully.`
+        }
       })
     } catch (error) {
       const message = error.response?.data?.message || 'Upload failed. Please try again.'
@@ -565,141 +494,130 @@ const DocumentUploadCard = ({ certifications = [] }) => {
 
   return (
     <div className="grid gap-4">
+      {/* Identity Document */}
       {renderUploadSection({
-          title: 'Identity Document (NIC / Passport / Driving License)',
-          file: identityFile,
-          previewUrl: identityPreviewUrl,
-          status: identityStatus,
-          uploadedUrl: identityUploadedUrl,
-          uploading: identityUploading,
-          extraFields: (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Document Type</label>
-                <select
-                  value={identityType}
-                  onChange={(event) => setIdentityType(event.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                >
-                  <option value="">Select document type</option>
-                  <option value="NIC">NIC</option>
-                  <option value="Passport">Passport</option>
-                  <option value="DrivingLicense">Driving License</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{identityNumberLabel}</label>
-                <input
-                  type="text"
-                  value={identityMeta.idNumber}
-                  onChange={(event) =>
-                    setIdentityMeta((prev) => ({ ...prev, idNumber: event.target.value }))
-                  }
-                  placeholder={identityNumberPlaceholder}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Issue Date</label>
-                <input
-                  type="date"
-                  value={identityMeta.issueDate}
-                  onChange={(event) =>
-                    setIdentityMeta((prev) => ({ ...prev, issueDate: event.target.value }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Expiry Date (Optional)</label>
-                <input
-                  type="date"
-                  value={identityMeta.expiryDate}
-                  onChange={(event) =>
-                    setIdentityMeta((prev) => ({ ...prev, expiryDate: event.target.value }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-            </>
-          ),
-          onFileChange: (event) =>
-            handleFileChange(event, setIdentityFile, setIdentityStatus, setIdentityUploadedUrl),
-          onUpload: () =>
-            handleUpload({
-              file: identityFile,
-              fileType: identityType,
-              metadata: identityMeta,
-              setStatus: setIdentityStatus,
-              setUploadedUrl: setIdentityUploadedUrl,
-              setUploading: setIdentityUploading,
-              setFile: setIdentityFile,
-              onSuccess: advanceSection
-            })
-        })}
+        title: 'Identity Document (NIC / Passport / Driving License)',
+        file: identityFile,
+        previewUrl: identityPreviewUrl,
+        status: identityStatus,
+        uploadedUrl: identityUploadedUrl,
+        uploading: identityUploading,
+        extraFields: (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Document Type</label>
+              <select
+                value={identityType}
+                onChange={(event) => setIdentityType(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              >
+                <option value="">Select document type</option>
+                <option value="NIC">NIC</option>
+                <option value="Passport">Passport</option>
+                <option value="DrivingLicense">Driving License</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{identityNumberLabel}</label>
+              <input
+                type="text"
+                value={identityMeta.idNumber}
+                onChange={(event) => setIdentityMeta((prev) => ({ ...prev, idNumber: event.target.value }))}
+                placeholder={identityNumberPlaceholder}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Issue Date</label>
+              <input
+                type="date"
+                value={identityMeta.issueDate}
+                onChange={(event) => setIdentityMeta((prev) => ({ ...prev, issueDate: event.target.value }))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Expiry Date (Optional)</label>
+              <input
+                type="date"
+                value={identityMeta.expiryDate}
+                onChange={(event) => setIdentityMeta((prev) => ({ ...prev, expiryDate: event.target.value }))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+          </>
+        ),
+        onFileChange: (event) =>
+          handleFileChange(event, setIdentityFile, setIdentityStatus, setIdentityUploadedUrl),
+        onUpload: () =>
+          handleUpload({
+            file: identityFile,
+            fileType: identityType,
+            metadata: identityMeta,
+            setStatus: setIdentityStatus,
+            setUploadedUrl: setIdentityUploadedUrl,
+            setUploading: setIdentityUploading,
+            setFile: setIdentityFile,
+            onSuccess: advanceSection
+          })
+      })}
 
-      
-
+      {/* Police Clearance */}
       {activeSection >= 1 && renderUploadSection({
-          title: 'Police Clearance Certificate',
-          file: policeFile,
-          previewUrl: policePreviewUrl,
-          status: policeStatus,
-          uploadedUrl: policeUploadedUrl,
-          uploading: policeUploading,
-          extraFields: (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Certificate Number</label>
-                <input
-                  type="text"
-                  value={policeMeta.certificateNumber}
-                  onChange={(event) =>
-                    setPoliceMeta((prev) => ({ ...prev, certificateNumber: event.target.value }))
-                  }
-                  placeholder="e.g., PCC-2024-001"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Issue Date</label>
-                <input
-                  type="date"
-                  value={policeMeta.issueDate}
-                  onChange={(event) =>
-                    setPoliceMeta((prev) => ({ ...prev, issueDate: event.target.value }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Expiry Date (Optional)</label>
-                <input
-                  type="date"
-                  value={policeMeta.expiryDate}
-                  onChange={(event) =>
-                    setPoliceMeta((prev) => ({ ...prev, expiryDate: event.target.value }))
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
-              </div>
-            </>
-          ),
-          onFileChange: (event) =>
-            handleFileChange(event, setPoliceFile, setPoliceStatus, setPoliceUploadedUrl),
-          onUpload: () =>
-            handleUpload({
-              file: policeFile,
-              fileType: 'PoliceClearance',
-              metadata: policeMeta,
-              setStatus: setPoliceStatus,
-              setUploadedUrl: setPoliceUploadedUrl,
-              setUploading: setPoliceUploading,
-              setFile: setPoliceFile,
-              onSuccess: advanceSection
-            })
-        })}
+        title: 'Police Clearance Certificate',
+        file: policeFile,
+        previewUrl: policePreviewUrl,
+        status: policeStatus,
+        uploadedUrl: policeUploadedUrl,
+        uploading: policeUploading,
+        extraFields: (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Certificate Number</label>
+              <input
+                type="text"
+                value={policeMeta.certificateNumber}
+                onChange={(event) => setPoliceMeta((prev) => ({ ...prev, certificateNumber: event.target.value }))}
+                placeholder="e.g., PCC-2024-001"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Issue Date</label>
+              <input
+                type="date"
+                value={policeMeta.issueDate}
+                onChange={(event) => setPoliceMeta((prev) => ({ ...prev, issueDate: event.target.value }))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Expiry Date (Optional)</label>
+              <input
+                type="date"
+                value={policeMeta.expiryDate}
+                onChange={(event) => setPoliceMeta((prev) => ({ ...prev, expiryDate: event.target.value }))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+            </div>
+          </>
+        ),
+        onFileChange: (event) =>
+          handleFileChange(event, setPoliceFile, setPoliceStatus, setPoliceUploadedUrl),
+        onUpload: () =>
+          handleUpload({
+            file: policeFile,
+            fileType: 'PoliceClearance',
+            metadata: policeMeta,
+            setStatus: setPoliceStatus,
+            setUploadedUrl: setPoliceUploadedUrl,
+            setUploading: setPoliceUploading,
+            setFile: setPoliceFile,
+            onSuccess: advanceSection
+          })
+      })}
 
+      {/* NVQ / Qualifications */}
       {activeSection >= 2 && (
         <>
           <h4 className="text-sm font-semibold text-gray-900">NVQ / Other Qualification</h4>
@@ -716,12 +634,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
               uploadedUrl: qualificationUploadedUrl,
               uploading: qualificationUploading,
               onFileChange: (event) =>
-                handleFileChange(
-                  event,
-                  setQualificationFile,
-                  setQualificationStatus,
-                  setQualificationUploadedUrl
-                ),
+                handleFileChange(event, setQualificationFile, setQualificationStatus, setQualificationUploadedUrl),
               onUpload: () =>
                 handleUpload({
                   file: qualificationFile,
@@ -740,55 +653,83 @@ const DocumentUploadCard = ({ certifications = [] }) => {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">Upload the certificate for this qualification.</p>
+                      <p className="text-xs text-gray-500">Upload the certificate(s) for this qualification.</p>
                     </div>
                   </div>
 
+                  {/* Multi-file input */}
                   <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Upload className="inline h-4 w-4 mr-2" />
-                      Select File
+                      Select Files <span className="text-xs text-gray-400 font-normal">(multiple allowed)</span>
                     </label>
                     <input
                       type="file"
                       accept=".jpg,.jpeg,.png,.pdf,.docx"
+                      multiple
                       onChange={(event) => handleQualificationFileSelect(event, item.name)}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                     />
-                    {item.file && (
-                      <p className="mt-2 text-sm text-gray-600">Selected: {item.file.name}</p>
-                    )}
                   </div>
 
+                  {/* Selected files list */}
+                  {item.files && item.files.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {item.files.map((f, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-700"
+                        >
+                          <span className="truncate mr-2">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleQualificationFileRemove(item.name, i)}
+                            className="flex-shrink-0 text-red-500 hover:text-red-700 transition-colors"
+                            aria-label={`Remove ${f.name}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Upload button */}
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={() => handleQualificationUpload(item)}
-                      disabled={item.uploading}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-gray-400"
+                      disabled={item.uploading || !item.files || item.files.length === 0}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                     >
-                      {item.uploading ? 'Uploading...' : 'Upload File'}
+                      {item.uploading
+                        ? 'Uploading...'
+                        : `Upload File${item.files && item.files.length > 1 ? 's' : ''}`}
                     </button>
-                    {item.uploadedUrl && (
-                      <a
-                        href={item.uploadedUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-blue-700 underline"
-                      >
-                        View uploaded file
-                      </a>
+
+                    {/* Previously uploaded files */}
+                    {item.uploadedUrls && item.uploadedUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {item.uploadedUrls.map((url, i) => (
+                          <a
+                            key={i}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm text-blue-700 underline"
+                          >
+                            View file {i + 1}
+                          </a>
+                        ))}
+                      </div>
                     )}
                   </div>
 
+                  {/* Status message */}
                   {item.status.text && (
-                    <div
-                      className={`mt-3 rounded-lg px-3 py-2 text-sm ${
-                        item.status.type === 'error'
-                          ? 'bg-red-50 text-red-700'
-                          : 'bg-green-50 text-green-700'
-                      }`}
-                    >
+                    <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                      item.status.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                    }`}>
                       {item.status.text}
                     </div>
                   )}
