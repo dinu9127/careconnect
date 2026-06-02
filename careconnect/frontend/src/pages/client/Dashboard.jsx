@@ -154,7 +154,11 @@ const ClientDashboard = () => {
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Have to Pay</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {allBookings.filter(b => b.paymentStatus === 'unpaid' || b.paymentStatus === 'pending').length}
+                    {allBookings.filter((booking) => {
+                      const status = booking.status?.toLowerCase()
+                      const paymentStatus = booking.paymentStatus?.toLowerCase()
+                      return status !== 'cancelled' && status !== 'rejected' && (paymentStatus === 'unpaid' || paymentStatus === 'pending')
+                    }).length}
                   </p>
                 </div>
                 <DollarSign className="w-12 h-12 text-red-100" />
@@ -279,7 +283,7 @@ const ClientDashboard = () => {
             <div className="bg-white rounded-2xl shadow-md border border-red-100 mb-8 overflow-hidden">
               <div className="p-6 border-b border-red-100 bg-gradient-to-r from-red-50 to-pink-50">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                  
                   <h2 className="text-2xl font-bold text-gray-900">Recently Submitted Complaints</h2>
                 </div>
                 <p className="text-gray-600 text-sm mt-1">Your latest complaints and issues</p>
@@ -317,7 +321,7 @@ const ClientDashboard = () => {
                       to="/client/complaints"
                       className="text-red-600 hover:text-red-700 font-semibold hover:underline"
                     >
-                      View All Complaints →
+                      View All Complaints
                     </Link>
                   </div>
                 )}

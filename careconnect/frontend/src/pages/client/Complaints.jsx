@@ -14,6 +14,7 @@ const Complaints = () => {
     description: '',
     category: 'service_quality',
     severity: 'medium',
+    caregiverName: '',
     caregiverId: '',
     bookedDate: '',
     bookedTime: ''
@@ -76,6 +77,7 @@ const Complaints = () => {
         description: '',
         category: 'service_quality',
         severity: 'medium',
+        caregiverName: '',
         caregiverId: '',
         bookedDate: '',
         bookedTime: ''
@@ -210,6 +212,20 @@ const Complaints = () => {
                         placeholder="Brief summary of your complaint"
                         className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                         required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Caregiver Name
+                      </label>
+                      <input
+                        type="text"
+                        name="caregiverName"
+                        value={formData.caregiverName}
+                        onChange={handleFormChange}
+                        placeholder="Enter caregiver name"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       />
                     </div>
 
@@ -360,6 +376,11 @@ const Complaints = () => {
                             <span className="font-medium">
                               Category: {getCategoryLabel(complaint.category)}
                             </span>
+                            {complaint.caregiverName && (
+                              <span className="font-medium">
+                                Caregiver: {complaint.caregiverName}
+                              </span>
+                            )}
                             <span className={`font-medium ${getSeverityColor(complaint.severity)}`}>
                               Severity: {complaint.severity.toUpperCase()}
                             </span>
@@ -424,6 +445,12 @@ const Complaints = () => {
                   <p className="text-sm text-gray-600 font-semibold mb-1">Category</p>
                   <p className="font-semibold text-gray-900">{getCategoryLabel(selectedComplaint.category)}</p>
                 </div>
+                {selectedComplaint.caregiverName && (
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold mb-1">Caregiver Name</p>
+                    <p className="font-semibold text-gray-900">{selectedComplaint.caregiverName}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-600 font-semibold mb-1">Severity</p>
                   <p className={`font-semibold ${getSeverityColor(selectedComplaint.severity)}`}>

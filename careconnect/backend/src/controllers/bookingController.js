@@ -324,6 +324,7 @@ export const cancelBooking = async (req, res) => {
 
     const booking = await Booking.findById(req.params.id);
     const isCaregiverUser = req.user?.role === 'caregiver';
+    const isClientUser = req.user?.role === 'client';
     const cancellationReason =
       req.body?.cancellationReason ||
       req.body?.reason ||
@@ -336,6 +337,30 @@ export const cancelBooking = async (req, res) => {
         success: false,
         message: 'Booking not found'
       });
+    }
+
+    if (isClientUser) {
+      if (booking.client?.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only cancel your own bookings'
+        });
+      }
+
+      if (booking.status !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          message: 'Clients can only cancel pending bookings'
+        });
+      }
+
+      const bookingAgeMs = Date.now() - new Date(booking.createdAt).getTime();
+      if (bookingAgeMs > 5 * 60 * 1000) {
+        return res.status(403).json({
+          success: false,
+          message: 'Bookings can only be cancelled within 5 minutes of creation'
+        });
+      }
     }
 
     if (isCaregiverUser && booking.status === 'confirmed') {
