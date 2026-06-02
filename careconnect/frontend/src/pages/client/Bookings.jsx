@@ -9,6 +9,9 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showViewReviewsModal, setShowViewReviewsModal] = useState(false)
+  const [caregiverReviews, setCaregiverReviews] = useState([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [reviewData, setReviewData] = useState({
@@ -258,12 +261,29 @@ const Bookings = () => {
                         )}
 
                         {booking.hasReview && (
-                          <div className="bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm">
-                            <div className="flex items-center gap-2 text-teal-800 font-medium">
-                              <Star className="w-4 h-4 fill-teal-800" />
-                              <span>Review Submitted</span>
-                            </div>
-                          </div>
+                          <button
+                            onClick={async () => {
+                              const caregiverId = booking.caregiver?._id || booking.caregiver?.user?._id
+                              if (!caregiverId) {
+                                setMessage({ type: 'error', text: 'Caregiver information not available.' })
+                                return
+                              }
+                              setLoadingReviews(true)
+                              try {
+                                const res = await api.get(`/reviews/caregiver/${caregiverId}`)
+                                setCaregiverReviews(res.data.data || [])
+                                setShowViewReviewsModal(true)
+                              } catch (err) {
+                                setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to load reviews.' })
+                              } finally {
+                                setLoadingReviews(false)
+                              }
+                            }}
+                            className="flex items-center justify-center gap-2 bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm text-teal-800 font-medium hover:shadow-md transition"
+                          >
+                            <Star className="w-4 h-4" />
+                            <span>{loadingReviews ? 'Loading...' : 'View Reviews'}</span>
+                          </button>
                         )}
 
                         {booking.paymentStatus === 'pending' && (
@@ -409,6 +429,51 @@ const Bookings = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Reviews Modal */}
+      {showViewReviewsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-teal-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Caregiver Reviews</h2>
+              <button
+                onClick={() => setShowViewReviewsModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {caregiverReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No reviews found for this caregiver.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {caregiverReviews.map((review) => (
+                    <div key={review._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{review.client?.name || 'Client'}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            {[1,2,3,4,5].map((s) => (
+                              <Star key={s} className={`w-4 h-4 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                            ))}
+                            <span className="text-xs text-gray-500 ml-2">{new Date(review.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600">{review.rating}/5</div>
+                      </div>
+                      {review.reviewText && <p className="text-sm text-gray-700 mt-2">{review.reviewText}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
