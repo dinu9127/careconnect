@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
@@ -15,12 +15,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-// Trust metrics
-const stats = [
-  { icon: Users, label: 'Verified Caregivers', value: '500+', color: 'text-indigo-600' },
-  { icon: Heart, label: 'People Served', value: '2000+', color: 'text-rose-600' },
-  { icon: Star, label: 'Average Rating', value: '4.8/5', color: 'text-amber-600' },
-]
+// Frontend will fetch trust metrics and latest reviews from the API
 
 // Service offerings with icons
 const services = [
@@ -126,32 +121,43 @@ const steps = [
   },
 ]
 
-// Testimonials/Social proof
-const testimonials = [
-  {
-    name: 'Maheepa De Silva',
-    Role: "Care recipient's family member",
-    content: 'CareConnect made finding quality care for my mother incredibly easy and stress-free.',
-    rating: 5,
-    
-  },
-  {
-    name: 'Ramesh Pathirana',
-    role: 'Care recipient',
-    content: 'The caregivers are truly compassionate. I feel safe and well-looked-after daily.',
-    rating: 5,
-   
-  },
-  {
-    name: 'Ethmi Fernando',
-    role: 'Professional caregiver',
-    content: 'This platform lets me connect with families in need. Truly fulfilling work.',
-    rating: 5,
-   
-  },
-]
+// Component state for stats and reviews
+const useStats = () => {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    const fetchStats = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch('/api/stats')
+        const json = await res.json()
+        if (!res.ok) throw new Error(json.message || 'Failed to load stats')
+        if (mounted) setData(json.data)
+      } catch (err) {
+        if (mounted) setError(err.message)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    fetchStats()
+    const id = setInterval(fetchStats, 15000) // refresh every 15s
+    return () => {
+      mounted = false
+      clearInterval(id)
+    }
+  }, [])
+
+  return { data, loading, error }
+}
 
 const Home = () => {
+  const { data: statsData, loading: statsLoading, error: statsError } = useStats()
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-blue-50">
       {/* Navigation */}
@@ -244,16 +250,43 @@ const Home = () => {
 
       {/* Stats Section - Mobile optimized */}
       <section className="container mx-auto px-4 py-12 grid grid-cols-3 gap-4">
-        {stats.map((s) => {
-          const Icon = s.icon
-          return (
-            <div key={s.label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center hover:shadow-md transition">
-              <Icon className={`w-6 h-6 ${s.color} mx-auto mb-2`} />
-              <div className="text-xl sm:text-2xl font-bold text-slate-900">{s.value}</div>
-              <div className="text-xs sm:text-sm text-slate-600 mt-1">{s.label}</div>
+        {statsLoading ? (
+          // Loading placeholders
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center animate-pulse">
+              <div className="h-6 w-6 bg-slate-200 rounded mx-auto mb-2" />
+              <div className="h-6 w-20 bg-slate-200 rounded mx-auto mb-2" />
+              <div className="h-4 w-24 bg-slate-200 rounded mx-auto" />
             </div>
-          )
-        })}
+          ))
+        ) : statsError ? (
+          <div className="col-span-3 bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-center text-rose-600">
+            Error loading stats: {statsError}
+          </div>
+        ) : statsData ? (
+          // Render real stats
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center hover:shadow-md transition">
+              <Users className={`w-6 h-6 text-indigo-600 mx-auto mb-2`} />
+              <div className="text-xl sm:text-2xl font-bold text-slate-900">{statsData.verifiedCaregiversCount}</div>
+              <div className="text-xs sm:text-sm text-slate-600 mt-1">Verified Caregivers</div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center hover:shadow-md transition">
+              <Heart className={`w-6 h-6 text-rose-600 mx-auto mb-2`} />
+              <div className="text-xl sm:text-2xl font-bold text-slate-900">{statsData.peopleServed}</div>
+              <div className="text-xs sm:text-sm text-slate-600 mt-1">People Served</div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center hover:shadow-md transition">
+              <Star className={`w-6 h-6 text-amber-500 mx-auto mb-2`} />
+              <div className="text-xl sm:text-2xl font-bold text-slate-900">{statsData.averageRating ? `${statsData.averageRating}/5` : 'N/A'}</div>
+              <div className="text-xs sm:text-sm text-slate-600 mt-1">Average Rating</div>
+            </div>
+          </>
+        ) : (
+          <div className="col-span-3 bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-center text-slate-600">No stats available</div>
+        )}
       </section>
 
       {/* Services Section */}
@@ -367,23 +400,36 @@ const Home = () => {
         </div>
 
         <div className="grid sm:grid-cols-3 gap-6">
-          {testimonials.map((t, idx) => (
-            <div key={idx} className="bg-white rounded-2xl border border-slate-100 p-8 hover:shadow-lg transition">
-              <div className="flex gap-1 mb-4">
-                {[...Array(t.rating)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-amber-500 fill-amber-500" />
-                ))}
+          {statsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-100 p-8 hover:shadow-lg transition animate-pulse">
+                <div className="h-4 bg-slate-200 rounded w-24 mb-4" />
+                <div className="h-24 bg-slate-200 rounded mb-4" />
+                <div className="h-4 bg-slate-200 rounded w-32" />
               </div>
-              <p className="text-slate-700 mb-6 leading-relaxed italic">"{t.content}"</p>
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">{t.avatar}</div>
-                <div>
-                  <div className="font-semibold text-slate-900">{t.name}</div>
-                  <div className="text-xs text-slate-600">{t.role}</div>
+            ))
+          ) : statsData && statsData.latestReviews && statsData.latestReviews.length > 0 ? (
+            statsData.latestReviews.map((r, idx) => (
+              <div key={r._id || idx} className="bg-white rounded-2xl border border-slate-100 p-8 hover:shadow-lg transition">
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: r.rating }).map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-amber-500 fill-amber-500" />
+                  ))}
+                </div>
+                <p className="text-slate-700 mb-6 leading-relaxed italic">"{r.reviewText || 'No review text.'}"</p>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="font-semibold text-slate-900">{r.client?.name || 'Anonymous'}</div>
+                    <div className="text-xs text-slate-600">{new Date(r.createdAt).toLocaleDateString()}</div>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-span-3 bg-white rounded-2xl border border-slate-100 p-8 text-center text-slate-600">
+              No reviews available yet
             </div>
-          ))}
+          )}
         </div>
       </section>
 
