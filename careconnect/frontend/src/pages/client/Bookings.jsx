@@ -289,7 +289,7 @@ const Bookings = () => {
                               <button
                                 onClick={() => handleCancelBooking(booking)}
                                 disabled={cancellingBookingId === booking._id}
-                                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-12 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {cancellingBookingId === booking._id ? 'Cancelling...' : 'Cancel Booking'}
                               </button>
@@ -302,7 +302,7 @@ const Bookings = () => {
                             onClick={() => handlePayment(booking)}
                             className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <CreditCard className="w-4 h-4" />
+                            
                             Continue Payment
                           </button>
                         )}
@@ -312,7 +312,7 @@ const Bookings = () => {
                             onClick={() => handleReview(booking)}
                             className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <Star className="w-4 h-4" />
+                            
                             Rate & Review
                           </button>
                         )}
@@ -336,9 +336,9 @@ const Bookings = () => {
                                 setLoadingReviews(false)
                               }
                             }}
-                            className="flex items-center justify-center gap-2 bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm text-teal-800 font-medium hover:shadow-md transition"
+                            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <Star className="w-4 h-4" />
+                            
                             <span>{loadingReviews ? 'Loading...' : 'View Reviews'}</span>
                           </button>
                         )}

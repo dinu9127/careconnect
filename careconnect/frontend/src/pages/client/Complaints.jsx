@@ -312,7 +312,7 @@ const Complaints = () => {
                     disabled={submitting}
                     className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
                   >
-                    <Send className="w-5 h-5" />
+                    
                     {submitting ? 'Submitting...' : 'Submit Complaint'}
                   </button>
                 </form>
