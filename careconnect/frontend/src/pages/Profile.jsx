@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X, Eye, EyeOff } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import { userService } from '../services/api'
 
 const Profile = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isEditing, setIsEditing] = useState(false)
   const [userData, setUserData] = useState(null)
   const [formData, setFormData] = useState({
@@ -19,9 +20,30 @@ const Profile = () => {
     newPassword: '',
     confirmPassword: ''
   })
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
+  })
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const isClientView = location.pathname.startsWith('/client')
+  const pageTheme = isClientView
+    ? {
+        page: 'bg-gradient-to-br from-teal-50 via-white to-cyan-50',
+        header: 'from-teal-600 to-cyan-600',
+        accent: 'border-teal-200',
+        button: 'bg-teal-600 hover:bg-teal-700',
+        buttonSoft: 'bg-teal-50 text-teal-700 hover:bg-teal-100'
+      }
+    : {
+        page: 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100',
+        header: 'from-teal-600 to-cyan-600',
+        accent: 'border-purple-200',
+        button: 'bg-blue-600 hover:bg-blue-700',
+        buttonSoft: 'bg-red-50 text-red-600 hover:bg-red-100'
+      }
 
   useEffect(() => {
     // Get user data from localStorage
@@ -84,6 +106,13 @@ const Profile = () => {
     }))
   }
 
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
     setPasswordMessage({ type: '', text: '' })
@@ -142,27 +171,33 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-      <Navbar />
+    <div className={`h-screen ${pageTheme.page} overflow-hidden`}>
+      <Navbar isFixed />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-y-auto h-[calc(100vh-4rem)]">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Profile</h1>
-          <p className="text-slate-600">Manage your account information</p>
+        <div className={`mb-8 border-b-2 ${pageTheme.accent} pb-4`}>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            {isClientView ? 'Client Profile' : 'My Profile'}
+          </h1>
+          <p className="text-slate-600">
+            {isClientView
+              ? 'Review and update your personal contact details.'
+              : 'Manage your account information'}
+          </p>
         </div>
 
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-8">
+          <div className={`bg-gradient-to-r ${pageTheme.header} px-6 py-8`}>
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
                 <User className="w-10 h-10 text-teal-600" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{userData.name}</h2>
-                <p className="text-teal-100 capitalize">{userData.role}</p>
+                <p className="text-teal-100 capitalize">{isClientView ? 'Client Account' : userData.role}</p>
               </div>
             </div>
           </div>
@@ -174,7 +209,7 @@ const Profile = () => {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition ${pageTheme.button}`}
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit Profile
@@ -183,7 +218,7 @@ const Profile = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition ${pageTheme.button}`}
                   >
                     <Save className="w-4 h-4" />
                     Save
@@ -278,7 +313,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {userData?.role === 'caregiver' && (
+        {!isClientView && userData?.role === 'caregiver' && (
           <div className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Account Settings</h3>
 
@@ -298,36 +333,66 @@ const Profile = () => {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPasswords.currentPassword ? 'text' : 'password'}
+                      name="currentPassword"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('currentPassword')}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                      aria-label={showPasswords.currentPassword ? 'Hide current password' : 'Show current password'}
+                    >
+                      {showPasswords.currentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPasswords.newPassword ? 'text' : 'password'}
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('newPassword')}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                      aria-label={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
+                    >
+                      {showPasswords.newPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPasswords.confirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-2 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('confirmPassword')}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+                      aria-label={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    >
+                      {showPasswords.confirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -9,6 +9,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 import ResetPassword from '../pages/auth/ResetPassword'
 import Profile from '../pages/Profile'
 import ClientDashboard from '../pages/client/Dashboard'
+import ClientProfile from '../pages/client/Profile'
 import Caregivers from '../pages/client/Caregivers'
 import Bookings from '../pages/client/Bookings'
 import Complaints from '../pages/client/Complaints'
@@ -21,7 +22,6 @@ import AdminComplaints from '../pages/admin/Complaints'
 import AdminPayments from '../pages/admin/Payments'
 import AdminUsers from '../pages/admin/Users'
 import AdminCaregivers from '../pages/admin/Caregivers'
-import AdminReports from '../pages/admin/Reports'
 import AdminProfile from '../pages/admin/AdminProfile'
 
 const AppRoutes = () => {
@@ -39,6 +39,7 @@ const AppRoutes = () => {
 
       {/* Client Routes */}
       <Route path="/client/dashboard" element={<ClientDashboard />} />
+      <Route path="/client/profile" element={<ClientProfile />} />
       <Route path="/client/caregivers" element={<Caregivers />} />
       <Route path="/client/bookings" element={<Bookings />} />
       <Route path="/client/complaints" element={<Complaints />} />
@@ -58,7 +59,6 @@ const AppRoutes = () => {
       <Route path="/admin/caregivers" element={<AdminCaregivers />} />
       <Route path="/admin/complaints" element={<AdminComplaints />} />
       <Route path="/admin/payments" element={<AdminPayments />} />
-      <Route path="/admin/reports" element={<AdminReports />} />
 
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />

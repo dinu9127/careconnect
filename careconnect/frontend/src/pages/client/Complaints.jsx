@@ -14,6 +14,7 @@ const Complaints = () => {
     description: '',
     category: 'service_quality',
     severity: 'medium',
+    caregiverName: '',
     caregiverId: '',
     bookedDate: '',
     bookedTime: ''
@@ -76,6 +77,7 @@ const Complaints = () => {
         description: '',
         category: 'service_quality',
         severity: 'medium',
+        caregiverName: '',
         caregiverId: '',
         bookedDate: '',
         bookedTime: ''
@@ -152,11 +154,11 @@ const Complaints = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-red-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="client" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-red-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="client" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
@@ -210,6 +212,20 @@ const Complaints = () => {
                         placeholder="Brief summary of your complaint"
                         className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                         required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Caregiver Name
+                      </label>
+                      <input
+                        type="text"
+                        name="caregiverName"
+                        value={formData.caregiverName}
+                        onChange={handleFormChange}
+                        placeholder="Enter caregiver name"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                       />
                     </div>
 
@@ -296,7 +312,7 @@ const Complaints = () => {
                     disabled={submitting}
                     className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
                   >
-                    <Send className="w-5 h-5" />
+                    
                     {submitting ? 'Submitting...' : 'Submit Complaint'}
                   </button>
                 </form>
@@ -360,6 +376,11 @@ const Complaints = () => {
                             <span className="font-medium">
                               Category: {getCategoryLabel(complaint.category)}
                             </span>
+                            {complaint.caregiverName && (
+                              <span className="font-medium">
+                                Caregiver: {complaint.caregiverName}
+                              </span>
+                            )}
                             <span className={`font-medium ${getSeverityColor(complaint.severity)}`}>
                               Severity: {complaint.severity.toUpperCase()}
                             </span>
@@ -424,6 +445,12 @@ const Complaints = () => {
                   <p className="text-sm text-gray-600 font-semibold mb-1">Category</p>
                   <p className="font-semibold text-gray-900">{getCategoryLabel(selectedComplaint.category)}</p>
                 </div>
+                {selectedComplaint.caregiverName && (
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold mb-1">Caregiver Name</p>
+                    <p className="font-semibold text-gray-900">{selectedComplaint.caregiverName}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-600 font-semibold mb-1">Severity</p>
                   <p className={`font-semibold ${getSeverityColor(selectedComplaint.severity)}`}>

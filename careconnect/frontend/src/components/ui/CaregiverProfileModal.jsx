@@ -1,5 +1,6 @@
 import React from 'react'
 import { X, Star, MapPin, Clock, Award, Phone, Mail, DollarSign } from 'lucide-react'
+import { getAvatarPlaceholder } from '../../utils/avatar'
 
 const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
   if (!isOpen || !caregiver) return null
@@ -15,7 +16,7 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-4 isolate">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4 flex items-center justify-between">
@@ -34,7 +35,7 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
           <div className="flex gap-6 mb-8 pb-8 border-b border-slate-200">
             <div>
               <img
-                src={caregiver.profileImage || `https://via.placeholder.com/150/4A5568/FFFFFF?text=${userData.name?.split(' ')[0]}`}
+                src={caregiver.profileImage || getAvatarPlaceholder(userData.name)}
                 alt={userData.name}
                 className="w-32 h-32 rounded-xl object-cover ring-2 ring-slate-200"
               />
@@ -48,7 +49,9 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
                   <span className="text-slate-600">({caregiver.reviewCount} reviews)</span>
                 </div>
               </div>
-              <p className="text-slate-600 mb-4">{caregiver.specialization}</p>
+              {caregiver.specialization && caregiver.specialization !== 'Not specified' && (
+                <p className="text-slate-600 mb-4">{caregiver.specialization}</p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {caregiver.serviceTypes?.map((service, index) => (
                   <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
@@ -115,7 +118,9 @@ const CaregiverProfileModal = ({ caregiver, isOpen, onClose, onBookNow }) => {
                 {caregiver.certifications.map((cert, index) => (
                   <div key={index} className="bg-slate-50 p-3 rounded-lg">
                     <p className="font-semibold text-slate-900">{cert.name}</p>
-                    <p className="text-sm text-slate-600">{cert.issuer}</p>
+                    {cert.issuer && (
+                      <p className="text-sm text-slate-600">{cert.issuer}</p>
+                    )}
                   </div>
                 ))}
               </div>

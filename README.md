@@ -3,7 +3,58 @@
 A full-stack MERN (MongoDB, Express, React, Node.js) application for connecting caregivers with clients who need healthcare services.
 
 
-## Features
+## Getting Started (Quick Start)
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd careconnectv1
+   ```
+
+2. **Setup Backend:**
+   ```bash
+   cd careconnect/backend
+   npm install
+   # Configure .env with MongoDB URI and other variables
+   npm run dev
+   ```
+
+3. **Setup Frontend (in a new terminal):**
+   ```bash
+   cd careconnect/frontend
+   npm install
+   npm run dev
+   ```
+
+4. **Access the application:**
+   - Frontend: http://localhost:5173 (or the port shown in terminal)
+   - Backend API: http://localhost:5000
+
+## Users & Roles
+
+The platform supports three main user roles:
+
+| Role | Access | Key Features |
+|------|--------|--------------|
+| **Client** | Browse caregivers, book services | Manage bookings, reviews, complaints |
+| **Caregiver** | Manage profile & availability | Verification documents, schedule management |
+| **Admin** | Full platform access | User management, complaint resolution, verification |
+
+## Documentation
+
+For additional resources, refer to:
+- [Implementation Guide](IMPLEMENTATION_GUIDE.md)
+- [Architecture Overview](ARCHITECTURE.md)
+- [Setup Guide](careconnect/SETUP_GUIDE.md)
+- [Developer Guide](careconnect/DEVELOPER_GUIDE.md)
+
+## Support
+
+For technical issues or questions, please refer to the individual README files in the frontend and backend directories.
+
+---
+
+**Last Updated:** March 2, 2026
 
 ### User Roles
 - **Client**: Book caregivers, manage appointments

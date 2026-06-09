@@ -8,7 +8,7 @@ const AdminCaregivers = () => {
   const [caregivers, setCaregivers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [filter, setFilter] = useState('all') // all, verified, pending, rejected
+  const [filter, setFilter] = useState('all') 
   const [selectedCaregiver, setSelectedCaregiver] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [verificationConfirm, setVerificationConfirm] = useState({ show: false, caregiverId: null, status: null })
@@ -45,7 +45,7 @@ const AdminCaregivers = () => {
 
   const submitRejection = () => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a reason for rejection')
+      alert('Please provide a reason for suspension')
       return
     }
     setVerificationConfirm({ show: true, caregiverId: pendingRejectionId, status: 'rejected', reason: rejectionReason })
@@ -71,7 +71,8 @@ const AdminCaregivers = () => {
         setSelectedCaregiver(prev => ({ ...prev, verificationStatus: status, verificationNotes: reason || prev.verificationNotes }))
       }
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
-      alert(`Caregiver ${status} successfully${reason ? ' with reason: ' + reason : ''}`)
+      const statusLabel = status === 'rejected' ? 'suspended' : status
+      alert(`Caregiver ${statusLabel} successfully${reason ? ' with reason: ' + reason : ''}`)
     } catch (err) {
       console.error('Error updating verification:', err)
       console.error('Error response:', err.response?.data)
@@ -104,12 +105,12 @@ const AdminCaregivers = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-6">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
+          <div className="flex justify-between items-center mb-6 border-b-2 border-purple-200 pb-4">
             <h1 className="text-3xl font-bold text-gray-800">Caregiver Management</h1>
             <div className="text-sm text-gray-600">
               Total: {filteredCaregivers.length} caregiver{filteredCaregivers.length !== 1 ? 's' : ''}
@@ -157,7 +158,7 @@ const AdminCaregivers = () => {
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
-              Rejected Caregivers
+              Suspended Caregivers
             </button>
           </div>
 
@@ -274,7 +275,7 @@ const AdminCaregivers = () => {
                                 className="inline-flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs font-medium"
                               >
                                 <XCircle className="w-4 h-4" />
-                                Revoke
+                                Suspend
                               </button>
                             )}
                             {caregiver.verificationStatus === 'rejected' && (
@@ -383,8 +384,8 @@ const AdminCaregivers = () => {
                   {selectedCaregiver.certifications.map((cert, idx) => (
                     <div key={idx} className="bg-gray-50 p-3 rounded-lg">
                       <p className="font-medium text-gray-900">{cert.name || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">Issuer: {cert.issuer || 'Not specified'}</p>
-                      <p className="text-sm text-gray-600">Date: {cert.date ? new Date(cert.date).toLocaleDateString() : 'Not specified'}</p>
+                      <p className="text-sm text-gray-600">Issuer: {cert.issuer || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">Date: {cert.date ? new Date(cert.date).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   ))}
                 </div>
@@ -460,7 +461,7 @@ const AdminCaregivers = () => {
                   className="inline-flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
                 >
                   <XCircle className="w-5 h-5" />
-                  Revoke
+                  Suspend
                 </button>
               )}
               
@@ -485,13 +486,13 @@ const AdminCaregivers = () => {
       {showRejectionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Rejection Reason</h3>
-            <p className="text-gray-600 mb-4">Please provide a reason for rejecting this caregiver. This will be recorded and may be communicated to them.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Suspension Reason</h3>
+            <p className="text-gray-600 mb-4">Please provide a reason for suspending this caregiver. This will be recorded and may be communicated to them.</p>
             
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
+              placeholder="Enter suspension reason..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               rows="4"
             />
@@ -511,7 +512,7 @@ const AdminCaregivers = () => {
                 onClick={submitRejection}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
               >
-                Submit Rejection
+                Submit Suspension
               </button>
             </div>
           </div>
@@ -545,17 +546,17 @@ const AdminCaregivers = () => {
                   {verificationConfirm.status === 'verified' 
                     ? 'Approve Caregiver' 
                     : verificationConfirm.status === 'rejected'
-                    ? 'Reject Caregiver'
+                    ? 'Suspend Caregiver'
                     : 'Update Verification'}
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {verificationConfirm.status === 'verified' 
                     ? 'This caregiver will be marked as verified and can accept bookings.'
-                    : 'This caregiver will be marked as rejected and cannot accept new bookings.'}
+                    : 'This caregiver will be suspended and cannot log in until re-approved.'}
                 </p>
                 {verificationConfirm.reason && verificationConfirm.status === 'rejected' && (
                   <div className="bg-red-50 border border-red-200 p-3 rounded mb-4">
-                    <p className="text-sm font-medium text-red-800 mb-1">Rejection Reason:</p>
+                    <p className="text-sm font-medium text-red-800 mb-1">Suspension Reason:</p>
                     <p className="text-sm text-red-700">{verificationConfirm.reason}</p>
                   </div>
                 )}
@@ -577,7 +578,7 @@ const AdminCaregivers = () => {
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {verificationConfirm.status === 'verified' ? 'Approve' : 'Reject'}
+                {verificationConfirm.status === 'verified' ? 'Approve' : 'Suspend'}
               </button>
             </div>
           </div>

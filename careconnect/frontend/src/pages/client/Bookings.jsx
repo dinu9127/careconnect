@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, DollarSign, CreditCard, X, CheckCircle, AlertCircle, Star } from 'lucide-react'
+import { Calendar, Clock, DollarSign, CreditCard, X, CheckCircle, AlertCircle, Star, MapPin } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import api from '../../services/api'
@@ -8,16 +8,13 @@ const Bookings = () => {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showViewReviewsModal, setShowViewReviewsModal] = useState(false)
+  const [caregiverReviews, setCaregiverReviews] = useState([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
+  const [cancellingBookingId, setCancellingBookingId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: ''
-  })
   const [reviewData, setReviewData] = useState({
     rating: 0,
     reviewText: ''
@@ -42,89 +39,27 @@ const Bookings = () => {
     }
   }
 
-  const handlePayment = (booking) => {
-    setSelectedBooking(booking)
-    setShowPaymentModal(true)
-    setCardDetails({
-      cardNumber: '',
-      cardName: '',
-      expiryDate: '',
-      cvv: ''
-    })
-  }
-
-  const handleCardInputChange = (e) => {
-    const { name, value } = e.target
-    
-    let formattedValue = value
-
-    if (name === 'cardNumber') {
-      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim()
-      if (formattedValue.replace(/\s/g, '').length > 16) return
-    }
-
-    if (name === 'expiryDate') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length >= 2) {
-        formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2, 4)
-      }
-      if (formattedValue.length > 5) return
-    }
-
-    if (name === 'cvv') {
-      formattedValue = value.replace(/\D/g, '').slice(0, 3)
-    }
-
-    setCardDetails(prev => ({
-      ...prev,
-      [name]: formattedValue
-    }))
-  }
-
-  const processCardPayment = async () => {
-    // Validate card details
-    if (!cardDetails.cardNumber || !cardDetails.cardName || !cardDetails.expiryDate || !cardDetails.cvv) {
-      setMessage({ type: 'error', text: 'Please fill all card details' })
-      return
-    }
-
-    // Simulate card payment processing
-    setSubmitting(true)
-    
+  const handlePayment = async (booking) => {
     try {
-      // In production, integrate with payment gateway (Stripe)
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const transactionId = 'TXN-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-      
-      const response = await api.put(`/bookings/${selectedBooking._id}/payment`, {
-        paymentMethod: 'card',
-        paymentStatus: 'paid',
-        transactionId: transactionId
+      const response = await api.get(`/payhere/checkout/${booking._id}`)
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = response.data.action
+      Object.entries(response.data.fields).forEach(([key, value]) => {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = key
+        input.value = value
+        form.appendChild(input)
       })
-
-      setBookings(prev => prev.map(b => 
-        b._id === selectedBooking._id ? response.data.data : b
-      ))
-
-      setMessage({ type: 'success', text: 'Payment successful!' })
-      setShowPaymentModal(false)
-      
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+      document.body.appendChild(form)
+      form.submit()
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Payment failed. Please try again.'
+        text: error.response?.data?.message || 'Failed to initiate payment'
       })
-    } finally {
-      setSubmitting(false)
     }
-  }
-
-  const handleSubmitPayment = async (e) => {
-    e.preventDefault()
-    await processCardPayment()
   }
 
   const handleReview = (booking) => {
@@ -134,6 +69,44 @@ const Bookings = () => {
       rating: 0,
       reviewText: ''
     })
+  }
+
+  const canCancelBooking = (booking) => {
+    if (!booking || booking.status !== 'pending' || !booking.createdAt) return false
+    const bookingAgeMs = Date.now() - new Date(booking.createdAt).getTime()
+    return bookingAgeMs <= 5 * 60 * 1000
+  }
+
+  const getCancelTimeLeft = (booking) => {
+    if (!booking?.createdAt) return ''
+    const elapsedMs = Date.now() - new Date(booking.createdAt).getTime()
+    const remainingMs = Math.max(0, (5 * 60 * 1000) - elapsedMs)
+    const remainingMinutes = Math.ceil(remainingMs / 60000)
+    return remainingMinutes > 0 ? `${remainingMinutes} min${remainingMinutes !== 1 ? 's' : ''}` : 'less than a minute'
+  }
+
+  const handleCancelBooking = async (booking) => {
+    const confirmCancel = window.confirm('Cancel this booking? You can only cancel within 5 minutes of creating it.')
+    if (!confirmCancel) return
+
+    setCancellingBookingId(booking._id)
+    try {
+      await api.delete(`/bookings/${booking._id}`)
+      setBookings(prev => prev.map(item => (
+        item._id === booking._id
+          ? { ...item, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: 'client' }
+          : item
+      )))
+      setMessage({ type: 'success', text: 'Booking cancelled successfully.' })
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to cancel booking. Please try again.'
+      })
+    } finally {
+      setCancellingBookingId('')
+    }
   }
 
   const handleSubmitReview = async (e) => {
@@ -204,12 +177,22 @@ const Bookings = () => {
     }
   }
 
+  // Simple phone masker: show first 3 and last 3 digits with middle masked
+  const maskPhone = (phone) => {
+    if (!phone) return 'N/A'
+    const digits = phone.replace(/\D/g, '')
+    if (digits.length <= 6) return digits.replace(/.(?=.{3})/g, 'X')
+    const start = digits.slice(0, 3)
+    const end = digits.slice(-3)
+    return `${start} XXX ${end}`
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="client" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="client" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-2">My Bookings</h1>
@@ -245,22 +228,22 @@ const Bookings = () => {
             ) : (
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-teal-100 hover:border-teal-300">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-5 border border-teal-100 hover:border-teal-300">
+                    <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="text-xl font-bold text-gray-900">
                             {booking.caregiver?.user?.name || 'Caregiver'}
                           </h3>
-                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
-                            {booking.status.toUpperCase()}
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
+                            {(booking.status || 'pending').toUpperCase()}
                           </span>
-                          <span className={`px-4 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
-                            {booking.paymentStatus.toUpperCase()}
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                            {(booking.paymentStatus || 'pending').toUpperCase()}
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-gray-600">
+                        <div className="grid gap-2 text-gray-600 sm:grid-cols-2">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-teal-600" />
                             <span>
@@ -274,15 +257,15 @@ const Bookings = () => {
                           <div className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4 text-teal-600" />
                             <span className="font-semibold text-teal-700">Rs. {booking.totalAmount}</span>
-                            {booking.paymentMethod !== 'none' && (
+                            {booking.paymentMethod && booking.paymentMethod !== 'none' && (
                               <span className="text-sm text-gray-500">
-                                ({booking.paymentMethod.replace('_', ' ').toUpperCase()})
+                                ({booking.paymentMethod.replace(/_/g, ' ').toUpperCase()})
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="mt-3">
+                        <div className="mt-2">
                           <p className="text-sm text-gray-700">
                             <span className="font-semibold">Service:</span> {booking.serviceType}
                           </p>
@@ -291,21 +274,35 @@ const Bookings = () => {
                               <span className="font-semibold">Notes:</span> {booking.notes}
                             </p>
                           )}
-                          {booking.transactionId && (
-                            <p className="text-sm text-gray-700 mt-1">
-                              <span className="font-semibold">Transaction ID:</span> {booking.transactionId}
-                            </p>
-                          )}
+                          
                         </div>
                       </div>
 
                       <div className="flex flex-col gap-2">
+                        {canCancelBooking(booking) && booking.status !== 'cancelled' && (
+                          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div className="flex items-center gap-2 text-rose-800 font-medium">
+                                <AlertCircle className="w-4 h-4" />
+                                <span>Cancel within {getCancelTimeLeft(booking)}</span>
+                              </div>
+                              <button
+                                onClick={() => handleCancelBooking(booking)}
+                                disabled={cancellingBookingId === booking._id}
+                                className="px-12 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {cancellingBookingId === booking._id ? 'Cancelling...' : 'Cancel Booking'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {booking.status === 'completed' && booking.paymentStatus === 'unpaid' && (
                           <button
                             onClick={() => handlePayment(booking)}
                             className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <CreditCard className="w-4 h-4" />
+                            
                             Continue Payment
                           </button>
                         )}
@@ -315,18 +312,35 @@ const Bookings = () => {
                             onClick={() => handleReview(booking)}
                             className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <Star className="w-4 h-4" />
+                            
                             Rate & Review
                           </button>
                         )}
 
                         {booking.hasReview && (
-                          <div className="bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm">
-                            <div className="flex items-center gap-2 text-teal-800 font-medium">
-                              <Star className="w-4 h-4 fill-teal-800" />
-                              <span>Review Submitted</span>
-                            </div>
-                          </div>
+                          <button
+                            onClick={async () => {
+                              const caregiverId = booking.caregiver?._id || booking.caregiver?.user?._id
+                              if (!caregiverId) {
+                                setMessage({ type: 'error', text: 'Caregiver information not available.' })
+                                return
+                              }
+                              setLoadingReviews(true)
+                              try {
+                                const res = await api.get(`/reviews/caregiver/${caregiverId}`)
+                                setCaregiverReviews(res.data.data || [])
+                                setShowViewReviewsModal(true)
+                              } catch (err) {
+                                setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to load reviews.' })
+                              } finally {
+                                setLoadingReviews(false)
+                              }
+                            }}
+                            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                          >
+                            
+                            <span>{loadingReviews ? 'Loading...' : 'View Reviews'}</span>
+                          </button>
                         )}
 
                         {booking.paymentStatus === 'pending' && (
@@ -351,6 +365,28 @@ const Bookings = () => {
                             )}
                           </div>
                         )}
+
+                        {/* Contact Info - visible after confirmation or once completed */}
+                        <div className="bg-white border border-gray-100 rounded-xl p-3 text-sm">
+                          {booking.status === 'confirmed' || booking.status === 'completed' ? (
+                            <div className="space-y-1">
+                              <div className="text-sm text-gray-700 font-semibold">Contact Information</div>
+                              <div className="flex items-center gap-2 text-teal-700">
+                                <a href={`tel:${booking.caregiver?.user?.phone || ''}`} className="font-medium">{booking.caregiver?.user?.phone || 'N/A'}</a>
+                              </div>
+                              {booking.caregiver?.location && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <MapPin className="w-4 h-4 text-teal-600" />
+                                  <span>{booking.caregiver.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : booking.status === 'pending' ? (
+                            <div className="text-sm text-gray-500 italic">Contact details will be available once the booking is accepted.</div>
+                          ) : (
+                            <div className="text-sm text-gray-500 italic">Contact details are hidden for this booking.</div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -360,89 +396,6 @@ const Bookings = () => {
           </div>
         </main>
       </div>
-
-      {/* Payment Modal */}
-      {showPaymentModal && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-96 overflow-y-auto border border-teal-100">
-            <div className="sticky top-0 bg-gradient-to-r from-teal-50 to-teal-50 border-b border-teal-100 p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Payment</h2>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-1 transition"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="bg-teal-50 rounded-xl p-4 mb-6 border border-teal-200">
-                <p className="text-sm text-gray-600 font-medium mb-1">Amount to Pay</p>
-                <p className="text-3xl font-bold text-teal-700">Rs. {selectedBooking.totalAmount}</p>
-              </div>
-
-              <form onSubmit={handleSubmitPayment}>
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Card Number</label>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      value={cardDetails.cardNumber}
-                      onChange={handleCardInputChange}
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cardholder Name</label>
-                    <input
-                      type="text"
-                      name="cardName"
-                      value={cardDetails.cardName}
-                      onChange={handleCardInputChange}
-                      placeholder="JOHN DOE"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Expiry Date</label>
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        value={cardDetails.expiryDate}
-                        onChange={handleCardInputChange}
-                        placeholder="MM/YY"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
-                      <input
-                        type="text"
-                        name="cvv"
-                        value={cardDetails.cvv}
-                        onChange={handleCardInputChange}
-                        placeholder="123"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Processing...' : `Pay Rs. ${selectedBooking.totalAmount}`}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Review Modal */}
       {showReviewModal && selectedBooking && (
@@ -533,6 +486,51 @@ const Bookings = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Reviews Modal */}
+      {showViewReviewsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-teal-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Caregiver Reviews</h2>
+              <button
+                onClick={() => setShowViewReviewsModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {caregiverReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No reviews found for this caregiver.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {caregiverReviews.map((review) => (
+                    <div key={review._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{review.client?.name || 'Client'}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            {[1,2,3,4,5].map((s) => (
+                              <Star key={s} className={`w-4 h-4 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                            ))}
+                            <span className="text-xs text-gray-500 ml-2">{new Date(review.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600">{review.rating}/5</div>
+                      </div>
+                      {review.reviewText && <p className="text-sm text-gray-700 mt-2">{review.reviewText}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

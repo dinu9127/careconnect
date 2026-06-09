@@ -10,6 +10,8 @@ const AdminDashboard = () => {
     totalClients: 0,
     totalCaregivers: 0,
     verifiedCaregivers: 0,
+    nonVerifiedCaregivers: 0,
+    totalAdmins: 0,
     activeBookings: 0,
     pendingVerifications: 0,
     openComplaints: 0,
@@ -29,7 +31,7 @@ const AdminDashboard = () => {
       // Fetch all data in parallel
       const [usersRes, caregiversRes, bookingsRes, complaintsRes] = await Promise.all([
         userService.getUsers().catch(() => ({ data: { data: [] } })),
-        caregiverService.getCaregivers().catch(() => ({ data: { data: [] } })),
+        caregiverService.getAllCaregiversAdmin().catch(() => ({ data: { data: [] } })),
         bookingService.getBookings().catch(() => ({ data: { data: [] } })),
         complaintService.getAllComplaints().catch(() => ({ data: { data: [] } })),
       ])
@@ -41,8 +43,11 @@ const AdminDashboard = () => {
 
       // Calculate stats
       const clients = users.filter(user => user.role === 'client')
+      const caregiverUsers = users.filter(user => user.role === 'caregiver')
+      const admins = users.filter(user => user.role === 'admin')
       const verifiedCaregivers = caregivers.filter(cg => cg.verificationStatus === 'verified')
       const pendingCaregivers = caregivers.filter(cg => cg.verificationStatus === 'pending')
+      const nonVerifiedCaregivers = Math.max(caregiverUsers.length - verifiedCaregivers.length, 0)
       const activeBookings = bookings.filter(booking => 
         booking.status === 'confirmed' || booking.status === 'pending'
       )
@@ -51,8 +56,10 @@ const AdminDashboard = () => {
       setStats({
         totalUsers: users.length,
         totalClients: clients.length,
-        totalCaregivers: caregivers.length,
+        totalCaregivers: caregiverUsers.length,
         verifiedCaregivers: verifiedCaregivers.length,
+        nonVerifiedCaregivers: nonVerifiedCaregivers,
+        totalAdmins: admins.length,
         activeBookings: activeBookings.length,
         pendingVerifications: pendingCaregivers.length,
         openComplaints: openComplaints.length,
@@ -67,13 +74,13 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar />
-        <div className="flex">
-          <Sidebar role="admin" />
-          <main className="flex-1 p-8">
+      <div className="h-screen bg-slate-50 overflow-hidden">
+        <Navbar isFixed />
+        <div className="flex pt-16 h-full">
+          <Sidebar role="admin" isFixed />
+          <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
             <div className="mb-8 border-b-2 border-purple-200 pb-4">
-              <h1 className="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
               <p className="text-slate-600 mt-1">Welcome back! Here's your platform overview</p>
             </div>
             <div className="flex justify-center items-center h-64">
@@ -86,11 +93,11 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-slate-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="mb-8 border-b-2 border-purple-200 pb-4">
             <h1 className="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
             <p className="text-slate-600 mt-1">Welcome back! Here's your platform overview</p>
@@ -103,93 +110,109 @@ const AdminDashboard = () => {
             </div>
           )}
           
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-blue-500">
-              <div className="flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 mb-8">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                  <p className="text-slate-600 text-sm font-medium mb-1">Total Users</p>
-                  <p className="text-4xl font-bold text-slate-900">{stats.totalUsers}</p>
-                  <p className="text-xs text-slate-500 mt-2">All registered users</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">User Breakdown</p>
+                  <h2 className="text-2xl font-bold text-slate-900">Total Users</h2>
+                 
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-blue-600" />
+                <div className="text-2xl font-extrabold text-slate-900">
+                  {stats.totalUsers}
                 </div>
               </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-indigo-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium mb-1">Total Clients</p>
-                  <p className="text-4xl font-bold text-slate-900">{stats.totalClients}</p>
-                  <p className="text-xs text-slate-500 mt-2">Registered clients</p>
+
+              <div className="w-full">
+                <div className="h-6 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex">
+                  <div
+                    className="h-full bg-red-500"
+                    style={{ width: `${(stats.totalAdmins / Math.max(stats.totalUsers, 1)) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${(stats.verifiedCaregivers / Math.max(stats.totalUsers, 1)) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-amber-400"
+                    style={{ width: `${(stats.nonVerifiedCaregivers / Math.max(stats.totalUsers, 1)) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-blue-500"
+                    style={{ width: `${(stats.totalClients / Math.max(stats.totalUsers, 1)) * 100}%` }}
+                  />
                 </div>
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-indigo-600" />
+                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-red-500"></span>
+                      <span className="text-sm font-medium text-slate-700">Admins</span>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">{stats.totalAdmins}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-emerald-500"></span>
+                      <span className="text-sm font-medium text-slate-700">Verified Caregivers</span>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">{stats.verifiedCaregivers}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-amber-400"></span>
+                      <span className="text-sm font-medium text-slate-700">Non-verified Caregivers</span>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">{stats.nonVerifiedCaregivers}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-blue-500"></span>
+                      <span className="text-sm font-medium text-slate-700">Clients</span>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">{stats.totalClients}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-purple-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium mb-1">Verified Caregivers</p>
-                  <p className="text-4xl font-bold text-slate-900">{stats.verifiedCaregivers}</p>
-                  <p className="text-xs text-slate-500 mt-2">Out of {stats.totalCaregivers} total</p>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Active Bookings</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">{stats.activeBookings}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-purple-600" />
+                <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pending Verifications</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">{stats.pendingVerifications}</p>
                 </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-blue-400">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium mb-1">Active Bookings</p>
-                  <p className="text-4xl font-bold text-slate-900">{stats.activeBookings}</p>
-                  <p className="text-xs text-slate-500 mt-2">Confirmed & pending</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-blue-500" />
+                <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Open Complaints</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">{stats.openComplaints}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-yellow-500">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 mb-1">Pending Verifications</h2>
-                  <p className="text-xs text-slate-600 mb-4">Awaiting approval</p>
-                  {stats.pendingVerifications > 0 ? (
-                    <div>
-                      <p className="text-5xl font-bold text-yellow-600 mb-2">{stats.pendingVerifications}</p>
-                      <p className="text-sm text-slate-600">Caregivers waiting for verification</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-600">No pending verifications</p>
-                  )}
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Pending Verifications</p>
+                  <h2 className="text-2xl font-bold text-slate-900">Awaiting approval</h2>
+                  <p className="text-sm text-slate-600 mt-2">Caregivers waiting for verification</p>
                 </div>
-                <div className="w-14 h-14 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-7 h-7 text-yellow-600" />
+                <div className="text-2xl font-extrabold text-slate-900">
+                  {stats.pendingVerifications}
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-t-4 border-red-500">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 mb-1">Open Complaints</h2>
-                  <p className="text-xs text-slate-600 mb-4">Requiring attention</p>
-                  {stats.openComplaints > 0 ? (
-                    <div>
-                      <p className="text-5xl font-bold text-red-600 mb-2">{stats.openComplaints}</p>
-                      <p className="text-sm text-slate-600">Complaints requiring attention</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-green-600 font-semibold">No open complaints</p>
-                  )}
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Open Complaints</p>
+                  <h2 className="text-2xl font-bold text-slate-900">Requiring attention</h2>
+                  <p className="text-sm text-slate-600 mt-2">Complaints requiring attention</p>
                 </div>
-                <div className="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-7 h-7 text-red-600" />
+                <div className="text-2xl font-extrabold text-slate-900">
+                  {stats.openComplaints}
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
-import { userService, caregiverService } from '../../services/api'
+import { userService, caregiverService, uploadService } from '../../services/api'
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
 const AdminUsers = () => {
@@ -18,6 +18,67 @@ const AdminUsers = () => {
   const [rejectionReason, setRejectionReason] = useState('')
   const [showRejectionModal, setShowRejectionModal] = useState(false)
   const [pendingRejectionId, setPendingRejectionId] = useState(null)
+  const [actionMessage, setActionMessage] = useState({ type: '', text: '' })
+  const [documentsModal, setDocumentsModal] = useState({ open: false, caregiver: null })
+  const [documentsLoading, setDocumentsLoading] = useState(false)
+  const [documentsError, setDocumentsError] = useState('')
+  const [documentsData, setDocumentsData] = useState({
+    uploads: [],
+    nvqCertifications: [],
+    professionalDocuments: [],
+    verificationDocuments: []
+  })
+
+  const showActionMessage = (type, text) => {
+    setActionMessage({ type, text })
+    window.setTimeout(() => {
+      setActionMessage({ type: '', text: '' })
+    }, 4000)
+  }
+
+  const formatDate = (value) => {
+    if (!value) return 'N/A'
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return 'N/A'
+    return parsed.toLocaleDateString()
+  }
+
+  const openDocumentsModal = async (caregiver) => {
+    setDocumentsModal({ open: true, caregiver })
+    setDocumentsLoading(true)
+    setDocumentsError('')
+    setDocumentsData({
+      uploads: [],
+      nvqCertifications: [],
+      professionalDocuments: [],
+      verificationDocuments: caregiver?.verificationDocuments || []
+    })
+
+    try {
+      const userId = caregiver?.user?._id
+      const [caregiverDocsResponse, userDocsResponse] = await Promise.all([
+        caregiverService.getCaregiverDocuments(caregiver._id),
+        userId ? uploadService.getUserDocuments(userId) : Promise.resolve({ data: { data: [] } })
+      ])
+
+      setDocumentsData({
+        uploads: userDocsResponse.data?.data || [],
+        nvqCertifications: caregiverDocsResponse.data?.data?.nvqCertifications || [],
+        professionalDocuments: caregiverDocsResponse.data?.data?.professionalDocuments || [],
+        verificationDocuments: caregiverDocsResponse.data?.data?.verificationDocuments || caregiver?.verificationDocuments || []
+      })
+    } catch (err) {
+      console.error('Error fetching caregiver documents:', err)
+      setDocumentsError('Failed to load caregiver documents. Please try again.')
+    } finally {
+      setDocumentsLoading(false)
+    }
+  }
+
+  const closeDocumentsModal = () => {
+    setDocumentsModal({ open: false, caregiver: null })
+    setDocumentsError('')
+  }
 
   useEffect(() => {
     fetchUsers()
@@ -72,7 +133,7 @@ const AdminUsers = () => {
 
   const submitRejection = () => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a reason for rejection')
+      showActionMessage('error', 'Please provide a reason for suspension')
       return
     }
     setVerificationConfirm({ show: true, caregiverId: pendingRejectionId, status: 'rejected', reason: rejectionReason })
@@ -93,10 +154,11 @@ const AdminUsers = () => {
         cg._id === caregiverId ? { ...cg, verificationStatus: status, verificationNotes: reason || cg.verificationNotes } : cg
       ))
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
-      alert(`Caregiver ${status} successfully${reason ? ' with reason: ' + reason : ''}`)
+      const statusLabel = status === 'rejected' ? 'suspended' : status
+      showActionMessage('success', `Caregiver ${statusLabel} successfully${reason ? ' with reason: ' + reason : ''}`)
     } catch (err) {
       console.error('Error updating verification:', err)
-      alert(`Failed to update verification status: ${err.response?.data?.message || err.message}`)
+      showActionMessage('error', `Failed to update verification status: ${err.response?.data?.message || err.message}`)
       setVerificationConfirm({ show: false, caregiverId: null, status: null })
     }
   }
@@ -110,9 +172,9 @@ const AdminUsers = () => {
       
       // Show success message with any warnings
       if (response.data.warning) {
-        alert(`User deleted successfully. Note: ${response.data.warning}`)
+        showActionMessage('success', `User deleted successfully. Note: ${response.data.warning}`)
       } else {
-        alert('User deleted successfully')
+        showActionMessage('success', 'User deleted successfully')
       }
     } catch (err) {
       console.error('Error deleting user:', err)
@@ -120,7 +182,7 @@ const AdminUsers = () => {
       
       // Show user-friendly error message
       const errorMsg = err.response?.data?.message || 'Failed to delete user'
-      alert(errorMsg)
+      showActionMessage('error', errorMsg)
     }
   }
 
@@ -171,12 +233,44 @@ const AdminUsers = () => {
     }
   }
 
+  const groupedUploads = documentsData.uploads.reduce((acc, doc) => {
+    const key = doc.fileType || 'Other'
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(doc)
+    return acc
+  }, {})
+
+  const documentSummary = [
+    {
+      label: 'Uploaded files',
+      count: documentsData.uploads.length,
+      tone: 'bg-purple-50 text-purple-800 border-purple-200'
+    },
+    {
+      label: 'NVQ certifications',
+      count: documentsData.nvqCertifications.length,
+      tone: 'bg-blue-50 text-blue-800 border-blue-200'
+    },
+    {
+      label: 'Professional documents',
+      count: documentsData.professionalDocuments.length,
+      tone: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+    },
+    {
+      label: 'Verification documents',
+      count: documentsData.verificationDocuments.length,
+      tone: 'bg-amber-50 text-amber-800 border-amber-200'
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="admin" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="admin" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           <div className="mb-8 border-b-2 border-purple-200 pb-4 flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold text-slate-900">User Management</h1>
@@ -245,6 +339,30 @@ const AdminUsers = () => {
             </div>
           )}
 
+          {actionMessage.text && (
+            <div className={`px-4 py-4 rounded-lg mb-6 shadow-md border-l-4 ${
+              actionMessage.type === 'success'
+                ? 'bg-green-50 border-green-600 text-green-800'
+                : 'bg-red-50 border-red-600 text-red-800'
+            }`}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold">
+                    {actionMessage.type === 'success' ? 'Success' : 'Error'}
+                  </p>
+                  <p className="text-sm mt-1">{actionMessage.text}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActionMessage({ type: '', text: '' })}
+                  className="text-sm font-semibold hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           {filter === 'caregiver' ? (
             caregiverLoading ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-slate-200">
@@ -258,7 +376,7 @@ const AdminUsers = () => {
             ) : (
               <div className="space-y-6">
                 {/* Pending Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-yellow-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-yellow-50 px-6 py-4 border-b border-yellow-100">
                     <h3 className="text-lg font-bold text-slate-900">Pending Review ({pendingCaregivers.length})</h3>
                     <p className="text-sm text-slate-600 mt-1">Awaiting approval</p>
@@ -292,13 +410,21 @@ const AdminUsers = () => {
                             <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                            <div className="text-sm text-slate-700">
+                              {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex gap-2 items-center">
+                              <button
+                                onClick={() => openDocumentsModal(caregiver)}
+                                className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                              >
+                                Documents
+                              </button>
                               {(caregiver.verificationStatus || 'pending') === 'pending' && (
                                 <>
                                   <button
@@ -323,7 +449,7 @@ const AdminUsers = () => {
                                   className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
                                 >
                                   <XCircle className="w-4 h-4" />
-                                  Revoke
+                                  Suspend
                                 </button>
                               )}
                               {(caregiver.verificationStatus || 'pending') === 'rejected' && (
@@ -352,7 +478,7 @@ const AdminUsers = () => {
                 </div>
 
                 {/* Verified Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-green-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-green-50 px-6 py-4 border-b border-green-100">
                     <h3 className="text-lg font-bold text-slate-900">Verified ({verifiedCaregivers.length})</h3>
                     <p className="text-sm text-slate-600 mt-1">Approved caregivers</p>
@@ -386,7 +512,9 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -394,11 +522,17 @@ const AdminUsers = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex gap-2 items-center">
                                   <button
+                                    onClick={() => openDocumentsModal(caregiver)}
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                                  >
+                                    Documents
+                                  </button>
+                                  <button
                                     onClick={() => handleVerificationUpdate(caregiver._id, 'rejected')}
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
                                   >
                                     <XCircle className="w-4 h-4" />
-                                    Revoke
+                                    Suspend
                                   </button>
                                   <button
                                     onClick={() => openDeleteConfirmation(caregiver.user)}
@@ -417,13 +551,13 @@ const AdminUsers = () => {
                 </div>
 
                 {/* Rejected Caregivers Section */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-t-4 border-red-500">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="bg-red-50 px-6 py-4 border-b border-red-100">
-                    <h3 className="text-lg font-bold text-slate-900">Rejected ({rejectedCaregivers.length})</h3>
-                    <p className="text-sm text-slate-600 mt-1">Verification not approved</p>
+                    <h3 className="text-lg font-bold text-slate-900">Suspended ({rejectedCaregivers.length})</h3>
+                    <p className="text-sm text-slate-600 mt-1">Suspended caregivers cannot log in</p>
                   </div>
                   {rejectedCaregivers.length === 0 ? (
-                    <div className="p-6 text-center text-slate-500 font-medium">No rejected caregivers</div>
+                    <div className="p-6 text-center text-slate-500 font-medium">No suspended caregivers</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-slate-200">
@@ -451,13 +585,21 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex gap-2 items-center">
+                                  <button
+                                    onClick={() => openDocumentsModal(caregiver)}
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
+                                  >
+                                    Documents
+                                  </button>
                                   <button
                                     onClick={() => handleVerificationUpdate(caregiver._id, 'verified')}
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 text-xs font-bold shadow-md hover:shadow-lg"
@@ -557,17 +699,109 @@ const AdminUsers = () => {
         </main>
       </div>
 
+      {/* Documents Modal */}
+      {documentsModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-100">
+
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Caregiver Documents</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  {documentsModal.caregiver?.user?.name || 'Caregiver'}
+                </p>
+              </div>
+              <button
+                onClick={closeDocumentsModal}
+                className="rounded-full bg-purple-50 px-3 py-1.5 text-sm font-semibold text-purple-700 border border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+              >
+                Close
+              </button>
+            </div>
+
+            
+
+            {documentsLoading ? (
+              <div className="py-12 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto mb-3"></div>
+                <p className="text-slate-600">Loading documents...</p>
+              </div>
+            ) : documentsError ? (
+              <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-4 py-4 rounded-lg shadow-sm">
+                <p className="font-semibold">Error</p>
+                <p className="text-sm mt-1">{documentsError}</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-700">Uploaded Files</h4>
+                      <p className="text-xs text-slate-500">Identity, police clearance, and qualification uploads</p>
+                    </div>
+                    <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 border border-purple-200">
+                      {documentsData.uploads.length} file{documentsData.uploads.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  {Object.keys(groupedUploads).length === 0 ? (
+                    <p className="text-sm text-slate-500">No uploaded files found.</p>
+                  ) : (
+                    <div className="grid gap-3">
+                      {Object.entries(groupedUploads).map(([type, docs]) => (
+                        <div key={type} className="rounded-xl border border-purple-100 bg-purple-50/40 p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-bold uppercase tracking-wide text-purple-700">{type}</p>
+                            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+                              {docs.length}
+                            </span>
+                          </div>
+                          <div className="mt-3 space-y-3">
+                            {docs.map((doc) => (
+                              <div key={doc._id} className="rounded-lg border border-purple-100 bg-white px-3 py-3 shadow-sm">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <a
+                                      href={doc.fileUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="truncate text-sm font-semibold text-blue-700 hover:text-purple-700 hover:underline"
+                                    >
+                                      {doc.fileName || 'View document'}
+                                    </a>
+                                    <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.createdAt)}</p>
+                                  </div>
+                                 
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                
+
+                
+                
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Rejection Reason Modal */}
       {showRejectionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Rejection Reason</h3>
-            <p className="text-slate-600 mb-4 text-sm">Please provide a reason for rejecting this caregiver. This will be recorded and may be communicated to them.</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Suspension Reason</h3>
+            <p className="text-slate-600 mb-4 text-sm">Please provide a reason for suspending this caregiver. This will be recorded and may be communicated to them.</p>
 
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
+              placeholder="Enter suspension reason..."
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none bg-white text-slate-900 placeholder-slate-500"
               rows="4"
             />
@@ -587,7 +821,7 @@ const AdminUsers = () => {
                 onClick={submitRejection}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                Submit Rejection
+                Submit Suspension
               </button>
             </div>
           </div>
@@ -617,17 +851,17 @@ const AdminUsers = () => {
                   {verificationConfirm.status === 'verified'
                     ? 'Approve Caregiver'
                     : verificationConfirm.status === 'rejected'
-                    ? 'Reject Caregiver'
+                    ? 'Suspend Caregiver'
                     : 'Update Verification'}
                 </h3>
                 <p className="text-slate-600 text-sm mb-4">
                   {verificationConfirm.status === 'verified'
                     ? 'This caregiver will be marked as verified and can accept bookings.'
-                    : 'This caregiver will be marked as rejected and cannot accept new bookings.'}
+                    : 'This caregiver will be suspended and cannot log in until re-approved.'}
                 </p>
                 {verificationConfirm.reason && verificationConfirm.status === 'rejected' && (
                   <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded">
-                    <p className="text-xs font-bold text-red-800 mb-1">REJECTION REASON</p>
+                    <p className="text-xs font-bold text-red-800 mb-1">SUSPENSION REASON</p>
                     <p className="text-xs text-red-700">{verificationConfirm.reason}</p>
                   </div>
                 )}
@@ -649,7 +883,7 @@ const AdminUsers = () => {
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {verificationConfirm.status === 'verified' ? 'Approve' : 'Reject'}
+                {verificationConfirm.status === 'verified' ? 'Approve' : 'Suspend'}
               </button>
             </div>
           </div>

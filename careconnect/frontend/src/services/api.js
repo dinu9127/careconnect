@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -30,6 +30,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -49,6 +52,7 @@ export const authService = {
 export const userService = {
   getUsers: () => api.get('/users'),
   getUserById: (id) => api.get(`/users/${id}`),
+  updateCurrentUser: (data) => api.put('/users/me', data),
   updateUser: (id, data) => api.put(`/users/${id}`, data),
   deleteUser: (id) => api.delete(`/users/${id}`),
   deleteMe: () => api.delete('/users/me'),
@@ -59,6 +63,7 @@ export const caregiverService = {
   getCaregivers: () => api.get('/caregivers'),
     getAllCaregiversAdmin: () => api.get('/caregivers/admin/all'),
   getCaregiverById: (id) => api.get(`/caregivers/${id}`),
+  getCaregiverDocuments: (id) => api.get(`/caregivers/${id}/documents`),
   updateCaregiver: (id, data) => api.put(`/caregivers/${id}`, data),
   uploadProfileImage: (file) => {
     const formData = new FormData()
@@ -97,6 +102,24 @@ export const reviewService = {
   getCaregiverReviews: (caregiverId) => api.get(`/reviews/caregiver/${caregiverId}`),
   getMyReviews: () => api.get('/reviews/me'), // caregiver
   getAllReviews: () => api.get('/reviews/admin'), // admin
+}
+
+export const uploadService = {
+  uploadDocument: ({ file, fileType, metadata = {}, onUploadProgress }) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('fileType', fileType)
+    Object.entries(metadata).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value)
+      }
+    })
+    return api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress
+    })
+  },
+  getUserDocuments: (userId) => api.get(`/upload/user/${userId}`)
 }
 
 export default api

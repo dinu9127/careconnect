@@ -2,8 +2,40 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
-import { User, Phone, Mail, MapPin, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera } from 'lucide-react'
+import DocumentUploadCard from '../../components/ui/DocumentUploadCard'
+import { User, Phone, Mail, DollarSign, Award, Save, FileText, CheckCircle, AlertCircle, Upload, X, Camera, Eye, EyeOff } from 'lucide-react'
 import api, { userService } from '../../services/api'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow
+})
+
+const caregiverPin = new L.Icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
+const LocationPicker = ({ onSelect }) => {
+  useMapEvents({
+    click: (event) => {
+      onSelect(event.latlng)
+    }
+  })
+
+  return null
+}
 
 const UpdateProfile = () => {
   const navigate = useNavigate()
@@ -18,10 +50,14 @@ const UpdateProfile = () => {
     name: '',
     email: '',
     phone: '',
-    location: '',
+    gender: '',
+    latitude: '',
+    longitude: '',
     bio: '',
     hourlyRate: '',
     experience: '',
+    residentDistrict: '',
+    boardingDistrict: '',
     certifications: '',
     serviceTypes: [],
     profilePicture: null,
@@ -31,6 +67,11 @@ const UpdateProfile = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  })
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
   })
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
   const [passwordLoading, setPasswordLoading] = useState(false)
@@ -73,19 +114,28 @@ const UpdateProfile = () => {
     nvq: null,
     professional: null
   })
-
-  const locations = [
-    'Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 
-    'Anuradhapura', 'Trincomalee', 'Batticaloa', 'Matara', 
-    'Kurunegala', 'Ratnapura', 'Badulla', 'Nuwara Eliya', 
-    'Hambantota', 'Ampara'
-  ]
+  const [locationSearchQuery, setLocationSearchQuery] = useState('')
+  const [locationSearchResults, setLocationSearchResults] = useState([])
+  const [locationSearchError, setLocationSearchError] = useState('')
+  const [locationSearching, setLocationSearching] = useState(false)
 
   const serviceTypes = [
     'Elderly Care',
     'Childcare',
     'Hospital Companion Care',
     'Disability Support'
+  ]
+
+  const districts = [
+    'Colombo', 'Gampaha', 'Kalutara',
+    'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota',
+    'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya',
+    'Puttalam', 'Kurunegala',
+    'Anuradhapura', 'Polonnaruwa',
+    'Trincomalee', 'Batticaloa', 'Ampara',
+    'Badulla', 'Monaragala',
+    'Ratnapura', 'Kegalle'
   ]
 
   const idTypes = ['National Identity Card', 'Passport', 'Driving License']
@@ -149,6 +199,9 @@ const UpdateProfile = () => {
     try {
       const response = await api.get('/caregivers/me')
       const caregiver = response.data.data
+      const coords = caregiver.geoLocation?.coordinates
+      const longitude = Array.isArray(coords) ? coords[0] : ''
+      const latitude = Array.isArray(coords) ? coords[1] : ''
       
       // Store caregiver ID for updates
       setCaregiverId(caregiver._id)
@@ -157,10 +210,14 @@ const UpdateProfile = () => {
         name: caregiver.user?.name || '',
         email: caregiver.user?.email || '',
         phone: caregiver.user?.phone || '',
-        location: caregiver.location || '',
+        gender: caregiver.gender || caregiver.user?.gender || '',
+        latitude: latitude !== '' ? String(latitude) : '',
+        longitude: longitude !== '' ? String(longitude) : '',
         bio: caregiver.bio || '',
         hourlyRate: caregiver.hourlyRate || '',
         experience: caregiver.experience || '',
+        residentDistrict: caregiver.residentDistrict || '',
+        boardingDistrict: caregiver.boardingDistrict || '',
         certifications: Array.isArray(caregiver.certifications) 
           ? caregiver.certifications.map(c => c.name || c).join(', ')
           : '',
@@ -182,6 +239,72 @@ const UpdateProfile = () => {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleUseCurrentLocation = () => {
+    setMessage('')
+    if (!navigator.geolocation) {
+      setMessage('Geolocation is not supported by your browser')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setFormData(prev => ({
+          ...prev,
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6)
+        }))
+      },
+      () => {
+        setMessage('Unable to fetch your location. Please allow location access.')
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const handleLocationSearch = async () => {
+    const query = locationSearchQuery.trim()
+    if (!query) {
+      setLocationSearchResults([])
+      setLocationSearchError('')
+      return
+    }
+
+    setLocationSearching(true)
+    setLocationSearchError('')
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=lk`
+      )
+      const data = await response.json()
+      const results = Array.isArray(data) ? data : []
+
+      if (results.length === 0) {
+        setLocationSearchError('No places found. Try a different search.')
+      }
+
+      setLocationSearchResults(results)
+    } catch (error) {
+      setLocationSearchError('Search failed. Please try again.')
+    } finally {
+      setLocationSearching(false)
+    }
+  }
+
+  const handleMapSelect = ({ lat, lng }) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    }))
+  }
+
+  const handleMarkerDragEnd = (event) => {
+    const { lat, lng } = event.target.getLatLng()
+    handleMapSelect({ lat, lng })
   }
 
   const handleProfilePictureChange = (e) => {
@@ -237,10 +360,18 @@ const UpdateProfile = () => {
         return
       }
       
-      // Validate phone number - must be exactly 10 digits
-      const phoneDigits = formData.phone.replace(/\D/g, '')
-      if (phoneDigits.length !== 10) {
-        setMessage('Phone number must be exactly 10 digits')
+      const normalizeSriLankaPhone = (phone) => {
+        const digits = phone.replace(/\D/g, '')
+        if (digits.startsWith('94') && digits.length === 11) {
+          return `0${digits.slice(2)}`
+        }
+        return digits
+      }
+
+      // Validate Sri Lanka phone numbers (0XXXXXXXXX or +94XXXXXXXXX)
+      const phoneDigits = normalizeSriLankaPhone(formData.phone)
+      if (!/^0\d{9}$/.test(phoneDigits)) {
+        setMessage('Phone number must be a valid Sri Lanka number (0XXXXXXXXX or +94XXXXXXXXX)')
         setLoading(false)
         return
       }
@@ -253,9 +384,9 @@ const UpdateProfile = () => {
         phone: phoneDigits
       })
 
-      // Prepare caregiver data (without gender field)
+      // Prepare caregiver data
       const caregiverData = {
-        location: formData.location,
+        gender: formData.gender,
         bio: formData.bio,
         hourlyRate: Number(formData.hourlyRate),
         experience: Number(formData.experience),
@@ -268,26 +399,34 @@ const UpdateProfile = () => {
         serviceTypes: formData.serviceTypes
       }
 
-      // If there's a new profile picture, upload it
-      if (formData.profilePicture) {
-        const formDataToSend = new FormData()
-        formDataToSend.append('profilePicture', formData.profilePicture)
-        
-        Object.keys(caregiverData).forEach(key => {
-          if (Array.isArray(caregiverData[key])) {
-            formDataToSend.append(key, JSON.stringify(caregiverData[key]))
-          } else {
-            formDataToSend.append(key, caregiverData[key])
-          }
-        })
+      // Include district fields if provided
+      if (formData.residentDistrict) caregiverData.residentDistrict = formData.residentDistrict
+      if (formData.boardingDistrict) caregiverData.boardingDistrict = formData.boardingDistrict
 
-        await api.put(`/caregivers/${caregiverId}`, formDataToSend, {
+      const latitude = Number.parseFloat(formData.latitude)
+      const longitude = Number.parseFloat(formData.longitude)
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        caregiverData.latitude = latitude
+        caregiverData.longitude = longitude
+      }
+
+      // If there's a new profile picture, upload it first
+      if (formData.profilePicture) {
+        const imageData = new FormData()
+        imageData.append('file', formData.profilePicture)
+
+        const uploadResponse = await api.post('/caregivers/me/profile-image', imageData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-      } else {
-        // Update caregiver data without profile picture
-        await api.put(`/caregivers/${caregiverId}`, caregiverData)
+
+        const uploadedUrl = uploadResponse?.data?.data?.url
+        if (uploadedUrl) {
+          setFormData(prev => ({ ...prev, profilePicturePreview: uploadedUrl }))
+        }
       }
+
+      // Update caregiver data without profile picture
+      await api.put('/caregivers/me', caregiverData)
 
       setMessage('Profile updated successfully!')
       setFormData(prev => ({ ...prev, profilePicture: null }))
@@ -329,6 +468,13 @@ const UpdateProfile = () => {
     setPasswordData(prev => ({
       ...prev,
       [name]: value
+    }))
+  }
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
     }))
   }
 
@@ -505,7 +651,7 @@ const UpdateProfile = () => {
       }
 
       const user = JSON.parse(localStorage.getItem('user'))
-      const endpoint = docType === 'identity' 
+      const endpoint = docType === 'identity'
         ? `/caregivers/${user.id}/identity-verification`
         : docType === 'nvq'
         ? `/caregivers/${user.id}/nvq-certifications`
@@ -553,6 +699,16 @@ const UpdateProfile = () => {
     setCurrentStep(1)
   }
 
+  const parsedLatitude = Number.parseFloat(formData.latitude)
+  const parsedLongitude = Number.parseFloat(formData.longitude)
+  const hasCoords = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
+  const mapCenter = hasCoords ? [parsedLatitude, parsedLongitude] : [7.8731, 80.7718]
+  const mapZoom = hasCoords ? 13 : 7
+  const certificationList = formData.certifications
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -572,10 +728,10 @@ const UpdateProfile = () => {
 
             {/* Message */}
             {message && (
-              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 border-t-4 transition-all duration-300 ${
+              <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 transition-all duration-300 ${
                 message.includes('Error') 
-                  ? 'bg-red-100 text-red-800 border border-red-300 border-t-red-600' 
-                  : 'bg-green-100 text-green-800 border border-green-300 border-t-green-600'
+                  ? 'bg-red-100 text-red-800 border border-red-300' 
+                  : 'bg-green-100 text-green-800 border border-green-300'
               }`}>
                 {message.includes('Error') ? (
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -624,7 +780,7 @@ const UpdateProfile = () => {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
+              <form onSubmit={handleProfileSubmit} className="bg-white rounded-xl shadow-md p-8">
                 {/* Profile Picture Section */}
                 <div className="mb-8 pb-8 border-b">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -716,32 +872,151 @@ const UpdateProfile = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="0771234567"
-                      pattern="[0-9]{10}"
+                      pattern="^(?:0\d{9}|\+?94\d{9})$"
                       maxLength="10"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Enter 10 digit phone number (e.g., 0771234567)</p>
+                    <p className="text-xs text-gray-500 mt-1">Use 0XXXXXXXXX or +94XXXXXXXXX (e.g., 0771234567)</p>
                   </div>
 
-                  {/* Location */}
+                  {/* Gender */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <MapPin className="w-4 h-4 inline mr-2" />
-                      Location
+                      <User className="w-4 h-4 inline mr-2" />
+                      Gender
                     </label>
                     <select
-                      name="location"
-                      value={formData.location}
+                      name="gender"
+                      value={formData.gender}
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       required
                     >
-                      <option value="">Select Location</option>
-                      {locations.map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                                  
+                {/* Districts */}
+                <div className="md:col-span-2 grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Resident District</label>
+                    <select
+                      name="residentDistrict"
+                      value={formData.residentDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select resident district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Boarding District</label>
+                    <select
+                      name="boardingDistrict"
+                      value={formData.boardingDistrict}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="">Select boarding district (optional)</option>
+                      {districts.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Choose Your Location on Map
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleUseCurrentLocation}
+                        className="text-sm text-blue-700 hover:text-blue-900 font-medium"
+                      >
+                        Use Current Location
+                      </button>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-3 mb-3">
+                      <input
+                        type="text"
+                        value={locationSearchQuery}
+                        onChange={(e) => setLocationSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleLocationSearch()
+                          }
+                        }}
+                        placeholder="Search a place or landmark"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleLocationSearch}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      >
+                        {locationSearching ? 'Searching...' : 'Search on Map'}
+                      </button>
+                    </div>
+                    {locationSearchError && (
+                      <p className="text-sm text-red-600 mb-2">{locationSearchError}</p>
+                    )}
+                    {locationSearchResults.length > 0 && (
+                      <div className="mb-3 grid gap-2">
+                        {locationSearchResults.map((result) => (
+                          <button
+                            key={`${result.place_id}`}
+                            type="button"
+                            onClick={() => {
+                              const lat = Number.parseFloat(result.lat)
+                              const lng = Number.parseFloat(result.lon)
+                              if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                                handleMapSelect({ lat, lng })
+                              }
+                              setLocationSearchResults([])
+                            }}
+                            className="text-left px-3 py-2 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition"
+                          >
+                            <span className="text-sm text-gray-800">{result.display_name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="h-[320px] w-full rounded-xl overflow-hidden border border-gray-200">
+                      <MapContainer
+                        key={`${parsedLatitude || 'na'}-${parsedLongitude || 'na'}`}
+                        center={mapCenter}
+                        zoom={mapZoom}
+                        scrollWheelZoom
+                        className="h-full w-full"
+                      >
+                        <TileLayer
+                          attribution="&copy; OpenStreetMap contributors"
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <LocationPicker onSelect={handleMapSelect} />
+                        {hasCoords && (
+                          <Marker
+                            position={[parsedLatitude, parsedLongitude]}
+                            icon={caregiverPin}
+                            draggable
+                            eventHandlers={{ dragend: handleMarkerDragEnd }}
+                          />
+                        )}
+                      </MapContainer>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Search, click the map, or drag the pin to set your location for nearby searches.</p>
                   </div>
 
                   {/* Hourly Rate */}
@@ -845,128 +1120,21 @@ const UpdateProfile = () => {
 
             {/* Verification Tab / Step-by-Step Setup */}
             {(activeTab === 'verification' || isNewCaregiverSetup) && (
-              <div className="bg-white rounded-xl shadow-md p-8 border-t-4 border-t-blue-600">
-                {/* Progress Steps */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between">
-                    {[1, 2, 3].map(step => (
-                      <React.Fragment key={step}>
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                            step <= currentStep
-                              ? 'bg-blue-600 text-white shadow-md'
-                              : 'bg-gray-300 text-gray-700'
-                          }`}
-                        >
-                          {step < currentStep ? <CheckCircle className="w-6 h-6" /> : step}
-                        </div>
-                        {step < 3 && (
-                          <div
-                            className={`flex-1 h-1 mx-2 transition-all duration-300 ${
-                              step < currentStep ? 'bg-blue-600' : 'bg-gray-300'
-                            }`}
-                          />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div className="flex justify-between mt-4 text-sm">
-                    <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Identity</span>
-                    <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-600'}>NVQ Certification</span>
-                    <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-600'}>Professional Docs</span>
-                  </div>
+              <div>
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-900">Verification Documents</h2>
+                  <p className="text-sm text-gray-600">Upload verification documents (max 5MB).</p>
                 </div>
-
-                {/* Step 1: Identity Verification */}
-                {currentStep === 1 && (
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <p className="text-sm text-blue-800">Upload your identification document (PDF or DOCX)</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ID Type
-                        </label>
-                        <select
-                          value={identityData.idType}
-                          onChange={(e) => setIdentityData(prev => ({ ...prev, idType: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        >
-                          <option value="">Select ID Type</option>
-                          {idTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
-                        {identityData.idType && (
-                          <p className="mt-2 text-xs text-gray-600">
-                            {identityData.idType === 'National Identity Card' && '9 digits (old format) or 12 digits (new format)'}
-                            {identityData.idType === 'Passport' && '6-12 characters'}
-                            {identityData.idType === 'Driving License' && '8-10 digits'}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ID Number
-                        </label>
-                        <input
-                          type="text"
-                          value={identityData.idNumber}
-                          onChange={(e) => setIdentityData(prev => ({ ...prev, idNumber: e.target.value }))}
-                          placeholder="Enter your ID number"
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors ${
-                            identityData.idNumber 
-                              ? validateIdNumber(identityData.idType, identityData.idNumber).valid
-                                ? 'border-green-500 focus:ring-green-500 bg-green-50'
-                                : 'border-red-500 focus:ring-red-500 bg-red-50'
-                              : 'border-gray-300 focus:ring-blue-600'
-                          }`}
-                        />
-                        {identityData.idNumber && (
-                          <p className={`mt-2 text-sm font-medium ${
-                            validateIdNumber(identityData.idType, identityData.idNumber).valid
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}>
-                            {validateIdNumber(identityData.idType, identityData.idNumber).valid ? (
-                              <>✓ Valid {identityData.idType} format</>
-                            ) : (
-                              <>✗ {validateIdNumber(identityData.idType, identityData.idNumber).message}</>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Upload className="w-4 h-4 inline mr-2" />
-                        Upload Document (PDF/DOCX)
-                      </label>
-                      <input
-                        type="file"
-                        accept=".pdf,.docx"
-                        onChange={handleIdentityFileChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                      />
-                      {identityData.file && (
-                        <p className="mt-2 text-sm text-green-600">✓ {identityData.file.name}</p>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => uploadDocument('identity', identityData, identityData.file)}
-                      disabled={loading || !identityData.idType || !identityData.idNumber || !identityData.file || !validateIdNumber(identityData.idType, identityData.idNumber).valid}
-                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-all duration-300 shadow-md hover:shadow-lg font-medium"
-                    >
-                      {loading ? 'Uploading...' : 'Upload & Continue'}
-                    </button>
-                  </div>
-                )}
+                <div className="bg-white rounded-xl shadow-md p-8">
+                <div className="mb-8">
+  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+    <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+    <p className="text-sm text-yellow-800">
+      Please rename your documents according to your NIC / Passport or Driving Licence number before uploading.
+    </p>
+  </div>
+  <DocumentUploadCard certifications={certificationList} />
+</div>
 
                 {/* Step 2: NVQ Certification */}
                 {currentStep === 2 && (
@@ -1209,21 +1377,22 @@ const UpdateProfile = () => {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             )}
 
             {/* Account Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-t-blue-600">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6">Account Settings</h3>
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   <h4 className="text-sm font-semibold text-gray-700">Change Password</h4>
 
                   {passwordMessage.text && (
-                    <div className={`rounded-lg px-4 py-3 text-sm border-t-4 transition-all duration-300 ${
+                    <div className={`rounded-lg px-4 py-3 text-sm transition-all duration-300 ${
                       passwordMessage.type === 'error'
-                        ? 'bg-red-100 text-red-700 border border-red-300 border-t-red-600'
-                        : 'bg-green-100 text-green-700 border border-green-300 border-t-green-600'
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-green-100 text-green-700 border border-green-300'
                     }`}>
                       {passwordMessage.text}
                     </div>
@@ -1232,36 +1401,66 @@ const UpdateProfile = () => {
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                      <input
-                        type="password"
-                        name="currentPassword"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.currentPassword ? 'text' : 'password'}
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('currentPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.currentPassword ? 'Hide current password' : 'Show current password'}
+                        >
+                          {showPasswords.currentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.newPassword ? 'text' : 'password'}
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('newPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.newPassword ? 'Hide new password' : 'Show new password'}
+                        >
+                          {showPasswords.newPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.confirmPassword ? 'text' : 'password'}
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('confirmPassword')}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                          aria-label={showPasswords.confirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                        >
+                          {showPasswords.confirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

@@ -9,7 +9,6 @@ const ClientDashboard = () => {
   const [allBookings, setAllBookings] = useState([])
   const [recentActivities, setRecentActivities] = useState([])
   const [recentComplaints, setRecentComplaints] = useState([])
-  const [recentReviews, setRecentReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [userName, setUserName] = useState('')
@@ -55,16 +54,6 @@ const ClientDashboard = () => {
         console.log('Complaints not available')
       }
       
-      // Fetch reviews
-      try {
-        const reviewsResponse = await api.get('/reviews/me')
-        if (reviewsResponse.data.success) {
-          const reviews = (reviewsResponse.data.data || []).slice(0, 2)
-          setRecentReviews(reviews)
-        }
-      } catch (err) {
-        console.log('Reviews not available')
-      }
     } catch (err) {
       console.error('Error fetching activities:', err)
       setError('Unable to load recent activities')
@@ -116,11 +105,11 @@ const ClientDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50">
-      <Navbar />
-      <div className="flex">
-        <Sidebar role="client" />
-        <main className="flex-1 p-8">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50 overflow-hidden">
+      <Navbar isFixed />
+      <div className="flex pt-16 h-full">
+        <Sidebar role="client" isFixed />
+        <main className="flex-1 p-8 overflow-y-auto md:ml-64 h-[calc(100vh-4rem)]">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -132,7 +121,7 @@ const ClientDashboard = () => {
           {/* Quick Stats */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {/* Total Bookings */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-teal-600 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Total Confirmed Bookings</p>
@@ -147,7 +136,7 @@ const ClientDashboard = () => {
               </div>
             </div>
                         {/* Completed */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-teal-500 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Completed</p>
@@ -160,12 +149,16 @@ const ClientDashboard = () => {
             </div>
 
             {/* Have to Pay */}
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-t-4 border-red-500 hover:scale-105">
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:scale-105">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold mb-1">Have to Pay</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {allBookings.filter(b => b.paymentStatus === 'unpaid' || b.paymentStatus === 'pending').length}
+                    {allBookings.filter((booking) => {
+                      const status = booking.status?.toLowerCase()
+                      const paymentStatus = booking.paymentStatus?.toLowerCase()
+                      return status !== 'cancelled' && status !== 'rejected' && (paymentStatus === 'unpaid' || paymentStatus === 'pending')
+                    }).length}
                   </p>
                 </div>
                 <DollarSign className="w-12 h-12 text-red-100" />
@@ -189,7 +182,7 @@ const ClientDashboard = () => {
           </div>
 
           {/* Recent Activity Section */}
-          <div className="bg-white rounded-2xl shadow-md border border-teal-100">
+          <div className="bg-white rounded-2xl shadow-md border border-teal-100 mb-8">
             <div className="p-6 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-teal-50">
               <h2 className="text-2xl font-bold text-gray-900">Recent Activities</h2>
               <p className="text-gray-600 text-sm mt-1">Your latest bookings and activities</p>
@@ -263,7 +256,7 @@ const ClientDashboard = () => {
                             to="/client/bookings"
                             className="text-teal-600 hover:text-teal-700 text-sm font-medium mt-2 inline-block hover:underline"
                           >
-                            View Details →
+                            View Details
                           </Link>
                         </div>
                       </div>
@@ -278,7 +271,7 @@ const ClientDashboard = () => {
                     to="/client/bookings"
                     className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                   >
-                    View All Bookings →
+                    View All Bookings
                   </Link>
                 </div>
               )}
@@ -290,7 +283,7 @@ const ClientDashboard = () => {
             <div className="bg-white rounded-2xl shadow-md border border-red-100 mb-8 overflow-hidden">
               <div className="p-6 border-b border-red-100 bg-gradient-to-r from-red-50 to-pink-50">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                  
                   <h2 className="text-2xl font-bold text-gray-900">Recently Submitted Complaints</h2>
                 </div>
                 <p className="text-gray-600 text-sm mt-1">Your latest complaints and issues</p>
@@ -328,7 +321,7 @@ const ClientDashboard = () => {
                       to="/client/complaints"
                       className="text-red-600 hover:text-red-700 font-semibold hover:underline"
                     >
-                      View All Complaints →
+                      View All Complaints
                     </Link>
                   </div>
                 )}
@@ -336,51 +329,6 @@ const ClientDashboard = () => {
             </div>
           )}
 
-          {/* Reviews Section */}
-          {recentReviews.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-md border border-amber-100 overflow-hidden">
-              <div className="p-6 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50">
-                <div className="flex items-center gap-2">
-                  <Star className="w-6 h-6 text-amber-500" />
-                  <h2 className="text-2xl font-bold text-gray-900">Recently Submitted Reviews</h2>
-                </div>
-                <p className="text-gray-600 text-sm mt-1">Your latest caregiver reviews and ratings</p>
-              </div>
-
-              <div className="p-6">
-                <div className="space-y-3">
-                  {recentReviews.map((review) => (
-                    <div 
-                      key={review._id} 
-                      className="p-4 rounded-xl border border-amber-200 bg-amber-50 hover:shadow-md transition-all duration-300"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star 
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= review.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm font-semibold text-gray-900">{review.rating}.0</span>
-                          </div>
-                          {review.reviewText && (
-                            <p className="text-sm text-gray-700 mb-2">"{review.reviewText}"</p>
-                          )}
-                          <p className="text-xs text-gray-600">Reviewed on {formatDate(review.createdAt)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>
