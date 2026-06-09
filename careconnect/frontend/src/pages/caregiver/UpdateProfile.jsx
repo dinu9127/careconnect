@@ -1127,8 +1127,14 @@ const UpdateProfile = () => {
                 </div>
                 <div className="bg-white rounded-xl shadow-md p-8">
                 <div className="mb-8">
-                  <DocumentUploadCard certifications={certificationList} />
-                </div>
+  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+    <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+    <p className="text-sm text-yellow-800">
+      Please rename your documents according to your NIC / Passport or Driving Licence number before uploading.
+    </p>
+  </div>
+  <DocumentUploadCard certifications={certificationList} />
+</div>
 
                 {/* Step 2: NVQ Certification */}
                 {currentStep === 2 && (

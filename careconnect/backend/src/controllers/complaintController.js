@@ -5,7 +5,7 @@ import User from '../models/User.js';
 // Submit a new complaint
 export const submitComplaint = async (req, res) => {
   try {
-    const { caregiverId, bookingId, title, description, category, severity } = req.body;
+    const { caregiverId, caregiverName, bookingId, title, description, category, severity } = req.body;
     const clientId = req.user.id;
 
     // Validation
@@ -30,6 +30,7 @@ export const submitComplaint = async (req, res) => {
     const complaint = new Complaint({
       clientId,
       caregiverId: caregiverId || null,
+      caregiverName: caregiverName || '',
       bookingId: bookingId || null,
       title,
       description,

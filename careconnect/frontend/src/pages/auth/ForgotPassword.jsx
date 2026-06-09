@@ -185,7 +185,7 @@ const ForgotPassword = () => {
                 </h4>
                 <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside leading-relaxed">
                   <li>We'll send a password reset link to your email</li>
-                  <li>Click the link in the email (valid for 30 minutes)</li>
+                  <li>Click the link in the email or copy and paste it into your browser</li>
                   <li>Create a new password and save it</li>
                   <li>Log in with your new password</li>
                 </ol>

@@ -11,6 +11,11 @@ const complaintSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  caregiverName: {
+    type: String,
+    default: '',
+    trim: true
+  },
   bookingId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Booking',

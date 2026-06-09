@@ -9,6 +9,10 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showViewReviewsModal, setShowViewReviewsModal] = useState(false)
+  const [caregiverReviews, setCaregiverReviews] = useState([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
+  const [cancellingBookingId, setCancellingBookingId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [reviewData, setReviewData] = useState({
@@ -65,6 +69,44 @@ const Bookings = () => {
       rating: 0,
       reviewText: ''
     })
+  }
+
+  const canCancelBooking = (booking) => {
+    if (!booking || booking.status !== 'pending' || !booking.createdAt) return false
+    const bookingAgeMs = Date.now() - new Date(booking.createdAt).getTime()
+    return bookingAgeMs <= 5 * 60 * 1000
+  }
+
+  const getCancelTimeLeft = (booking) => {
+    if (!booking?.createdAt) return ''
+    const elapsedMs = Date.now() - new Date(booking.createdAt).getTime()
+    const remainingMs = Math.max(0, (5 * 60 * 1000) - elapsedMs)
+    const remainingMinutes = Math.ceil(remainingMs / 60000)
+    return remainingMinutes > 0 ? `${remainingMinutes} min${remainingMinutes !== 1 ? 's' : ''}` : 'less than a minute'
+  }
+
+  const handleCancelBooking = async (booking) => {
+    const confirmCancel = window.confirm('Cancel this booking? You can only cancel within 5 minutes of creating it.')
+    if (!confirmCancel) return
+
+    setCancellingBookingId(booking._id)
+    try {
+      await api.delete(`/bookings/${booking._id}`)
+      setBookings(prev => prev.map(item => (
+        item._id === booking._id
+          ? { ...item, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: 'client' }
+          : item
+      )))
+      setMessage({ type: 'success', text: 'Booking cancelled successfully.' })
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to cancel booking. Please try again.'
+      })
+    } finally {
+      setCancellingBookingId('')
+    }
   }
 
   const handleSubmitReview = async (e) => {
@@ -194,10 +236,10 @@ const Bookings = () => {
                             {booking.caregiver?.user?.name || 'Caregiver'}
                           </h3>
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
-                            {booking.status.toUpperCase()}
+                            {(booking.status || 'pending').toUpperCase()}
                           </span>
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
-                            {booking.paymentStatus.toUpperCase()}
+                            {(booking.paymentStatus || 'pending').toUpperCase()}
                           </span>
                         </div>
 
@@ -215,9 +257,9 @@ const Bookings = () => {
                           <div className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4 text-teal-600" />
                             <span className="font-semibold text-teal-700">Rs. {booking.totalAmount}</span>
-                            {booking.paymentMethod !== 'none' && (
+                            {booking.paymentMethod && booking.paymentMethod !== 'none' && (
                               <span className="text-sm text-gray-500">
-                                ({booking.paymentMethod.replace('_', ' ').toUpperCase()})
+                                ({booking.paymentMethod.replace(/_/g, ' ').toUpperCase()})
                               </span>
                             )}
                           </div>
@@ -237,12 +279,30 @@ const Bookings = () => {
                       </div>
 
                       <div className="flex flex-col gap-2">
+                        {canCancelBooking(booking) && booking.status !== 'cancelled' && (
+                          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div className="flex items-center gap-2 text-rose-800 font-medium">
+                                <AlertCircle className="w-4 h-4" />
+                                <span>Cancel within {getCancelTimeLeft(booking)}</span>
+                              </div>
+                              <button
+                                onClick={() => handleCancelBooking(booking)}
+                                disabled={cancellingBookingId === booking._id}
+                                className="px-12 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {cancellingBookingId === booking._id ? 'Cancelling...' : 'Cancel Booking'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {booking.status === 'completed' && booking.paymentStatus === 'unpaid' && (
                           <button
                             onClick={() => handlePayment(booking)}
                             className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <CreditCard className="w-4 h-4" />
+                            
                             Continue Payment
                           </button>
                         )}
@@ -252,18 +312,35 @@ const Bookings = () => {
                             onClick={() => handleReview(booking)}
                             className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            <Star className="w-4 h-4" />
+                            
                             Rate & Review
                           </button>
                         )}
 
                         {booking.hasReview && (
-                          <div className="bg-teal-50 border border-teal-300 rounded-xl p-3 text-sm">
-                            <div className="flex items-center gap-2 text-teal-800 font-medium">
-                              <Star className="w-4 h-4 fill-teal-800" />
-                              <span>Review Submitted</span>
-                            </div>
-                          </div>
+                          <button
+                            onClick={async () => {
+                              const caregiverId = booking.caregiver?._id || booking.caregiver?.user?._id
+                              if (!caregiverId) {
+                                setMessage({ type: 'error', text: 'Caregiver information not available.' })
+                                return
+                              }
+                              setLoadingReviews(true)
+                              try {
+                                const res = await api.get(`/reviews/caregiver/${caregiverId}`)
+                                setCaregiverReviews(res.data.data || [])
+                                setShowViewReviewsModal(true)
+                              } catch (err) {
+                                setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to load reviews.' })
+                              } finally {
+                                setLoadingReviews(false)
+                              }
+                            }}
+                            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                          >
+                            
+                            <span>{loadingReviews ? 'Loading...' : 'View Reviews'}</span>
+                          </button>
                         )}
 
                         {booking.paymentStatus === 'pending' && (
@@ -295,7 +372,7 @@ const Bookings = () => {
                             <div className="space-y-1">
                               <div className="text-sm text-gray-700 font-semibold">Contact Information</div>
                               <div className="flex items-center gap-2 text-teal-700">
-                                <a href={`tel:${booking.caregiver?.user?.phone}`} className="font-medium">{booking.caregiver?.user?.phone || 'N/A'}</a>
+                                <a href={`tel:${booking.caregiver?.user?.phone || ''}`} className="font-medium">{booking.caregiver?.user?.phone || 'N/A'}</a>
                               </div>
                               {booking.caregiver?.location && (
                                 <div className="flex items-center gap-2 text-gray-600">
@@ -409,6 +486,51 @@ const Bookings = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Reviews Modal */}
+      {showViewReviewsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-teal-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Caregiver Reviews</h2>
+              <button
+                onClick={() => setShowViewReviewsModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {caregiverReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No reviews found for this caregiver.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {caregiverReviews.map((review) => (
+                    <div key={review._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{review.client?.name || 'Client'}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            {[1,2,3,4,5].map((s) => (
+                              <Star key={s} className={`w-4 h-4 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                            ))}
+                            <span className="text-xs text-gray-500 ml-2">{new Date(review.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600">{review.rating}/5</div>
+                      </div>
+                      {review.reviewText && <p className="text-sm text-gray-700 mt-2">{review.reviewText}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

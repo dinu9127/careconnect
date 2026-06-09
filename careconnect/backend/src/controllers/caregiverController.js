@@ -45,6 +45,24 @@ const ensureCaregiverProfile = async (userId) => {
 const sanitizeFilename = (filename) =>
   filename.replace(/[^a-zA-Z0-9._-]/g, '_');
 
+const buildDistrictFilter = (district) => {
+  if (!district || district === 'All Locations') {
+    return null;
+  }
+
+  return {
+    $or: [
+      { boardingDistrict: district },
+      {
+        $and: [
+          { boardingDistrict: { $in: [null, ''] } },
+          { residentDistrict: district }
+        ]
+      }
+    ]
+  };
+};
+
 // @desc    Get all caregivers with filters and search
 // @route   GET /api/caregivers
 // @access  Public
@@ -68,12 +86,10 @@ export const getCaregivers = async (req, res) => {
       filter.serviceTypes = { $in: [serviceType] };
     }
 
-    // District filter: match either residentDistrict or boardingDistrict
-    if (district && district !== 'All Locations') {
-      filter.$or = [
-        { residentDistrict: district },
-        { boardingDistrict: district }
-      ];
+    // District filter: prefer boardingDistrict; fall back to residentDistrict only when boarding is missing.
+    const districtFilter = buildDistrictFilter(district);
+    if (districtFilter) {
+      Object.assign(filter, districtFilter);
     }
 
     let caregivers = await Caregiver.find(filter).populate({
@@ -136,12 +152,10 @@ export const getCaregiversNearby = async (req, res) => {
       match.serviceTypes = { $in: [req.query.serviceType] };
     }
 
-    // District filter for nearby: match resident or boarding district
-    if (req.query.district && req.query.district !== 'All Locations') {
-      match.$or = [
-        { residentDistrict: req.query.district },
-        { boardingDistrict: req.query.district }
-      ];
+    // District filter for nearby: prefer boardingDistrict; fall back to residentDistrict only when boarding is missing.
+    const districtFilter = buildDistrictFilter(req.query.district);
+    if (districtFilter) {
+      Object.assign(match, districtFilter);
     }
 
     const pipeline = [
@@ -852,7 +866,7 @@ export const deleteProfessionalDocument = async (req, res) => {
 export const getCaregiverDocuments = async (req, res) => {
   try {
     const caregiver = await Caregiver.findById(req.params.id).select(
-      'nvqCertifications professionalDocuments'
+      'nvqCertifications professionalDocuments verificationDocuments'
     );
 
     if (!caregiver) {
@@ -866,7 +880,8 @@ export const getCaregiverDocuments = async (req, res) => {
       success: true,
       data: {
         nvqCertifications: caregiver.nvqCertifications,
-        professionalDocuments: caregiver.professionalDocuments
+        professionalDocuments: caregiver.professionalDocuments,
+        verificationDocuments: caregiver.verificationDocuments || []
       }
     });
   } catch (error) {

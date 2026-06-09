@@ -247,11 +247,11 @@ const Register = () => {
               {/* Stats */}
               <div className="relative z-10 grid grid-cols-2 gap-4">
                 <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/20">
-                  <div className="text-2xl font-bold text-white">500+</div>
+                  <div className="text-2xl font-bold text-white">10+</div>
                   <div className="text-sm text-white/80">Caregivers</div>
                 </div>
                 <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/20">
-                  <div className="text-2xl font-bold text-white">2000+</div>
+                  <div className="text-2xl font-bold text-white">20+</div>
                   <div className="text-sm text-white/80">Users</div>
                 </div>
               </div>

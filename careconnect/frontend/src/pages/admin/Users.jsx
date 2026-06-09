@@ -65,7 +65,7 @@ const AdminUsers = () => {
         uploads: userDocsResponse.data?.data || [],
         nvqCertifications: caregiverDocsResponse.data?.data?.nvqCertifications || [],
         professionalDocuments: caregiverDocsResponse.data?.data?.professionalDocuments || [],
-        verificationDocuments: caregiver?.verificationDocuments || []
+        verificationDocuments: caregiverDocsResponse.data?.data?.verificationDocuments || caregiver?.verificationDocuments || []
       })
     } catch (err) {
       console.error('Error fetching caregiver documents:', err)
@@ -242,6 +242,29 @@ const AdminUsers = () => {
     return acc
   }, {})
 
+  const documentSummary = [
+    {
+      label: 'Uploaded files',
+      count: documentsData.uploads.length,
+      tone: 'bg-purple-50 text-purple-800 border-purple-200'
+    },
+    {
+      label: 'NVQ certifications',
+      count: documentsData.nvqCertifications.length,
+      tone: 'bg-blue-50 text-blue-800 border-blue-200'
+    },
+    {
+      label: 'Professional documents',
+      count: documentsData.professionalDocuments.length,
+      tone: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+    },
+    {
+      label: 'Verification documents',
+      count: documentsData.verificationDocuments.length,
+      tone: 'bg-amber-50 text-amber-800 border-amber-200'
+    }
+  ]
+
   return (
     <div className="h-screen bg-gray-50 overflow-hidden">
       <Navbar isFixed />
@@ -387,7 +410,9 @@ const AdminUsers = () => {
                             <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                            <div className="text-sm text-slate-700">
+                              {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -487,7 +512,9 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -558,7 +585,9 @@ const AdminUsers = () => {
                                 <div className="text-sm text-slate-700">{caregiver.user?.phone || 'N/A'}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-slate-700">{caregiver.location || 'N/A'}</div>
+                                <div className="text-sm text-slate-700">
+                                  {caregiver.residentDistrict || caregiver.boardedDistrict || caregiver.location || 'N/A'}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-slate-700">{caregiver.experience || 0} years</div>
@@ -673,21 +702,24 @@ const AdminUsers = () => {
       {/* Documents Modal */}
       {documentsModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 max-h-[85vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 max-h-[85vh] overflow-y-auto border border-slate-100">
+
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Caregiver Documents</h3>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-600 mt-1">
                   {documentsModal.caregiver?.user?.name || 'Caregiver'}
                 </p>
               </div>
               <button
                 onClick={closeDocumentsModal}
-                className="text-sm font-semibold text-slate-600 hover:text-slate-900"
+                className="rounded-full bg-purple-50 px-3 py-1.5 text-sm font-semibold text-purple-700 border border-purple-200 hover:bg-purple-100 hover:text-purple-800"
               >
                 Close
               </button>
             </div>
+
+            
 
             {documentsLoading ? (
               <div className="py-12 text-center">
@@ -695,34 +727,50 @@ const AdminUsers = () => {
                 <p className="text-slate-600">Loading documents...</p>
               </div>
             ) : documentsError ? (
-              <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-4 py-4 rounded-lg">
+              <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-4 py-4 rounded-lg shadow-sm">
                 <p className="font-semibold">Error</p>
                 <p className="text-sm mt-1">{documentsError}</p>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-2">Uploaded Files (Identity/Police/Qualification)</h4>
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-purple-700">Uploaded Files</h4>
+                      <p className="text-xs text-slate-500">Identity, police clearance, and qualification uploads</p>
+                    </div>
+                    <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 border border-purple-200">
+                      {documentsData.uploads.length} file{documentsData.uploads.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
                   {Object.keys(groupedUploads).length === 0 ? (
                     <p className="text-sm text-slate-500">No uploaded files found.</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="grid gap-3">
                       {Object.entries(groupedUploads).map(([type, docs]) => (
-                        <div key={type} className="rounded-lg border border-slate-200 p-3">
-                          <p className="text-xs font-bold uppercase text-slate-500">{type}</p>
-                          <div className="mt-2 space-y-2">
+                        <div key={type} className="rounded-xl border border-purple-100 bg-purple-50/40 p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-bold uppercase tracking-wide text-purple-700">{type}</p>
+                            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+                              {docs.length}
+                            </span>
+                          </div>
+                          <div className="mt-3 space-y-3">
                             {docs.map((doc) => (
-                              <div key={doc._id} className="flex items-center justify-between gap-3 text-sm">
-                                <div>
-                                  <a
-                                    href={doc.fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-blue-700 underline"
-                                  >
-                                    {doc.fileName || 'View document'}
-                                  </a>
-                                  <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.createdAt)}</p>
+                              <div key={doc._id} className="rounded-lg border border-purple-100 bg-white px-3 py-3 shadow-sm">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <a
+                                      href={doc.fileUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="truncate text-sm font-semibold text-blue-700 hover:text-purple-700 hover:underline"
+                                    >
+                                      {doc.fileName || 'View document'}
+                                    </a>
+                                    <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.createdAt)}</p>
+                                  </div>
+                                 
                                 </div>
                               </div>
                             ))}
@@ -733,97 +781,10 @@ const AdminUsers = () => {
                   )}
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-2">NVQ Certifications</h4>
-                  {documentsData.nvqCertifications.length === 0 ? (
-                    <p className="text-sm text-slate-500">No NVQ certifications uploaded.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {documentsData.nvqCertifications.map((cert) => (
-                        <div key={cert._id} className="rounded-lg border border-slate-200 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900">{cert.level || 'NVQ'}</p>
-                              <p className="text-xs text-slate-500">{cert.subject || 'Subject not provided'}</p>
-                              <p className="text-xs text-slate-500">Issued: {formatDate(cert.issueDate)}</p>
-                            </div>
-                            {cert.documentUrl && (
-                              <a
-                                href={cert.documentUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-sm text-blue-700 underline"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                
 
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-2">Professional Documents</h4>
-                  {documentsData.professionalDocuments.length === 0 ? (
-                    <p className="text-sm text-slate-500">No professional documents uploaded.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {documentsData.professionalDocuments.map((doc) => (
-                        <div key={doc._id} className="rounded-lg border border-slate-200 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900">{doc.title || doc.documentType || 'Document'}</p>
-                              <p className="text-xs text-slate-500">{doc.issuer || 'Issuer not provided'}</p>
-                              <p className="text-xs text-slate-500">Issued: {formatDate(doc.issueDate)}</p>
-                            </div>
-                            {doc.documentUrl && (
-                              <a
-                                href={doc.documentUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-sm text-blue-700 underline"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-2">Verification Documents</h4>
-                  {documentsData.verificationDocuments.length === 0 ? (
-                    <p className="text-sm text-slate-500">No verification documents uploaded.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {documentsData.verificationDocuments.map((doc) => (
-                        <div key={doc._id} className="rounded-lg border border-slate-200 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900">{doc.originalName || 'Verification Document'}</p>
-                              <p className="text-xs text-slate-500">Uploaded: {formatDate(doc.uploadedAt)}</p>
-                            </div>
-                            {doc.url && (
-                              <a
-                                href={doc.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-sm text-blue-700 underline"
-                              >
-                                View document
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                
+                
               </div>
             )}
           </div>

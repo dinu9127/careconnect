@@ -274,6 +274,11 @@ const AdminComplaints = () => {
                         <p className="text-xs text-gray-600 mb-2">
                           {complaint.clientId?.name || 'Unknown Client'}
                         </p>
+                        {complaint.caregiverName && (
+                          <p className="text-xs text-gray-600 mb-2">
+                            Caregiver: {complaint.caregiverName}
+                          </p>
+                        )}
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">
                             {getCategoryLabel(complaint.category)}
@@ -308,6 +313,14 @@ const AdminComplaints = () => {
                           {getCategoryLabel(selectedComplaint.category)}
                         </p>
                       </div>
+                      {selectedComplaint.caregiverName && (
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium mb-1">Caregiver Name</p>
+                          <p className="font-semibold text-gray-800">
+                            {selectedComplaint.caregiverName}
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-sm text-gray-600 font-medium mb-1">Severity</p>
                         <p className={`font-semibold ${getSeverityColor(selectedComplaint.severity)}`}>
@@ -389,7 +402,7 @@ const AdminComplaints = () => {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
                       >
                         <Save className="w-5 h-5" />
                         {submitting ? 'Updating...' : 'Update Complaint'}

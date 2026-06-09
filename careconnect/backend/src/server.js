@@ -13,6 +13,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import payhereRoutes from './routes/payhereRoutes.js';
 import debugRoutes from './routes/debugRoutes.js';
+import statsRoutes from './routes/statsRoutes.js';
 import { autoCancelExpiredPendingBookings } from './controllers/bookingController.js';
 
 // Import middleware
@@ -42,6 +43,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payhere', payhereRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

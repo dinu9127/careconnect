@@ -139,7 +139,7 @@ const Caregivers = () => {
     }, 500)
 
     return () => clearTimeout(debounceTimer)
-  }, [searchQuery, selectedService, useNearby, userCoords, radiusKm])
+  }, [searchQuery, selectedService, selectedDistrict, useNearby, userCoords, radiusKm])
 
   const handleViewProfile = (caregiver) => {
     setSelectedCaregiverProfile(caregiver)

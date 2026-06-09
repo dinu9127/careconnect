@@ -14,13 +14,16 @@ const bookingSchema = new mongoose.Schema({
     required: true
   },
   startDate: {
-    type: Date,
-    required: [true, 'Please add a start date']
-  },
-  endDate: {
-    type: Date,
-    required: [true, 'Please add an end date']
-  },
+  type: Date,
+  required: false
+},
+endDate: {
+  type: Date,
+  required: false
+},
+selectedDates: [{
+  type: Date
+}],
   startTime: {
     type: String,
     required: [true, 'Please add a start time']
