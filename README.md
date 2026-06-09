@@ -2,109 +2,6 @@
 
 A full-stack MERN (MongoDB, Express, React, Node.js) application for connecting caregivers with clients who need healthcare services.
 
-## Quick Overview
-
-CareConnect is a modern healthcare management platform that facilitates:
-- **Clients** - Find and book qualified caregivers
-- **Caregivers** - Manage availability and build their professional profile
-- **Admin** - Oversee the platform, manage complaints, and verify caregivers
-
-## Technology Stack
-
-### Frontend
-- React 18 with Vite
-- TailwindCSS for styling
-- React Router for navigation
-- Axios for API calls
-
-### Backend
-- Node.js with Express.js
-- MongoDB with Mongoose
-- JWT authentication
-- bcryptjs for password hashing
-
-## Project Setup
-
-This project is organized into clearly separated frontend and backend directories. Detailed setup instructions for each are below.
-
-### Frontend Setup
-
-Navigate to `careconnect/frontend/` and follow the [Frontend README](careconnect/frontend/README.md) for:
-- Installation steps
-- Development server startup
-- Build instructions
-- Project structure overview
-
-```bash
-cd careconnect/frontend
-npm install
-npm run dev
-```
-
-### Backend Setup
-
-Navigate to `careconnect/backend/` and follow the [Backend README](careconnect/backend/README.md) for:
-- Prerequisites and installation
-- Environment configuration
-- Server startup
-- API documentation
-
-```bash
-cd careconnect/backend
-npm install
-npm run dev
-```
-
-## Key Features
-
-### For Clients
-- Browse available caregivers
-- Book services
-- Manage bookings
-- Rate and review caregivers
-- File complaints and feedback
-
-### For Caregivers
-- Professional profile management
-- Upload verification documents (ID, NVQ, professional certificates)
-- Manage availability schedule
-- View bookings and earnings
-- Build reputation through client reviews
-
-### For Admin
-- Dashboard overview
-- Caregiver verification management
-- Complaint resolution system
-- Platform analytics and reporting
-- User management
-
-## API Documentation
-
-API endpoints and detailed documentation are available in the [Backend README](careconnect/backend/README.md).
-
-## Project Structure
-
-```
-careconnect/
-├── frontend/                # React + Vite + TailwindCSS
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components by role
-│   │   ├── routes/        # Route configuration
-│   │   ├── services/      # API client
-│   │   └── utils/         # Helper functions
-│   └── package.json
-│
-└── backend/                # Node.js + Express + MongoDB
-    ├── src/
-    │   ├── controllers/   # Request handlers
-    │   ├── models/        # Database schemas
-    │   ├── routes/        # API routes
-    │   ├── middleware/    # Custom middleware
-    │   └── server.js      # Entry point
-    ├── config/
-    └── package.json
-```
 
 ## Getting Started (Quick Start)
 
@@ -165,12 +62,12 @@ For technical issues or questions, please refer to the individual README files i
 - **Admin**: Manage users, view analytics, system oversight
 
 ### Core Functionality
-- ✅ User authentication & authorization (JWT)
-- ✅ Role-based access control
-- ✅ Caregiver profiles with specializations & ratings
-- ✅ Booking management system
-- ✅ Responsive dashboard for each role
-- ✅ RESTful API architecture
+- User authentication & authorization (JWT)
+- Role-based access control
+- Caregiver profiles with specializations & ratings
+- Booking management system
+- Responsive dashboard for each role
+- RESTful API architecture
 
 ## Tech Stack
 
@@ -238,32 +135,6 @@ npm run dev
 
 Frontend runs on http://localhost:3000
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/profile` - Get user profile (Protected)
-
-### Users
-- `GET /api/users` - Get all users (Admin only)
-- `GET /api/users/:id` - Get user by ID
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user (Admin only)
-
-### Caregivers
-- `GET /api/caregivers` - Get all caregivers
-- `GET /api/caregivers/:id` - Get caregiver by ID
-- `POST /api/caregivers` - Create caregiver profile (Caregiver only)
-- `PUT /api/caregivers/:id` - Update caregiver profile
-
-### Bookings
-- `POST /api/bookings` - Create booking
-- `GET /api/bookings` - Get all bookings
-- `GET /api/bookings/:id` - Get booking by ID
-- `PUT /api/bookings/:id` - Update booking
-- `DELETE /api/bookings/:id` - Cancel booking
-
 ## Development
 
 ### Running Tests
@@ -304,22 +175,3 @@ NODE_ENV=development
 VITE_API_URL=http://localhost:5000/api
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Contact
-
-Project Link: [https://github.com/yourusername/careconnect](https://github.com/yourusername/careconnect)
-
----
-
-**Happy Coding! 🚀**
