@@ -15,6 +15,8 @@ const Bookings = () => {
   const [cancellingBookingId, setCancellingBookingId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [filterStatus, setFilterStatus] = useState('all') // all, completed, cancelled
+  const [paymentFilter, setPaymentFilter] = useState('all') // all, paid, unpaid
   const [reviewData, setReviewData] = useState({
     rating: 0,
     reviewText: ''
@@ -177,7 +179,6 @@ const Bookings = () => {
     }
   }
 
-  // Simple phone masker: show first 3 and last 3 digits with middle masked
   const maskPhone = (phone) => {
     if (!phone) return 'N/A'
     const digits = phone.replace(/\D/g, '')
@@ -186,6 +187,16 @@ const Bookings = () => {
     const end = digits.slice(-3)
     return `${start} XXX ${end}`
   }
+
+  const filteredBookings = bookings.filter(b => {
+    if (filterStatus !== 'all' && b.status !== filterStatus) return false;
+    
+    if (filterStatus === 'completed' && paymentFilter !== 'all') {
+      if (b.paymentStatus !== paymentFilter) return false;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-teal-50 overflow-hidden">
@@ -214,20 +225,63 @@ const Bookings = () => {
               </div>
             )}
 
+            {/* Filter Tabs */}
+            <div className="flex gap-2 mb-6 border-b-2 border-gray-200">
+              {['all', 'completed', 'cancelled'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    setFilterStatus(status);
+                    setPaymentFilter('all');
+                  }}
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
+                    filterStatus === status
+                      ? 'border-teal-600 text-teal-600 bg-teal-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Payment Filter (Only for completed) */}
+            {filterStatus === 'completed' && (
+              <div className="flex gap-2 mb-6 ml-4">
+                {['all', 'paid', 'unpaid'].map(payStatus => (
+                  <button
+                    key={payStatus}
+                    onClick={() => setPaymentFilter(payStatus)}
+                    className={`px-3 py-1 text-sm rounded-full font-medium transition-all duration-300 border ${
+                      paymentFilter === payStatus
+                        ? 'border-teal-600 text-white bg-teal-600'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {payStatus.charAt(0).toUpperCase() + payStatus.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {loading ? (
               <div className="text-center py-16">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
                 <p className="mt-4 text-gray-600 font-medium">Loading bookings...</p>
               </div>
-            ) : bookings.length === 0 ? (
+            ) : filteredBookings.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-teal-100">
                 <Calendar className="w-16 h-16 text-teal-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
-                <p className="text-gray-600">You haven't made any bookings yet. Start by finding a caregiver!</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Found</h3>
+                <p className="text-gray-600">
+                  {bookings.length === 0 
+                    ? "You haven't made any bookings yet. Start by finding a caregiver!"
+                    : "No bookings match the selected filters."}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {bookings.map((booking) => (
+                {filteredBookings.map((booking) => (
                   <div key={booking._id} className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-5 border border-teal-100 hover:border-teal-300">
                     <div className="grid gap-4 md:grid-cols-[1fr_220px]">
                       <div>
