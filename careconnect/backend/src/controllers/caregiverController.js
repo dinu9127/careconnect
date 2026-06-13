@@ -556,6 +556,14 @@ export const updateCaregiver = async (req, res) => {
     }
 
     const updateData = withGeoLocationUpdate(req.body);
+    
+    // Sync location field with the most relevant district if provided
+    if (updateData.boardingDistrict) {
+      updateData.location = updateData.boardingDistrict;
+    } else if (updateData.residentDistrict) {
+      updateData.location = updateData.residentDistrict;
+    }
+
     const caregiver = await Caregiver.findByIdAndUpdate(
       caregiverId,
       updateData,
