@@ -40,13 +40,6 @@ The platform supports three main user roles:
 | **Caregiver** | Manage profile & availability | Verification documents, schedule management |
 | **Admin** | Full platform access | User management, complaint resolution, verification |
 
-## Support
-
-For technical issues or questions, please refer to the individual README files in the frontend and backend directories.
-
----
-
-**Last Updated:** March 2, 2026
 
 ### User Roles
 - **Client**: Book caregivers, manage appointments

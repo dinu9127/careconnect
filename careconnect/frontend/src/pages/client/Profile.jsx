@@ -265,11 +265,10 @@ const ClientProfile = () => {
 
               <div className="p-6 space-y-6">
                 {message.text && (
-                  <div className={`rounded-xl border px-4 py-3 text-sm flex items-start gap-3 ${
-                    message.type === 'error'
-                      ? 'bg-red-50 text-red-700 border-red-200'
-                      : 'bg-green-50 text-green-700 border-green-200'
-                  }`}>
+                  <div className={`rounded-xl border px-4 py-3 text-sm flex items-start gap-3 ${message.type === 'error'
+                    ? 'bg-red-50 text-red-700 border-red-200'
+                    : 'bg-green-50 text-green-700 border-green-200'
+                    }`}>
                     {message.type === 'error' ? <AlertCircle className="w-5 h-5 mt-0.5" /> : <CheckCircle className="w-5 h-5 mt-0.5" />}
                     <p>{message.text}</p>
                   </div>
@@ -277,12 +276,10 @@ const ClientProfile = () => {
 
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">Profile status</h2>
+
                     <p className="text-sm text-slate-600">Complete all required fields so bookings can be submitted without interruption.</p>
                   </div>
-                  <span className={`px-3 py-2 rounded-full text-sm font-semibold ${isComplete ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {isComplete ? 'Profile Complete' : 'Profile Incomplete'}
-                  </span>
+
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -387,14 +384,8 @@ const ClientProfile = () => {
                         <LocateFixed className="w-4 h-4" />
                         Use Current Location
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleLocationSearch}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition"
-                      >
-                        <Search className="w-4 h-4" />
-                        {locationSearching ? 'Searching...' : 'Search'}
-                      </button>
+
+
                     </div>
                   </div>
 
@@ -479,9 +470,9 @@ const ClientProfile = () => {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+        </main >
+      </div >
+    </div >
   )
 }
 
