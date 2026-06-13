@@ -227,7 +227,7 @@ const Bookings = () => {
 
             {/* Filter Tabs */}
             <div className="flex gap-2 mb-6 border-b-2 border-gray-200">
-              {['all', 'completed', 'cancelled'].map(status => (
+              {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(status => (
                 <button
                   key={status}
                   onClick={() => {
