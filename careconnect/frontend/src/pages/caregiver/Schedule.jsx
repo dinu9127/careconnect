@@ -377,15 +377,17 @@ const Schedule = () => {
 
                           {/* Right - Status Indicators */}
                           <div className="flex flex-col gap-2 min-w-max">
-                            <div className={`px-3 py-2 rounded text-sm font-medium text-center whitespace-nowrap ${
-                              booking.paymentStatus === 'paid' 
-                                ? 'bg-green-100 text-green-800'
-                                : booking.paymentStatus === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'UNPAID'}
-                            </div>
+                            {!(booking.status === 'cancelled' && booking.paymentStatus !== 'paid') && (
+                              <div className={`px-3 py-2 rounded text-sm font-medium text-center whitespace-nowrap ${
+                                booking.paymentStatus === 'paid' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : booking.paymentStatus === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'UNPAID'}
+                              </div>
+                            )}
                             
                             {booking.transactionId && (
                               <div className="text-xs text-gray-600 text-center p-2 bg-gray-50 rounded">

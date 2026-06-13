@@ -238,9 +238,11 @@ const Bookings = () => {
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(booking.status)}`}>
                             {(booking.status || 'pending').toUpperCase()}
                           </span>
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
-                            {(booking.paymentStatus || 'pending').toUpperCase()}
-                          </span>
+                          {!(booking.status === 'cancelled' && booking.paymentStatus !== 'paid') && (
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                              {(booking.paymentStatus || 'pending').toUpperCase()}
+                            </span>
+                          )}
                         </div>
 
                         <div className="grid gap-2 text-gray-600 sm:grid-cols-2">
