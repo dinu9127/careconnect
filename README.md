@@ -40,14 +40,6 @@ The platform supports three main user roles:
 | **Caregiver** | Manage profile & availability | Verification documents, schedule management |
 | **Admin** | Full platform access | User management, complaint resolution, verification |
 
-## Documentation
-
-For additional resources, refer to:
-- [Implementation Guide](IMPLEMENTATION_GUIDE.md)
-- [Architecture Overview](ARCHITECTURE.md)
-- [Setup Guide](careconnect/SETUP_GUIDE.md)
-- [Developer Guide](careconnect/DEVELOPER_GUIDE.md)
-
 ## Support
 
 For technical issues or questions, please refer to the individual README files in the frontend and backend directories.
