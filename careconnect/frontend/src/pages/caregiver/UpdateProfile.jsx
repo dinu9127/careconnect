@@ -400,8 +400,14 @@ const UpdateProfile = () => {
       }
 
       // Include district fields if provided
-      if (formData.residentDistrict) caregiverData.residentDistrict = formData.residentDistrict
-      if (formData.boardingDistrict) caregiverData.boardingDistrict = formData.boardingDistrict
+      if (formData.residentDistrict) {
+        caregiverData.residentDistrict = formData.residentDistrict
+        caregiverData.location = formData.residentDistrict
+      }
+      if (formData.boardingDistrict) {
+        caregiverData.boardingDistrict = formData.boardingDistrict
+        caregiverData.location = formData.boardingDistrict
+      }
 
       const latitude = Number.parseFloat(formData.latitude)
       const longitude = Number.parseFloat(formData.longitude)
