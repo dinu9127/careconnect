@@ -6,6 +6,7 @@ import {
   addBookedDate,
   removeBookedDate
 } from '../utils/availabilityHelper.js';
+import { calculateBookingPricing } from '../utils/pricingHelper.js';
 
 const clientProfileSelection = 'name email phone address careReceiverName careReceiverRelationship specialNotes geoLocation';
 const CAREGIVER_RESPONSE_WINDOW_MS = 5 * 60 * 1000;
@@ -118,9 +119,29 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    let daysCount = 1;
+    if (selectedDates && selectedDates.length > 0) {
+      daysCount = selectedDates.length;
+    } else if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      const diffTime = Math.abs(end - start);
+      daysCount = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    const { totalAmount } = calculateBookingPricing(
+      startTime,
+      endTime,
+      caregiverData.hourlyRate,
+      daysCount
+    );
+
     const booking = await Booking.create({
       ...req.body,
       client: req.user.id,
+      totalAmount,
       responseDeadline: new Date(Date.now() + CAREGIVER_RESPONSE_WINDOW_MS)
     });
 
@@ -189,6 +210,39 @@ export const updateBooking = async (req, res) => {
     }
 
     const updateData = { ...req.body };
+
+    // Recalculate price if schedule fields are updated
+    if (req.body.startTime || req.body.endTime || req.body.selectedDates || req.body.startDate || req.body.endDate) {
+      const caregiverId = req.body.caregiver || booking.caregiver;
+      const caregiverData = await Caregiver.findById(caregiverId);
+      if (caregiverData) {
+        const startTime = req.body.startTime || booking.startTime;
+        const endTime = req.body.endTime || booking.endTime;
+        const selectedDates = req.body.selectedDates || booking.selectedDates;
+        const startDate = req.body.startDate || booking.startDate;
+        const endDate = req.body.endDate || booking.endDate;
+
+        let daysCount = 1;
+        if (selectedDates && selectedDates.length > 0) {
+          daysCount = selectedDates.length;
+        } else if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(0, 0, 0, 0);
+          const diffTime = Math.abs(end - start);
+          daysCount = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        const { totalAmount } = calculateBookingPricing(
+          startTime,
+          endTime,
+          caregiverData.hourlyRate,
+          daysCount
+        );
+        updateData.totalAmount = totalAmount;
+      }
+    }
 
     if (status === 'confirmed' && booking.status !== 'confirmed') {
       const caregiver = await Caregiver.findById(booking.caregiver);
