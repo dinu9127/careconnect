@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
+import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, X } from 'lucide-react'
 import { authService } from '../../services/api'
 
 const Login = () => {
@@ -18,8 +18,15 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     })
-    // Clear error when user types
-    if (error) setError('')
+
+  }
+
+  //  Auto dismiss
+  const showError = (message) => {
+    setError(message)
+    setTimeout(() => {
+      setError('')
+    }, 5000)
   }
 
   const handleSubmit = async (e) => {
@@ -29,15 +36,13 @@ const Login = () => {
 
     try {
       const response = await authService.login(formData)
-      
+
       if (response.data.success) {
         const { token, role, ...userData } = response.data.data
-        
-        // Store token and user data
+
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify({ ...userData, role }))
-        
-        // Navigate based on role
+
         switch (role) {
           case 'admin':
             navigate('/admin/dashboard')
@@ -53,7 +58,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError(err.response?.data?.message || 'Invalid email or password. Please try again.')
+      showError(err.response?.data?.message || 'Invalid email or password. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -63,13 +68,13 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl">
         <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-shadow duration-300">
+
           {/* Left Side - Image & Gradient */}
           <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-indigo-600 via-blue-500 to-cyan-500 relative overflow-hidden">
             <div className="absolute inset-0 opacity-30">
               <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-900 rounded-full blur-3xl" />
             </div>
-
             <div className="relative z-10">
               <div className="text-white mb-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -88,7 +93,6 @@ const Login = () => {
 
           {/* Right Side - Form */}
           <div className="p-8 sm:p-12 bg-white">
-            {/* Header */}
             <div className="mb-10">
               <Link to="/" className="inline-flex items-center gap-3 mb-8 lg:hidden">
                 <img src="/images/logo/careconnectlogo.png" alt="CareConnect logo" className="h-9 w-auto" />
@@ -102,16 +106,24 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Error Alert */}
+
+              {/* Error Alert — X button */}
               {error && (
-                <div className="flex items-start gap-3 p-4 rounded-xl border-l-4 border-l-red-600 bg-red-50 border border-red-200 text-red-800 shadow-sm">
+                <div className="flex items-start gap-3 p-4 rounded-xl border-l-4 border-l-red-600 bg-red-50 border border-red-200 text-red-800 shadow-sm relative">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600" />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-sm mb-1">Error</p>
                     <p className="text-sm">{error}</p>
                   </div>
+                  {/* Manual close button */}
+                  <button
+                    type="button"
+                    onClick={() => setError('')}
+                    className="text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 
@@ -160,11 +172,7 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -185,7 +193,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 transform hover:shadow-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md disabled:hover:from-indigo-600 disabled:hover:to-blue-600 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 transition-all duration-300 transform hover:shadow-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -216,4 +224,3 @@ const Login = () => {
 }
 
 export default Login
-
