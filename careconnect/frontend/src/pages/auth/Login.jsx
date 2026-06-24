@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, X } from 'lucide-react'
 import { authService } from '../../services/api'
@@ -11,7 +11,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail')
+    if (rememberedEmail) {
+      setFormData((prev) => ({ ...prev, email: rememberedEmail }))
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -39,6 +48,12 @@ const Login = () => {
 
       if (response.data.success) {
         const { token, role, ...userData } = response.data.data
+
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email)
+        } else {
+          localStorage.removeItem('rememberedEmail')
+        }
 
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify({ ...userData, role }))
@@ -182,6 +197,8 @@ const Login = () => {
                 <input
                   type="checkbox"
                   id="remember"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-5 h-5 rounded-lg border border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                 />
                 <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
