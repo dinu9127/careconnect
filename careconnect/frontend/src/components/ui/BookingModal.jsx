@@ -154,19 +154,47 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
   const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
 
-  // ── Cost helpers ──────────────────────────────────────────────────────────
-
-  const calculateHoursPerDay = () => {
+  const calculatePricingBreakdown = () => {
     const [sh, sm] = formData.startTime.split(':').map(Number)
     const [eh, em] = formData.endTime.split(':').map(Number)
-    return Math.max(0, (eh + em / 60) - (sh + sm / 60))
+    const start = sh + (sm || 0) / 60
+    const end = eh + (em || 0) / 60
+    const totalHoursPerDay = Math.max(0, end - start)
+
+    const stdStart = 9.0 // 9:00 AM
+    const stdEnd = 17.0  // 5:00 PM
+
+    const normalHours = Math.max(0, Math.min(end, stdEnd) - Math.max(start, stdStart))
+    const otHours = Math.max(0, totalHoursPerDay - normalHours)
+
+    const normalRate = caregiver.hourlyRate
+    const otRate = caregiver.hourlyRate * 1.5
+
+    const normalCostPerDay = normalHours * normalRate
+    const otCostPerDay = otHours * otRate
+    const costPerDay = normalCostPerDay + otCostPerDay
+
+    const daysCount = formData.selectedDates.length
+    const totalNormalCost = normalCostPerDay * daysCount
+    const totalOtCost = otCostPerDay * daysCount
+    const totalAmount = Math.round(costPerDay * daysCount)
+
+    return {
+      normalHours,
+      otHours,
+      totalHoursPerDay,
+      normalRate,
+      otRate,
+      normalCostPerDay,
+      otCostPerDay,
+      costPerDay,
+      totalNormalCost,
+      totalOtCost,
+      totalAmount
+    }
   }
 
-  const calculateCostPerDay = () => calculateHoursPerDay() * caregiver.hourlyRate
-
-  const calculateTotal = () => formData.selectedDates.length * calculateHoursPerDay() * caregiver.hourlyRate
-
-  // ── Validation ────────────────────────────────────────────────────────────
+  const calculateHoursPerDay = () => calculatePricingBreakdown().totalHoursPerDay
 
   const validateForm = () => {
     if (formData.selectedDates.length === 0) {
@@ -209,8 +237,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     setLoading(true)
 
     try {
-      const hours = Math.max(1, calculateHoursPerDay())
-      const totalAmount = Math.round(formData.selectedDates.length * hours * caregiver.hourlyRate)
+      const { totalAmount } = calculatePricingBreakdown()
 
       // Sort dates so startDate = first, endDate = last
       const sortedDates = [...formData.selectedDates].sort()
@@ -341,17 +368,16 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
                     type="button"
                     onClick={() => handleDateClick(date)}
                     disabled={!available}
-                    className={`aspect-square rounded text-sm font-medium transition ${
-                      selected
-                        ? 'bg-teal-600 text-white'
-                        : isToday
+                    className={`aspect-square rounded text-sm font-medium transition ${selected
+                      ? 'bg-teal-600 text-white'
+                      : isToday
                         ? 'border-2 border-teal-600 text-teal-600'
                         : booked
-                        ? 'bg-red-100 text-red-400 cursor-not-allowed'
-                        : available
-                        ? 'bg-white text-slate-900 hover:bg-teal-50'
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    }`}
+                          ? 'bg-red-100 text-red-400 cursor-not-allowed'
+                          : available
+                            ? 'bg-white text-slate-900 hover:bg-teal-50'
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      }`}
                   >
                     {date.getDate()}
                   </button>
@@ -447,28 +473,51 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
           </div>
 
           {/* Cost breakdown */}
-          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
-            <div className="flex justify-between text-sm text-slate-600">
-              <span>Hourly rate</span>
-              <span>Rs. {caregiver.hourlyRate}</span>
-            </div>
-            <div className="flex justify-between text-sm text-slate-600">
-              <span>Days selected</span>
-              <span>{formData.selectedDates.length}</span>
-            </div>
-            <div className="flex justify-between text-sm text-slate-600">
-              <span>Hours per day</span>
-              <span>{calculateHoursPerDay().toFixed(1)} hrs</span>
-            </div>
-            <div className="border-t border-slate-200 pt-2 flex justify-between">
-              <span className="font-semibold text-slate-900">Cost per day</span>
-              <span className="font-bold text-teal-600">Rs. {Math.round(calculateCostPerDay()).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-semibold text-slate-900">Total cost</span>
-              <span className="text-lg font-bold text-teal-600">Rs. {Math.round(calculateTotal()).toLocaleString()}</span>
-            </div>
-          </div>
+          {(() => {
+            const pricing = calculatePricingBreakdown()
+            const daysCount = formData.selectedDates.length
+            return (
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3 shadow-inner">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Pricing Breakdown</h4>
+
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Standard rate (9am - 5pm)</span>
+                  <span>Rs. {caregiver.hourlyRate}/hr</span>
+                </div>
+
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Days selected</span>
+                  <span>{daysCount} {daysCount === 1 ? 'day' : 'days'}</span>
+                </div>
+
+                <div className="border-t border-slate-200/60 pt-2 space-y-2">
+                  <div className="flex justify-between text-sm text-slate-700">
+                    <span className="flex items-center gap-1.5">
+
+                      Normal Hours ({pricing.normalHours.toFixed(1)} hrs/day)
+                    </span>
+                    <span className="font-medium text-slate-900">Rs. {Math.round(pricing.normalCostPerDay * daysCount).toLocaleString()}</span>
+                  </div>
+
+                  {pricing.otHours > 0 && (
+                    <div className="flex justify-between text-sm text-slate-700">
+                      <span className="flex items-center gap-1.5">
+
+                        Overtime ({pricing.otHours.toFixed(1)} hrs/day)
+
+                      </span>
+                      <span className="font-medium text-slate-900">Rs. {Math.round(pricing.otCostPerDay * daysCount).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-200 pt-2 flex justify-between items-baseline">
+                  <span className="font-semibold text-slate-900">Total cost</span>
+                  <span className="text-xl font-bold text-teal-600">Rs. {pricing.totalAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">

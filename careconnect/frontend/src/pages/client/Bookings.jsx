@@ -13,6 +13,7 @@ const Bookings = () => {
   const [caregiverReviews, setCaregiverReviews] = useState([])
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [cancellingBookingId, setCancellingBookingId] = useState('')
+  const [bookingToCancel, setBookingToCancel] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [filterStatus, setFilterStatus] = useState('all') // all, completed, cancelled
@@ -87,10 +88,15 @@ const Bookings = () => {
     return remainingMinutes > 0 ? `${remainingMinutes} min${remainingMinutes !== 1 ? 's' : ''}` : 'less than a minute'
   }
 
-  const handleCancelBooking = async (booking) => {
-    const confirmCancel = window.confirm('Cancel this booking? You can only cancel within 5 minutes of creating it.')
-    if (!confirmCancel) return
+  const handleCancelBooking = (booking) => {
+    setBookingToCancel(booking)
+  }
 
+  const confirmCancelBooking = async () => {
+    const booking = bookingToCancel
+    if (!booking) return
+
+    setBookingToCancel(null)
     setCancellingBookingId(booking._id)
     try {
       await api.delete(`/bookings/${booking._id}`)
@@ -113,14 +119,14 @@ const Bookings = () => {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault()
-    
+
     if (reviewData.rating === 0) {
       setMessage({ type: 'error', text: 'Please select a rating' })
       return
     }
 
     setSubmitting(true)
-    
+
     try {
       await api.post('/reviews', {
         bookingId: selectedBooking._id,
@@ -130,9 +136,9 @@ const Bookings = () => {
 
       setMessage({ type: 'success', text: 'Review submitted successfully!' })
       setShowReviewModal(false)
-      
+
       // Mark booking as reviewed
-      setBookings(prev => prev.map(b => 
+      setBookings(prev => prev.map(b =>
         b._id === selectedBooking._id ? { ...b, hasReview: true } : b
       ))
 
@@ -190,11 +196,11 @@ const Bookings = () => {
 
   const filteredBookings = bookings.filter(b => {
     if (filterStatus !== 'all' && b.status !== filterStatus) return false;
-    
+
     if (filterStatus === 'completed' && paymentFilter !== 'all') {
       if (b.paymentStatus !== paymentFilter) return false;
     }
-    
+
     return true;
   });
 
@@ -211,11 +217,10 @@ const Bookings = () => {
             </div>
 
             {message.text && (
-              <div className={`mb-6 p-4 rounded-xl border-l-4 ${
-                message.type === 'error'
-                  ? 'bg-red-50 text-red-800 border-red-300'
-                  : 'bg-teal-50 text-teal-800 border-teal-300'
-              }`}>
+              <div className={`mb-6 p-4 rounded-xl border-l-4 ${message.type === 'error'
+                ? 'bg-red-50 text-red-800 border-red-300'
+                : 'bg-teal-50 text-teal-800 border-teal-300'
+                }`}>
                 <div className="flex justify-between items-start">
                   <p className="font-medium">{message.text}</p>
                   <button onClick={() => setMessage({ type: '', text: '' })} className="text-gray-500 hover:text-gray-700">
@@ -234,11 +239,10 @@ const Bookings = () => {
                     setFilterStatus(status);
                     setPaymentFilter('all');
                   }}
-                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${
-                    filterStatus === status
-                      ? 'border-teal-600 text-teal-600 bg-teal-50'
-                      : 'border-transparent text-gray-600 hover:text-gray-800'
-                  }`}
+                  className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 ${filterStatus === status
+                    ? 'border-teal-600 text-teal-600 bg-teal-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-800'
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
@@ -252,11 +256,10 @@ const Bookings = () => {
                   <button
                     key={payStatus}
                     onClick={() => setPaymentFilter(payStatus)}
-                    className={`px-3 py-1 text-sm rounded-full font-medium transition-all duration-300 border ${
-                      paymentFilter === payStatus
-                        ? 'border-teal-600 text-white bg-teal-600'
-                        : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`px-3 py-1 text-sm rounded-full font-medium transition-all duration-300 border ${paymentFilter === payStatus
+                      ? 'border-teal-600 text-white bg-teal-600'
+                      : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                      }`}
                   >
                     {payStatus.charAt(0).toUpperCase() + payStatus.slice(1)}
                   </button>
@@ -274,7 +277,7 @@ const Bookings = () => {
                 <Calendar className="w-16 h-16 text-teal-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Found</h3>
                 <p className="text-gray-600">
-                  {bookings.length === 0 
+                  {bookings.length === 0
                     ? "You haven't made any bookings yet. Start by finding a caregiver!"
                     : "No bookings match the selected filters."}
                 </p>
@@ -330,7 +333,7 @@ const Bookings = () => {
                               <span className="font-semibold">Notes:</span> {booking.notes}
                             </p>
                           )}
-                          
+
                         </div>
                       </div>
 
@@ -358,7 +361,7 @@ const Bookings = () => {
                             onClick={() => handlePayment(booking)}
                             className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            
+
                             Continue Payment
                           </button>
                         )}
@@ -368,7 +371,7 @@ const Bookings = () => {
                             onClick={() => handleReview(booking)}
                             className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            
+
                             Rate & Review
                           </button>
                         )}
@@ -394,7 +397,7 @@ const Bookings = () => {
                             }}
                             className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                           >
-                            
+
                             <span>{loadingReviews ? 'Loading...' : 'View Reviews'}</span>
                           </button>
                         )}
@@ -490,11 +493,10 @@ const Bookings = () => {
                           className="transition-transform hover:scale-110 active:scale-95"
                         >
                           <Star
-                            className={`w-10 h-10 ${
-                              star <= reviewData.rating
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'text-gray-300'
-                            }`}
+                            className={`w-10 h-10 ${star <= reviewData.rating
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-gray-300'
+                              }`}
                           />
                         </button>
                       ))}
@@ -574,7 +576,7 @@ const Bookings = () => {
                         <div>
                           <p className="font-semibold text-gray-900">{review.client?.name || 'Client'}</p>
                           <div className="flex items-center gap-1 mt-1">
-                            {[1,2,3,4,5].map((s) => (
+                            {[1, 2, 3, 4, 5].map((s) => (
                               <Star key={s} className={`w-4 h-4 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
                             ))}
                             <span className="text-xs text-gray-500 ml-2">{new Date(review.createdAt).toLocaleDateString()}</span>
@@ -587,6 +589,44 @@ const Bookings = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Cancel Confirmation Modal */}
+      {bookingToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full border border-rose-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-rose-500 to-rose-600 text-white p-6 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Cancel Booking?</h2>
+              <button
+                onClick={() => setBookingToCancel(null)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700 mb-6">
+                You can only cancel within 5 minutes of creating it. This action cannot be undone.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setBookingToCancel(null)}
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300"
+                >
+                  Keep Booking
+                </button>
+                <button
+                  onClick={confirmCancelBooking}
+                  disabled={cancellingBookingId === bookingToCancel._id}
+                  className="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold transition-all duration-300 disabled:opacity-50"
+                >
+                  {cancellingBookingId === bookingToCancel._id ? 'Cancelling...' : 'Yes, Cancel'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
