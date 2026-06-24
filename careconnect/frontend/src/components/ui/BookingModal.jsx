@@ -16,7 +16,21 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
   const [error, setError] = useState('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [bookedDates, setBookedDates] = useState([])
+  const [leaveSlots, setLeaveSlots] = useState([])
   const [profileCheck, setProfileCheck] = useState({ complete: true, missingFields: [] })
+
+  const getLocalDateString = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    if (Number.isNaN(d.getTime())) return ''
+    if (typeof date === 'string' && date.includes('T')) {
+      return date.split('T')[0]
+    }
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
 
   const formatLocalDate = (date) => {
     const year = date.getFullYear()
@@ -50,9 +64,11 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
       if (!caregiver?._id) return
       const response = await api.get(`/caregivers/${caregiver._id}`)
       setBookedDates(response.data.data?.bookedDates || [])
+      setLeaveSlots(response.data.data?.leaveSlots || [])
     } catch (err) {
       console.error('Failed to fetch booked dates:', err)
       setBookedDates([])
+      setLeaveSlots([])
     }
   }
 
@@ -96,12 +112,21 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
 
   const isDateBooked = (dateStr) => {
     return bookedDates.some(booked => {
-      const bookedStart = new Date(booked.startDate)
-      const bookedEnd = new Date(booked.endDate)
-      bookedStart.setHours(0, 0, 0, 0)
-      bookedEnd.setHours(23, 59, 59, 999)
-      const d = new Date(dateStr + 'T12:00:00')
-      return d >= bookedStart && d <= bookedEnd
+      const bookedStart = getLocalDateString(booked.startDate)
+      const bookedEnd = getLocalDateString(booked.endDate)
+      return dateStr >= bookedStart && dateStr <= bookedEnd
+    })
+  }
+
+  const isDateLeave = (dateStr) => {
+    return leaveSlots.some(leave => {
+      return getLocalDateString(leave.date) === dateStr
+    })
+  }
+
+  const getLeaveForDate = (dateStr) => {
+    return leaveSlots.find(leave => {
+      return getLocalDateString(leave.date) === dateStr
     })
   }
 
@@ -109,6 +134,7 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
     const today = formatLocalDate(new Date())
     if (dateStr < today) return false
     if (isDateBooked(dateStr)) return false
+    if (isDateLeave(dateStr)) return false
     return true
   }
 
@@ -359,8 +385,11 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
                 const dateStr = formatLocalDate(date)
                 const available = isDateAvailable(dateStr)
                 const booked = isDateBooked(dateStr)
+                const leave = isDateLeave(dateStr)
                 const selected = formData.selectedDates.includes(dateStr)
                 const isToday = date.toDateString() === new Date().toDateString()
+
+                const leaveInfo = leave ? getLeaveForDate(dateStr) : null
 
                 return (
                   <button
@@ -374,10 +403,13 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
                         ? 'border-2 border-teal-600 text-teal-600'
                         : booked
                           ? 'bg-red-100 text-red-400 cursor-not-allowed'
-                          : available
-                            ? 'bg-white text-slate-900 hover:bg-teal-50'
-                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : leave
+                            ? 'bg-orange-100 text-orange-700 border border-orange-200 cursor-not-allowed'
+                            : available
+                              ? 'bg-white text-slate-900 hover:bg-teal-50'
+                              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                       }`}
+                    title={leaveInfo ? `Leave: ${leaveInfo.reason || 'Unavailable'} (${leaveInfo.startTime} - ${leaveInfo.endTime})` : undefined}
                   >
                     {date.getDate()}
                   </button>
@@ -398,6 +430,10 @@ const BookingModal = ({ caregiver, isOpen, onClose, onSuccess }) => {
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 bg-red-100 rounded" />
                 <span className="text-slate-600">Booked</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-orange-100 border border-orange-200 rounded" />
+                <span className="text-slate-600">Leave</span>
               </div>
             </div>
 

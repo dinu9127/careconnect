@@ -15,6 +15,19 @@ const UpdateAvailability = () => {
   const [message, setMessage] = useState('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
+  const getLocalDateString = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    if (Number.isNaN(d.getTime())) return ''
+    if (typeof date === 'string' && date.includes('T')) {
+      return date.split('T')[0]
+    }
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   useEffect(() => {
     fetchLeaveSlots()
     fetchBookings()
@@ -99,7 +112,14 @@ const UpdateAvailability = () => {
       return 'Date unavailable'
     }
 
-    const parsed = new Date(dateString)
+    let parsed
+    if (typeof dateString === 'string' && dateString.includes('T')) {
+      const [year, month, day] = dateString.split('T')[0].split('-').map(Number)
+      parsed = new Date(year, month - 1, day)
+    } else {
+      parsed = new Date(dateString)
+    }
+
     if (Number.isNaN(parsed.getTime())) {
       return 'Date unavailable'
     }
@@ -122,28 +142,27 @@ const UpdateAvailability = () => {
   }
 
   const isDateBooked = (date) => {
+    const checkStr = getLocalDateString(date)
     return bookings.some(booking => {
-      const startDate = new Date(booking.startDate)
-      const endDate = new Date(booking.endDate)
-      const checkDate = new Date(date)
-      return checkDate >= startDate && checkDate <= endDate
+      const startStr = getLocalDateString(booking.startDate)
+      const endStr = getLocalDateString(booking.endDate)
+      return checkStr >= startStr && checkStr <= endStr
     })
   }
 
   const getBookingForDate = (date) => {
-    const checkDate = new Date(date).toDateString()
+    const checkStr = getLocalDateString(date)
     return bookings.find(booking => {
-      const startDate = new Date(booking.startDate).toDateString()
-      const endDate = new Date(booking.endDate).toDateString()
-      return checkDate >= startDate && checkDate <= endDate
+      const startStr = getLocalDateString(booking.startDate)
+      const endStr = getLocalDateString(booking.endDate)
+      return checkStr >= startStr && checkStr <= endStr
     })
   }
 
   const getLeaveForDate = (date) => {
-    const checkDate = new Date(date).toDateString()
+    const checkStr = getLocalDateString(date)
     return leaveSlots.find(leave => {
-      const leaveDate = new Date(leave.date).toDateString()
-      return leaveDate === checkDate
+      return getLocalDateString(leave.date) === checkStr
     })
   }
 
