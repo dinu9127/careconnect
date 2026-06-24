@@ -1,6 +1,6 @@
 # Quick Start Guide - CareConnect Caregiver Features
 
-## ⚡ 5-Minute Setup
+## 5-Minute Setup
 
 ### Prerequisites
 - Node.js installed
@@ -12,21 +12,21 @@
 cd backend
 node seed-caregivers.js
 ```
-✅ This creates 10 sample caregivers with Sri Lankan data
+ This creates 10 sample caregivers with Sri Lankan data
 
 ### Step 2: Start Backend
 ```bash
 cd backend
 npm start
 ```
-✅ API running on http://localhost:5000
+API running on http://localhost:5000
 
 ### Step 3: Start Frontend  
 ```bash
 cd frontend
 npm run dev
 ```
-✅ Frontend running on http://localhost:5173
+ Frontend running on http://localhost:5173
 
 ### Step 4: Test
 1. Open http://localhost:5173 in browser
@@ -71,26 +71,26 @@ System calculates: Days × Hours per Day × Hourly Rate
 
 ---
 
-## 📁 Key Files Created
+##  Key Files Created
 
 ### Backend
 ```
-✅ backend/src/seeds/caregiverSeeds.js
-✅ backend/seed-caregivers.js
-✅ backend/src/models/Caregiver.js (UPDATED)
-✅ backend/src/controllers/caregiverController.js (UPDATED)
+backend/src/seeds/caregiverSeeds.js
+backend/seed-caregivers.js
+backend/src/models/Caregiver.js (UPDATED)
+backend/src/controllers/caregiverController.js (UPDATED)
 ```
 
 ### Frontend
 ```
-✅ frontend/src/pages/client/Caregivers.jsx (REWRITTEN)
-✅ frontend/src/components/ui/CaregiverProfileModal.jsx
-✅ frontend/src/components/ui/BookingModal.jsx
+frontend/src/pages/client/Caregivers.jsx (REWRITTEN)
+frontend/src/components/ui/CaregiverProfileModal.jsx
+frontend/src/components/ui/BookingModal.jsx
 ```
 
 ---
 
-## 🔍 Testing
+## Testing
 
 ### Test Search
 - Search for "Priya" → Shows Priya Jayawardana
@@ -114,7 +114,7 @@ System calculates: Days × Hours per Day × Hourly Rate
 
 ---
 
-## 🚀 Deployment Checklist
+## Deployment Checklist
 
 - [ ] MongoDB configured and running
 - [ ] Backend environment variables set
@@ -131,7 +131,7 @@ System calculates: Days × Hours per Day × Hourly Rate
 
 ---
 
-## 📊 Sample Data Included
+## Sample Data Included
 
 ### 10 Caregivers
 Each with:
@@ -165,7 +165,7 @@ Each with:
 
 ---
 
-## 🎨 UI Components
+## UI Components
 
 ### Caregivers Page
 - Search bar (name search)
@@ -178,10 +178,7 @@ Each with:
   - Availability count
   - Service types (max 2 shown + count)
   - View Profile & Book Now buttons
-- Categorized sections:
-  - 🟢 Available Today (green)
-  - 🟡 Limited Availability (amber)
-  - ⚫ Not Available (gray)
+
 
 ### Profile Modal
 - Full profile with photo
@@ -204,7 +201,7 @@ Each with:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Cannot find module" errors
 ```bash
@@ -235,7 +232,7 @@ docker run -d -p 27017:27017 mongo
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - **IMPLEMENTATION_GUIDE.md** - Complete setup guide
 - **FEATURES_IMPLEMENTATION.md** - Detailed features
@@ -244,24 +241,24 @@ docker run -d -p 27017:27017 mongo
 
 ---
 
-## ✨ What You Get
+## What You Get
 
-✅ Search caregivers by name
-✅ Filter by 15 Sri Lankan locations
-✅ Filter by 4 service categories
-✅ View caregiver profiles
-✅ Book caregivers with dates/times
-✅ Automatic cost calculation
-✅ Real-time availability status
-✅ Professional ratings system
-✅ Responsive design
-✅ Error handling
-✅ Loading states
-✅ 10 sample caregivers ready to use
+Search caregivers by name
+Filter by 15 Sri Lankan districts
+Filter by 4 service categories
+View caregiver profiles
+Book caregivers with dates/times
+Automatic cost calculation
+Real-time availability status
+Professional ratings system
+Responsive design
+Error handling
+Loading states
+10 sample caregivers ready to use
 
 ---
 
-## 🎓 Example Workflow
+## Example Workflow
 
 1. **User visits caregivers page**
    ↓
@@ -283,7 +280,7 @@ docker run -d -p 27017:27017 mongo
 
 ---
 
-## 🔗 API Quick Reference
+## API Quick Reference
 
 ### Search & Filter
 ```
@@ -312,4 +309,4 @@ POST /api/bookings
 
 ---
 
-**Ready to go? Run `node seed-caregivers.js` and start the application! 🚀**
+**Ready to go? Run `node seed-caregivers.js` and start the application!**

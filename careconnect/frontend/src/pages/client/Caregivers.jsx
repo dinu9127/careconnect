@@ -28,6 +28,16 @@ const caregiverPin = new L.Icon({
   shadowSize: [41, 41]
 })
 
+const userPin = new L.Icon({
+  iconRetinaUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
 const Caregivers = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedService, setSelectedService] = useState('All Services')
@@ -404,7 +414,7 @@ const Caregivers = () => {
 
                 {userCoords && (
                   <>
-                    <Marker position={[userCoords.lat, userCoords.lng]} icon={caregiverPin}>
+                    <Marker position={[userCoords.lat, userCoords.lng]} icon={userPin}>
                       <Popup>You are here</Popup>
                     </Marker>
                     <Circle

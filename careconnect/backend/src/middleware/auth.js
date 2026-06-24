@@ -30,8 +30,30 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    // Fix 1: Suspended user check
+    if (!req.user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support.'
+      });
+    }
+
     next();
+
+    // Specific error messages
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired, please login again'
+      });
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'

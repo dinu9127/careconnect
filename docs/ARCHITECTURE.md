@@ -61,10 +61,7 @@ Response JSON
         │
         ▼
 Frontend Display
-        │
-        ├─ "Available Today" Section
-        ├─ "Limited Availability" Section
-        └─ "Not Available" Section
+
 ```
 
 ## User Journey - Discovery to Booking
@@ -128,16 +125,6 @@ Caregivers.jsx (Main Page)
 │  ├─ Location dropdown (15 options)
 │  └─ Service type dropdown (4 options)
 │
-├─ Caregiver Grid
-│  │
-│  ├─ "Available Today" Section
-│  │  └─ [CaregiverCard × N]
-│  │
-│  ├─ "Limited Availability" Section
-│  │  └─ [CaregiverCard × N]
-│  │
-│  └─ "Not Available" Section
-│     └─ [CaregiverCard × N]
 │
 ├─ CaregiverProfileModal
 │  ├─ Profile header
@@ -209,7 +196,7 @@ BOOKINGS Collection
 ├─ startTime: String (HH:MM)
 ├─ endTime: String (HH:MM)
 ├─ serviceType: String
-├─ status: String (enum: pending, confirmed, in-progress, completed, cancelled)
+├─ status: String (enum: pending, confirmed, completed, cancelled)
 ├─ totalAmount: Number
 ├─ notes: String
 ├─ createdAt: Date
@@ -222,25 +209,6 @@ BOOKINGS Collection
 Current Date: TODAY
 Tomorrow Date: TODAY + 1 day
 
-FOR EACH CAREGIVER:
-  │
-  ├─ Check availability[day] contains TODAY's day name
-  │  OR availability[day] contains TOMORROW's day name
-  │
-  ├─ IF YES
-  │  └─ Category: "Available Today" (🟢 GREEN)
-  │
-  ├─ ELSE IF caregiver has any availability records
-  │  └─ Category: "Limited Availability" (🟡 AMBER)
-  │
-  └─ ELSE
-     └─ Category: "Not Available" (⚫ GRAY)
-
-DISPLAY SECTIONS IN ORDER:
-1. Available Today (sorted by rating)
-2. Limited Availability (sorted by rating)
-3. Not Available (sorted by rating)
-```
 
 ## Search & Filter Flow
 
