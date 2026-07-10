@@ -41,8 +41,9 @@ const CaregiverDashboard = () => {
   const getStats = () => {
     const confirmedBookings = bookings.filter(b => b.status === 'confirmed')
     
-    // Unique connected clients
-    const uniqueClients = [...new Set(confirmedBookings.map(b => b.client?._id))]
+    // Unique connected clients (both active and past)
+    const activeAndPastBookings = bookings.filter(b => ['confirmed', 'completed'].includes(b.status))
+    const uniqueClients = [...new Set(activeAndPastBookings.map(b => b.client?._id))]
     const connectedClients = uniqueClients.length
 
     // Upcoming shifts (future dates)
