@@ -375,6 +375,13 @@ const UpdateProfile = () => {
         setLoading(false)
         return
       }
+
+      // Validate Service Types
+      if (!formData.serviceTypes || formData.serviceTypes.length === 0) {
+        setMessage('Please select at least one Service Type')
+        setLoading(false)
+        return
+      }
       
       const user = JSON.parse(localStorage.getItem('user'))
       
@@ -842,7 +849,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <User className="w-4 h-4 inline mr-2" />
-                      Full Name
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -856,7 +863,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Mail className="w-4 h-4 inline mr-2" />
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -890,7 +897,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <User className="w-4 h-4 inline mr-2" />
-                      Gender
+                      Gender <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="gender"
@@ -943,7 +950,7 @@ const UpdateProfile = () => {
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        Choose Your Location on Map
+                        Choose Your Location on Map <span className="text-red-500">*</span>
                       </label>
                       <button
                         type="button"
@@ -1029,7 +1036,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <DollarSign className="w-4 h-4 inline mr-2" />
-                      Hourly Rate (LKR)
+                      Hourly Rate (LKR) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -1045,7 +1052,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Award className="w-4 h-4 inline mr-2" />
-                      Years of Experience
+                      Years of Experience <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -1092,7 +1099,7 @@ const UpdateProfile = () => {
                 {/* Service Types */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Service Types
+                    Service Types <span className="text-red-500">*</span>
                   </label>
                   <div className="grid md:grid-cols-2 gap-3">
                     {serviceTypes.map(service => (
@@ -1406,7 +1413,7 @@ const UpdateProfile = () => {
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.currentPassword ? 'text' : 'password'}
@@ -1427,7 +1434,7 @@ const UpdateProfile = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.newPassword ? 'text' : 'password'}
@@ -1448,7 +1455,7 @@ const UpdateProfile = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.confirmPassword ? 'text' : 'password'}
