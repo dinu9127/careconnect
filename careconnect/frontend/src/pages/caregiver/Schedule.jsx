@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
-import { Calendar, Clock, MapPin, User, DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
+import { Calendar, Clock, MapPin, User, DollarSign, AlertCircle, CheckCircle, X } from 'lucide-react'
 import api from '../../services/api'
 
 const Schedule = () => {
@@ -11,6 +11,8 @@ const Schedule = () => {
   const [filterStatus, setFilterStatus] = useState('all') // all, upcoming, completed, cancelled
   const [updatingId, setUpdatingId] = useState(null)
   const [visibleContactBookingId, setVisibleContactBookingId] = useState(null)
+  const [bookingToCancel, setBookingToCancel] = useState(null)
+  const [cancellationReason, setCancellationReason] = useState('')
 
   useEffect(() => {
     fetchBookings()
@@ -32,27 +34,27 @@ const Schedule = () => {
   }
 
   const updateBookingStatus = async (booking, newStatus) => {
-    if (newStatus === 'cancelled') {
-      const confirmCancel = window.confirm('Are you sure you want to cancel this booking?')
-      if (!confirmCancel) {
-        return
-      }
-    }
-
     try {
       setUpdatingId(booking._id)
       const updatePayload = { status: newStatus }
 
       if (newStatus === 'cancelled' && booking.status === 'confirmed') {
-        const reason = window.prompt('Please enter a cancellation reason (required):', '')
-        if (!reason || !reason.trim()) {
-          setUpdatingId(null)
+        const reason = cancellationReason.trim()
+        if (!reason) {
+          setMessage({
+            type: 'error',
+            text: 'Please provide a cancellation reason.'
+          })
           return
         }
-        updatePayload.cancellationReason = reason.trim()
+        updatePayload.cancellationReason = reason
       }
 
       const response = await api.put(`/bookings/${booking._id}`, updatePayload)
+      if (newStatus === 'cancelled') {
+        setBookingToCancel(null)
+        setCancellationReason('')
+      }
       await fetchBookings()
       if (newStatus === 'confirmed') {
         setVisibleContactBookingId(booking._id)
@@ -422,7 +424,12 @@ const Schedule = () => {
                               {booking.status === 'confirmed' && (
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateBookingStatus(booking, 'cancelled') }}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    setBookingToCancel(booking)
+                                    setCancellationReason('')
+                                  }}
                                   disabled={updatingId === booking._id}
                                   className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition disabled:opacity-50"
                                 >
@@ -441,6 +448,69 @@ const Schedule = () => {
           </div>
         </main>
       </div>
+
+        {bookingToCancel && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-red-100 bg-white shadow-2xl">
+              <div className="flex items-center justify-between bg-gradient-to-r from-red-600 to-rose-600 p-5 text-white">
+                <div>
+                  <h2 className="text-xl font-bold">Cancel Booking?</h2>
+                  <p className="text-sm text-red-50">This will remove the booking from your active schedule.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookingToCancel(null)
+                    setCancellationReason('')
+                  }}
+                  className="rounded-full p-2 transition hover:bg-white/20"
+                  aria-label="Close cancel dialog"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
+                  You can only cancel confirmed bookings. Please add a reason before continuing.
+                </div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="cancellationReason">
+                  Cancellation reason
+                </label>
+                <textarea
+                  id="cancellationReason"
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  rows="4"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+                  placeholder="Tell the client why you need to cancel this booking"
+                />
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBookingToCancel(null)
+                      setCancellationReason('')
+                    }}
+                    className="flex-1 rounded-xl border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+                  >
+                    Keep Booking
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateBookingStatus(bookingToCancel, 'cancelled')}
+                    disabled={updatingId === bookingToCancel._id || !cancellationReason.trim()}
+                    className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updatingId === bookingToCancel._id ? 'Cancelling...' : 'Yes, Cancel'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   )
 }
