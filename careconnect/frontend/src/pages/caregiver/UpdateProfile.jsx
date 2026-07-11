@@ -41,6 +41,7 @@ const UpdateProfile = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [verificationStatus, setVerificationStatus] = useState('pending')
   const [activeTab, setActiveTab] = useState('profile') // profile, verification
   const [currentStep, setCurrentStep] = useState(1) // 1: identity, 2: nvq, 3: professional
   const [isNewCaregiverSetup, setIsNewCaregiverSetup] = useState(false)
@@ -202,6 +203,8 @@ const UpdateProfile = () => {
       const coords = caregiver.geoLocation?.coordinates
       const longitude = Array.isArray(coords) ? coords[0] : ''
       const latitude = Array.isArray(coords) ? coords[1] : ''
+
+      setVerificationStatus(caregiver.verificationStatus || 'pending')
       
       // Store caregiver ID for updates
       setCaregiverId(caregiver._id)
@@ -372,6 +375,13 @@ const UpdateProfile = () => {
       const phoneDigits = normalizeSriLankaPhone(formData.phone)
       if (!/^0\d{9}$/.test(phoneDigits)) {
         setMessage('Phone number must be a valid Sri Lanka number (0XXXXXXXXX or +94XXXXXXXXX)')
+        setLoading(false)
+        return
+      }
+
+      // Validate Service Types
+      if (!formData.serviceTypes || formData.serviceTypes.length === 0) {
+        setMessage('Please select at least one Service Type')
         setLoading(false)
         return
       }
@@ -714,6 +724,23 @@ const UpdateProfile = () => {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+  const verificationMessage = verificationStatus === 'verified'
+    ? {
+        title: 'Congratulations, your account is verified successfully',
+        text: 'Congratulations, your account is verified successfully. Now you will receive bookings in your caregiver profile tab according to admin approval.',
+        tone: 'success'
+      }
+    : verificationStatus === 'rejected'
+    ? {
+        title: 'Your account verification was not approved',
+        text: 'Please update your documents and wait for admin approval to start receiving bookings in your caregiver profile tab.',
+        tone: 'error'
+      }
+    : {
+        title: 'Your account is not verified yet',
+        text: 'Please update your documents and wait for admin approval to start receiving bookings in your caregiver profile tab.',
+        tone: 'warning'
+      }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -747,6 +774,26 @@ const UpdateProfile = () => {
                 <p>{message}</p>
               </div>
             )}
+
+            <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${
+              verificationMessage.tone === 'success'
+                ? 'bg-green-50 text-green-800 border-green-200'
+                : verificationMessage.tone === 'error'
+                ? 'bg-red-50 text-red-800 border-red-200'
+                : 'bg-yellow-50 text-yellow-800 border-yellow-200'
+            }`}>
+              {verificationMessage.tone === 'success' ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : verificationMessage.tone === 'error' ? (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              )}
+              <div>
+                <p className="font-semibold">{verificationMessage.title}</p>
+                <p className="text-sm mt-1">{verificationMessage.text}</p>
+              </div>
+            </div>
 
             {/* Tabs */}
             {!isNewCaregiverSetup && (
@@ -842,7 +889,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <User className="w-4 h-4 inline mr-2" />
-                      Full Name
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -856,7 +903,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Mail className="w-4 h-4 inline mr-2" />
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -890,7 +937,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <User className="w-4 h-4 inline mr-2" />
-                      Gender
+                      Gender <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="gender"
@@ -943,7 +990,7 @@ const UpdateProfile = () => {
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        Choose Your Location on Map
+                        Choose Your Location on Map <span className="text-red-500">*</span>
                       </label>
                       <button
                         type="button"
@@ -1029,7 +1076,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <DollarSign className="w-4 h-4 inline mr-2" />
-                      Hourly Rate (LKR)
+                      Hourly Rate (LKR) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -1045,7 +1092,7 @@ const UpdateProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Award className="w-4 h-4 inline mr-2" />
-                      Years of Experience
+                      Years of Experience <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -1092,7 +1139,7 @@ const UpdateProfile = () => {
                 {/* Service Types */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Service Types
+                    Service Types <span className="text-red-500">*</span>
                   </label>
                   <div className="grid md:grid-cols-2 gap-3">
                     {serviceTypes.map(service => (
@@ -1406,7 +1453,7 @@ const UpdateProfile = () => {
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.currentPassword ? 'text' : 'password'}
@@ -1427,7 +1474,7 @@ const UpdateProfile = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.newPassword ? 'text' : 'password'}
@@ -1448,7 +1495,7 @@ const UpdateProfile = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type={showPasswords.confirmPassword ? 'text' : 'password'}

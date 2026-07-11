@@ -9,6 +9,7 @@ const Complaints = () => {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedComplaint, setSelectedComplaint] = useState(null)
+  const [filterStatus, setFilterStatus] = useState('all')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -153,6 +154,18 @@ const Complaints = () => {
     }
   }
 
+  const complaintTabs = [
+    { key: 'all', label: 'All Complaints' },
+    { key: 'open', label: 'Open' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'resolved', label: 'Resolved' },
+    { key: 'closed', label: 'Closed' }
+  ]
+
+  const filteredComplaints = filterStatus === 'all'
+    ? complaints
+    : complaints.filter((complaint) => complaint.status === filterStatus)
+
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-red-50 overflow-hidden">
       <Navbar isFixed />
@@ -193,6 +206,30 @@ const Complaints = () => {
                 </div>
               </div>
             )}
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2 mb-6 border-b-2 border-gray-200 overflow-x-auto">
+              {complaintTabs.map((tab) => {
+                const isActive = filterStatus === tab.key
+                const tabCount = tab.key === 'all'
+                  ? complaints.length
+                  : complaints.filter((complaint) => complaint.status === tab.key).length
+
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setFilterStatus(tab.key)}
+                    className={`px-4 py-2 font-medium border-b-2 transition-all duration-300 whitespace-nowrap ${isActive
+                      ? 'border-teal-600 text-teal-600 bg-teal-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                      }`}
+                  >
+                    {tab.label}
+                    
+                  </button>
+                )
+              })}
+            </div>
 
             {/* Form */}
             {showForm && (
@@ -326,37 +363,30 @@ const Complaints = () => {
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
                   <p className="mt-4 text-gray-600 font-medium">Loading complaints...</p>
                 </div>
-              ) : complaints.length === 0 ? (
+              ) : filteredComplaints.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-red-100">
                   <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No Complaints Yet</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {complaints.length === 0 ? 'No Complaints Yet' : 'No Complaints Match This Filter'}
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    You haven't submitted any complaints. If you experience any issues with our service, please submit a complaint.
+                    {complaints.length === 0
+                      ? "You haven't submitted any complaints. If you experience any issues with our service, please submit a complaint."
+                      : 'Try another tab to view complaints with a different status.'}
                   </p>
                   <button
-                    onClick={() => setShowForm(true)}
-                    className="inline-block bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                    onClick={() => {
+                      setFilterStatus('all')
+                      setShowForm(true)
+                    }}
+                    className="inline-block bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
                   >
-                    Submit Your First Complaint
-                  </button>
-                </div>
-              ) : complaints.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-red-100">
-                  <AlertCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Complaints Yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    You haven't submitted any complaints. If you experience any issues with our service, please submit a complaint.
-                  </p>
-                  <button
-                    onClick={() => setShowForm(true)}
-                    className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
-                  >
-                    Submit Your First Complaint
+                    {complaints.length === 0 ? 'Submit Your First Complaint' : 'Submit a New Complaint'}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {complaints.map((complaint) => (
+                  {filteredComplaints.map((complaint) => (
                     <div
                       key={complaint._id}
                       className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-red-100 hover:border-red-300 cursor-pointer"

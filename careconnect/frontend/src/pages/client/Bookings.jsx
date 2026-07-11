@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar, Clock, DollarSign, CreditCard, X, CheckCircle, AlertCircle, Star, MapPin } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import api from '../../services/api'
 
 const Bookings = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
@@ -26,6 +29,51 @@ const Bookings = () => {
   useEffect(() => {
     fetchBookings()
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const paymentResult = params.get('payment')
+    const bookingId = params.get('bookingId') || params.get('order_id')
+
+    if (paymentResult !== 'success' || !bookingId) {
+      return
+    }
+
+    const reconcilePayment = async () => {
+      try {
+        await api.put(`/bookings/${bookingId}/payment`, {
+          paymentMethod: 'card',
+          paymentStatus: 'paid',
+          transactionId: params.get('order_id') || bookingId
+        })
+
+        await fetchBookings()
+        setMessage({
+          type: 'success',
+          text: 'Payment completed successfully. Your booking is now ready for review.'
+        })
+
+        params.delete('payment')
+        params.delete('bookingId')
+        params.delete('order_id')
+        navigate(
+          {
+            pathname: '/client/bookings',
+            search: params.toString() ? `?${params.toString()}` : ''
+          },
+          { replace: true }
+        )
+      } catch (error) {
+        setMessage({
+          type: 'error',
+          text: error.response?.data?.message || 'Payment was received but could not be synced yet. Please refresh in a moment.'
+        })
+        fetchBookings()
+      }
+    }
+
+    reconcilePayment()
+  }, [location.search])
 
   const fetchBookings = async () => {
     try {

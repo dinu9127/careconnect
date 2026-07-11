@@ -40,40 +40,8 @@ npm start
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory:
+Create a `.env` file in the backend directory
 
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/careconnect
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRE=7d
-NODE_ENV=development
-```
-
-## API Endpoints
-
-### Authentication
-- POST `/api/auth/register` - Register new user
-- POST `/api/auth/login` - Login user
-- GET `/api/auth/profile` - Get user profile (protected)
-
-### Users
-- GET `/api/users` - Get all users (admin)
-- GET `/api/users/:id` - Get user by ID
-- PUT `/api/users/:id` - Update user
-- DELETE `/api/users/:id` - Delete user (admin)
-
-### Caregivers
-- GET `/api/caregivers` - Get all caregivers
-- GET `/api/caregivers/:id` - Get caregiver by ID
-- PUT `/api/caregivers/:id` - Update caregiver profile
-
-### Bookings
-- POST `/api/bookings` - Create new booking
-- GET `/api/bookings` - Get all bookings
-- GET `/api/bookings/:id` - Get booking by ID
-- PUT `/api/bookings/:id` - Update booking
-- DELETE `/api/bookings/:id` - Cancel booking
 
 ## Project Structure
 
@@ -88,7 +56,3 @@ src/
 config/
 └── db.js          # Database configuration
 ```
-
-## License
-
-MIT
