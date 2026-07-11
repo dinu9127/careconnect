@@ -41,6 +41,7 @@ const UpdateProfile = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [verificationStatus, setVerificationStatus] = useState('pending')
   const [activeTab, setActiveTab] = useState('profile') // profile, verification
   const [currentStep, setCurrentStep] = useState(1) // 1: identity, 2: nvq, 3: professional
   const [isNewCaregiverSetup, setIsNewCaregiverSetup] = useState(false)
@@ -202,6 +203,8 @@ const UpdateProfile = () => {
       const coords = caregiver.geoLocation?.coordinates
       const longitude = Array.isArray(coords) ? coords[0] : ''
       const latitude = Array.isArray(coords) ? coords[1] : ''
+
+      setVerificationStatus(caregiver.verificationStatus || 'pending')
       
       // Store caregiver ID for updates
       setCaregiverId(caregiver._id)
@@ -721,6 +724,23 @@ const UpdateProfile = () => {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+  const verificationMessage = verificationStatus === 'verified'
+    ? {
+        title: 'Congratulations, your account is verified successfully',
+        text: 'Congratulations, your account is verified successfully. Now you will receive bookings in your caregiver profile tab according to admin approval.',
+        tone: 'success'
+      }
+    : verificationStatus === 'rejected'
+    ? {
+        title: 'Your account verification was not approved',
+        text: 'Please update your documents and wait for admin approval to start receiving bookings in your caregiver profile tab.',
+        tone: 'error'
+      }
+    : {
+        title: 'Your account is not verified yet',
+        text: 'Please update your documents and wait for admin approval to start receiving bookings in your caregiver profile tab.',
+        tone: 'warning'
+      }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -754,6 +774,26 @@ const UpdateProfile = () => {
                 <p>{message}</p>
               </div>
             )}
+
+            <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${
+              verificationMessage.tone === 'success'
+                ? 'bg-green-50 text-green-800 border-green-200'
+                : verificationMessage.tone === 'error'
+                ? 'bg-red-50 text-red-800 border-red-200'
+                : 'bg-yellow-50 text-yellow-800 border-yellow-200'
+            }`}>
+              {verificationMessage.tone === 'success' ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : verificationMessage.tone === 'error' ? (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              )}
+              <div>
+                <p className="font-semibold">{verificationMessage.title}</p>
+                <p className="text-sm mt-1">{verificationMessage.text}</p>
+              </div>
+            </div>
 
             {/* Tabs */}
             {!isNewCaregiverSetup && (
