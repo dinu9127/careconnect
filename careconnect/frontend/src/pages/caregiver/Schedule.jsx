@@ -419,7 +419,7 @@ const Schedule = () => {
                                 </button>
                               )}
 
-                              {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                              {booking.status === 'confirmed' && (
                                 <button
                                   type="button"
                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); updateBookingStatus(booking, 'cancelled') }}
