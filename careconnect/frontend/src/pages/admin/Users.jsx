@@ -9,6 +9,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all') // all, client, caregiver, admin
+  const [searchQuery, setSearchQuery] = useState('')
   const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, user: null })
   const [caregivers, setCaregivers] = useState([])
   const [caregiverLoading, setCaregiverLoading] = useState(false)
@@ -194,17 +195,35 @@ const AdminUsers = () => {
     setDeleteConfirmation({ show: false, user: null })
   }
 
+  const normalizeSearchValue = (value) => value?.toString().trim().toLowerCase() || ''
+
+  const matchesSearch = (value) => {
+    const query = normalizeSearchValue(searchQuery)
+    if (!query) return true
+    const normalizedValue = normalizeSearchValue(value)
+    return normalizedValue.includes(query)
+  }
+
   const filteredUsers = users.filter(user => {
     if (filter === 'all') return true
-    return user.role === filter
+    const matchesRole = user.role === filter
+    const matchesName = matchesSearch(user.name)
+    const matchesEmail = matchesSearch(user.email)
+    return matchesRole && (matchesName || matchesEmail)
   })
 
-  const pendingCaregivers = caregivers.filter(c => (c.verificationStatus || 'pending') === 'pending')
-  const verifiedCaregivers = caregivers.filter(c => c.verificationStatus === 'verified')
-  const rejectedCaregivers = caregivers.filter(c => c.verificationStatus === 'rejected')
+  const filteredCaregivers = caregivers.filter((caregiver) => {
+    const matchesName = matchesSearch(caregiver.user?.name)
+    const matchesEmail = matchesSearch(caregiver.user?.email)
+    return matchesName || matchesEmail
+  })
+
+  const pendingCaregivers = filteredCaregivers.filter(c => (c.verificationStatus || 'pending') === 'pending')
+  const verifiedCaregivers = filteredCaregivers.filter(c => c.verificationStatus === 'verified')
+  const rejectedCaregivers = filteredCaregivers.filter(c => c.verificationStatus === 'rejected')
 
   const totalCount = filter === 'caregiver'
-    ? caregivers.length
+    ? filteredCaregivers.length
     : filteredUsers.length
 
   const getRoleBadgeColor = (role) => {
@@ -283,6 +302,17 @@ const AdminUsers = () => {
 
           {/* Filter Buttons */}
           <div className="mb-6 flex gap-2 flex-wrap">
+            <div className="w-full md:w-96">
+              <label className="sr-only" htmlFor="admin-user-search">Search users or caregivers</label>
+              <input
+                id="admin-user-search"
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or email"
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
@@ -369,7 +399,7 @@ const AdminUsers = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                 <div className="text-slate-600">Loading caregivers...</div>
               </div>
-            ) : caregivers.length === 0 ? (
+            ) : filteredCaregivers.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-slate-200">
                 <div className="text-slate-600">No caregivers found</div>
               </div>
