@@ -727,13 +727,13 @@ const UpdateProfile = () => {
   const verificationMessage = verificationStatus === 'verified'
     ? {
         title: 'Congratulations, your account is verified successfully',
-        text: 'Congratulations, your account is verified successfully. Now you will receive bookings in your caregiver profile tab according to admin approval.',
+        text: 'Now you will receive bookings in your caregiver profile tab according to admin approval.',
         tone: 'success'
       }
     : verificationStatus === 'rejected'
     ? {
         title: 'Your account verification was not approved',
-        text: 'Please update your documents and wait for admin approval to start receiving bookings in your caregiver profile tab.',
+        text: 'Please update your correct documents and wait for admin approval to start receiving bookings.',
         tone: 'error'
       }
     : {
@@ -1178,14 +1178,16 @@ const UpdateProfile = () => {
                   <h2 className="text-2xl font-semibold text-gray-900">Verification Documents</h2>
                   <p className="text-sm text-gray-600">Upload verification documents (max 5MB).</p>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-8">
-                <div className="mb-8">
-  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
-    <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+    
     <p className="text-sm text-yellow-800">
-      Please rename your documents according to your NIC / Passport or Driving Licence number before uploading.
+      Please rename your documents using your NIC, Passport, or Driving Licence number before uploading. Ensure that you upload a valid identity document (NIC/Passport/Driving Licence), a recently issued Police Clearance Certificate obtained from your residential area police station, and true copies of all relevant qualification documents.
+Please make sure that all uploaded documents are accurate, clear, and authentic.
     </p>
   </div>
+                <div className="bg-white rounded-xl shadow-md p-8">
+                <div className="mb-8">
+
   <DocumentUploadCard certifications={certificationList} />
 </div>
 
