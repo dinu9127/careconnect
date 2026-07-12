@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Upload, X } from 'lucide-react'
+import { Download, Eye, RefreshCw, Upload, X } from 'lucide-react'
 import { uploadService } from '../../services/api'
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -16,6 +16,34 @@ const isAllowedFile = (file) => {
   if (allowedMimeTypes.includes(file.type)) return true
   const name = file.name?.toLowerCase() || ''
   return allowedExtensions.some((ext) => name.endsWith(ext))
+}
+
+const getCurrentUserId = () => {
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null')
+    return storedUser?._id || storedUser?.id || ''
+  } catch (error) {
+    return ''
+  }
+}
+
+const formatUploadDate = (value) => {
+  if (!value) return 'Uploaded recently'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Uploaded recently'
+  return `Uploaded ${parsed.toLocaleDateString()}`
+}
+
+const getDocumentUrl = (document) => document?.secureUrl || document?.downloadUrl || document?.fileUrl || document?.url || ''
+
+const getDocumentName = (document) => document?.fileName || document?.originalName || 'View document'
+
+const normalizeUploadType = (fileType) => {
+  const normalized = String(fileType || '').trim().toLowerCase()
+  if (['nic', 'passport', 'drivinglicense'].includes(normalized)) return 'identity'
+  if (normalized === 'policeclearance') return 'police'
+  if (['qualification', 'nvq'].includes(normalized)) return 'qualification'
+  return ''
 }
 
 const usePreviewUrl = (file) => {
@@ -38,6 +66,9 @@ const usePreviewUrl = (file) => {
 
 const DocumentUploadCard = ({ certifications = [] }) => {
   const [activeSection, setActiveSection] = useState(0)
+  const [documentHistory, setDocumentHistory] = useState([])
+  const [documentLoading, setDocumentLoading] = useState(false)
+  const [documentError, setDocumentError] = useState('')
   const [identityType, setIdentityType] = useState('')
   const [identityFile, setIdentityFile] = useState(null)
   const [policeFile, setPoliceFile] = useState(null)
@@ -67,6 +98,26 @@ const DocumentUploadCard = ({ certifications = [] }) => {
   const qualificationPreviewUrl = usePreviewUrl(qualificationFile)
   const identityExtraInputRef = useRef(null)
 
+  const loadDocumentHistory = async () => {
+    const userId = getCurrentUserId()
+    if (!userId) {
+      setDocumentHistory([])
+      return
+    }
+
+    try {
+      setDocumentLoading(true)
+      setDocumentError('')
+      const response = await uploadService.getUserDocuments(userId)
+      setDocumentHistory(response.data?.data || [])
+    } catch (error) {
+      setDocumentError(error.response?.data?.message || 'Failed to load your saved documents.')
+      setDocumentHistory([])
+    } finally {
+      setDocumentLoading(false)
+    }
+  }
+
   const allowedExtraMimeTypes = ['application/pdf', 'image/jpeg', 'image/png']
   const allowedExtraExtensions = ['.pdf', '.jpg', '.jpeg', '.png']
 
@@ -83,6 +134,9 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
+
+  const getDocumentsForSection = (section) =>
+    documentHistory.filter((document) => normalizeUploadType(document.fileType) === section)
 
   const addIdentityExtraFiles = (files) => {
     if (!files || files.length === 0) return
@@ -267,11 +321,11 @@ const DocumentUploadCard = ({ certifications = [] }) => {
       setUploading(true)
       setStatus({ type: '', text: '' })
       const response = await uploadService.uploadDocument({ file, fileType, metadata })
-      const fileUrl = response.data?.data?.fileUrl || ''
+      const fileUrl = response.data?.data?.secureUrl || response.data?.data?.fileUrl || ''
       setUploadedUrl(fileUrl)
       setStatus({ type: 'success', text: response.data?.message || 'Upload complete.' })
       setFile(null)
-      if (onSuccess) onSuccess()
+      if (onSuccess) await onSuccess()
     } catch (error) {
       const message = error.response?.data?.message || 'Upload failed. Please try again.'
       setStatus({ type: 'error', text: message })
@@ -406,6 +460,10 @@ const DocumentUploadCard = ({ certifications = [] }) => {
     })
   }, [normalizedCertifications])
 
+  useEffect(() => {
+    loadDocumentHistory()
+  }, [])
+
   const updateQualificationItem = (name, updates) => {
     setQualificationItems((prev) =>
       prev.map((item) => (item.name === name ? { ...item, ...updates } : item))
@@ -470,7 +528,7 @@ const DocumentUploadCard = ({ certifications = [] }) => {
           fileType: 'Qualification',
           metadata: { certificationName: item.name }
         })
-        const fileUrl = response.data?.data?.fileUrl || ''
+        const fileUrl = response.data?.data?.secureUrl || response.data?.data?.fileUrl || ''
         if (fileUrl) uploadedUrls.push(fileUrl)
       }
 
@@ -494,6 +552,95 @@ const DocumentUploadCard = ({ certifications = [] }) => {
 
   return (
     <div className="grid gap-4">
+      {documentError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {documentError}
+        </div>
+      )}
+
+      {documentLoading && (
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          Loading your saved documents...
+        </div>
+      )}
+
+      {!documentLoading && documentHistory.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900">Previously Uploaded Documents</h4>
+              <p className="text-xs text-slate-500">Review saved files and upload a new copy if something is wrong.</p>
+            </div>
+            <button
+              type="button"
+              onClick={loadDocumentHistory}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {[
+              { key: 'identity', title: 'Identity documents' },
+              { key: 'police', title: 'Police clearance' },
+              { key: 'qualification', title: 'Qualification documents' }
+            ].map((section) => {
+              const docs = getDocumentsForSection(section.key)
+              return (
+                <div key={section.key} className="rounded-lg border border-white bg-white p-3 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-900">{section.title}</p>
+                    
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {docs.length === 0 ? (
+                      <p className="text-xs text-slate-500">No saved documents yet.</p>
+                    ) : (
+                      docs.map((document) => {
+                        const viewUrl = getDocumentUrl(document)
+                        return (
+                          <div key={document._id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="truncate text-sm font-medium text-slate-800">{getDocumentName(document)}</p>
+                            <p className="mt-1 text-[11px] text-slate-500">{formatUploadDate(document.createdAt || document.uploadedAt)}</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {viewUrl && (
+                                <a
+                                  href={viewUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-100 hover:bg-blue-50"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  View
+                                </a>
+                              )}
+                              {viewUrl && (
+                                <a
+                                  href={viewUrl}
+                                  download
+                                  className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200 hover:bg-slate-100"
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                  Download
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Identity Document */}
       {renderUploadSection({
         title: 'Identity Document (NIC / Passport / Driving License)',
@@ -558,7 +705,10 @@ const DocumentUploadCard = ({ certifications = [] }) => {
             setUploadedUrl: setIdentityUploadedUrl,
             setUploading: setIdentityUploading,
             setFile: setIdentityFile,
-            onSuccess: advanceSection
+            onSuccess: async () => {
+              await loadDocumentHistory()
+              advanceSection()
+            }
           })
       })}
 
@@ -613,7 +763,10 @@ const DocumentUploadCard = ({ certifications = [] }) => {
             setUploadedUrl: setPoliceUploadedUrl,
             setUploading: setPoliceUploading,
             setFile: setPoliceFile,
-            onSuccess: advanceSection
+            onSuccess: async () => {
+              await loadDocumentHistory()
+              advanceSection()
+            }
           })
       })}
 
@@ -643,7 +796,8 @@ const DocumentUploadCard = ({ certifications = [] }) => {
                   setStatus: setQualificationStatus,
                   setUploadedUrl: setQualificationUploadedUrl,
                   setUploading: setQualificationUploading,
-                  setFile: setQualificationFile
+                  setFile: setQualificationFile,
+                  onSuccess: loadDocumentHistory
                 })
             })
           ) : (

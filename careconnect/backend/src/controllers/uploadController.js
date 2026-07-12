@@ -1,5 +1,6 @@
 import path from 'path';
 import Document from '../models/Document.js';
+import { head } from '@vercel/blob';
 import { uploadToBlob } from '../services/blobService.js';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -88,8 +89,8 @@ export const uploadFile = async (req, res) => {
     const extension = path.extname(safeName) || '';
     const typeSegment = resolvedFileType.toLowerCase();
     const key = `uploads/${userId}/${typeSegment}/${Date.now()}${extension}`;
-    const access = 'public';
-    const blobToken = process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
+    const access = 'private';
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PRIVATE_READ_WRITE_TOKEN || process.env.BLOB_PUBLIC_READ_WRITE_TOKEN;
 
     if (!blobToken) {
       return res.status(500).json({
@@ -113,11 +114,14 @@ export const uploadFile = async (req, res) => {
       fileType: resolvedFileType
     });
 
+    const secureUrl = await getSecureBlobUrl(url, blobToken);
+
     return res.status(201).json({
       success: true,
       message: 'File uploaded successfully',
       data: {
         fileUrl: url,
+        secureUrl,
         document
       }
     });
@@ -134,18 +138,47 @@ export const uploadFile = async (req, res) => {
 // @access  Private/Admin
 export const getUserDocuments = async (req, res) => {
   try {
+    const requesterId = req.user.id || req.user._id;
+    const isOwner = String(requesterId) === String(req.params.id);
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to view these documents'
+      });
+    }
+
     const documents = await Document.find({ userId: req.params.id })
       .sort({ createdAt: -1 })
       .lean();
 
+    const secureDocuments = await Promise.all(documents.map(async (document) => ({
+      ...document,
+      secureUrl: await getSecureBlobUrl(document.fileUrl)
+    })));
+
     return res.status(200).json({
       success: true,
-      data: documents
+      data: secureDocuments
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message
     });
+  }
+};
+
+const getSecureBlobUrl = async (url, token = process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PRIVATE_READ_WRITE_TOKEN || process.env.BLOB_PUBLIC_READ_WRITE_TOKEN) => {
+  if (!url || !token) {
+    return url || '';
+  }
+
+  try {
+    const blobInfo = await head(url, { token });
+    return blobInfo.downloadUrl || blobInfo.url || url;
+  } catch (error) {
+    return url;
   }
 };

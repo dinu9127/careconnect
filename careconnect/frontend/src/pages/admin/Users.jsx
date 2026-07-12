@@ -761,7 +761,7 @@ const AdminUsers = () => {
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                   <div className="min-w-0">
                                     <a
-                                      href={doc.fileUrl}
+                                      href={doc.secureUrl || doc.fileUrl}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="truncate text-sm font-semibold text-blue-700 hover:text-purple-700 hover:underline"
